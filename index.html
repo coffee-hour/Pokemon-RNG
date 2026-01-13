@@ -118,18 +118,36 @@ const SHINY_RATE = 4096;
 // ---------- AUTH ----------
 async function signUp(e){
     e.preventDefault();
+
     const username = document.getElementById('signupUsername').value;
     const email = document.getElementById('signupEmail').value;
     const password = document.getElementById('signupPassword').value;
 
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if(error){ alert(error.message); return; }
+    try {
+        // 1️⃣ Sign up user
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
+        if(signUpError) { alert(signUpError.message); return; }
 
-    user = data.user;
+        // 2️⃣ Auto-login immediately
+        const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+        if(loginError) { alert(loginError.message); return; }
 
-    // Create player row
-    await supabase.from('players').insert({ id: user.id, username }).select();
-    loadPlayer(user.id);
+        user = loginData.user;
+
+        // 3️⃣ Create player row in database
+        await supabase.from('players').insert({ id: user.id, username }).select();
+
+        // 4️⃣ Load game
+        loadPlayer(user.id);
+
+        // 5️⃣ Clear inputs (optional)
+        document.getElementById('signupForm').reset();
+        document.getElementById('loginForm').reset();
+
+    } catch(err){
+        console.error(err);
+        alert("Something went wrong. Check console.");
+    }
 }
 
 async function login(e){
