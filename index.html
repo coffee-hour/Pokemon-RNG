@@ -16,9 +16,7 @@ body {
     margin: 0;
     padding: 20px;
 }
-
 h1 { margin-bottom: 10px; }
-
 button {
     background: #ff4757;
     border: none;
@@ -28,9 +26,7 @@ button {
     border-radius: 10px;
     cursor: pointer;
 }
-
 button:hover { background: #ff6b81; }
-
 .card {
     margin: 20px auto;
     padding: 20px;
@@ -40,19 +36,14 @@ button:hover { background: #ff6b81; }
     box-shadow: 0 0 20px rgba(0,0,0,0.4);
     transition: transform 0.3s ease;
 }
-
 .card.shiny { box-shadow: 0 0 30px gold; }
-
 .rarity-common { color: #aaa; }
 .rarity-uncommon { color: #2ecc71; }
 .rarity-rare { color: #3498db; }
 .rarity-ultra { color: #9b59b6; }
 .rarity-mythical { color: #f1c40f; }
-
 .stats { margin-top: 20px; font-size: 14px; }
-
 .history { margin-top: 20px; font-size: 13px; opacity: 0.8; }
-
 form { margin: 10px auto; max-width: 300px; }
 input { margin: 5px 0; padding: 8px; width: 100%; border-radius: 5px; border: none; }
 </style>
@@ -100,7 +91,7 @@ input { margin: 5px 0; padding: 8px; width: 100%; border-radius: 5px; border: no
 // ---------- SUPABASE SETUP ----------
 const SUPABASE_URL = 'https://mlkhgrkayqwqlvzagvjq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sa2hncmtheXF3cWx2emFndmpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDE3MDEsImV4cCI6MjA4MzkxNzcwMX0.YzCjC52nhY829bxDeAoipdXq-6Heu7sPtbKmg1mpV1s';
-const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = Supabase.createClient(https://mlkhgrkayqwqlvzagvjq.supabase.co, eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sa2hncmtheXF3cWx2emFndmpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDE3MDEsImV4cCI6MjA4MzkxNzcwMX0.YzCjC52nhY829bxDeAoipdXq-6Heu7sPtbKmg1mpV1s);
 
 let user = null;
 let playerData = null;
@@ -118,86 +109,44 @@ const SHINY_RATE = 4096;
 // ---------- AUTH ----------
 async function signUp(e){
     e.preventDefault();
-
     const username = document.getElementById('signupUsername').value.trim();
     const email = document.getElementById('signupEmail').value.trim();
     const password = document.getElementById('signupPassword').value.trim();
+    if(!username || !email || !password){ alert("Fill in all fields"); return; }
 
-    if(!username || !email || !password){
-        alert("Fill in all fields");
-        return;
-    }
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
+    if(signUpError){ alert(signUpError.message); return; }
 
-    // Sign up with Supabase
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: email,
-        password: password
-    });
+    user = signUpData.user;
 
-    if(signUpError){
-        console.error("Signup error:", signUpError);
-        alert(signUpError.message);
-        return;
-    }
-
-    // signUpData.user is created
-    const user = signUpData.user;
-    console.log("User signed up:", user);
-
-    // Create player row if not exists
+    // Create player row
     const { error: dbError } = await supabase.from('players').upsert({
         id: user.id,
-        username: username,
+        username,
         total_rolls: 0,
         shiny_count: 0,
         best_pull: null,
         best_pull_rank: 0
     });
-
-    if(dbError){
-        console.error("DB error:", dbError);
-        alert("Failed to create player row: " + dbError.message);
-        return;
-    }
+    if(dbError){ alert("Failed to create player row: " + dbError.message); return; }
 
     alert("Signup successful! You can now login.");
+    document.getElementById('signupForm').reset();
 }
-
 
 async function login(e){
     e.preventDefault();
-
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value.trim();
-
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-    if(error){
-        console.error("Login error:", error);
-        alert(error.message);
-        return;
-    }
-
-    const user = data.user;
-    console.log("Logged in:", user);
-
-    // Load player data
-    const { data: playerData, error: playerError } = await supabase.from('players').select('*').eq('id', user.id).single();
-
-    if(playerError){
-        alert("Failed to load player data: " + playerError.message);
-        return;
-    }
-
-    console.log("Player data:", playerData);
-    // Show the game UI here
-}
-
-async function loadPlayer(id){
-    const { data, error } = await supabase.from('players').select('*').eq('id', id).single();
     if(error){ alert(error.message); return; }
-    playerData = data;
 
+    user = data.user;
+    // Load player
+    const { data: player, error: playerError } = await supabase.from('players').select('*').eq('id', user.id).single();
+    if(playerError){ alert("Failed to load player data: " + playerError.message); return; }
+
+    playerData = player;
     document.getElementById('authForms').style.display = 'none';
     document.getElementById('game').style.display = 'block';
     document.getElementById('playerInfo').textContent = `Logged in as ${playerData.username}`;
@@ -217,7 +166,6 @@ async function rollPokemon(){
     const pokemon = rarity.pool[Math.floor(Math.random()*rarity.pool.length)];
     const isShiny = Math.floor(Math.random()*SHINY_RATE)===0;
 
-    // Update player data
     playerData.total_rolls++;
     if(isShiny) playerData.shiny_count++;
     if(rarity.rank > playerData.best_pull_rank){
@@ -225,7 +173,6 @@ async function rollPokemon(){
         playerData.best_pull_rank = rarity.rank;
     }
 
-    // Update history
     if(!playerData.history) playerData.history = [];
     playerData.history.unshift(`${isShiny ? "✨ " : ""}${pokemon} (${rarity.name})`);
     playerData.history = playerData.history.slice(0,5);
@@ -256,18 +203,27 @@ function updateStats(){
     document.getElementById('history').innerHTML = (playerData.history||[]).map(r=>`<div>${r}</div>`).join('');
 }
 
-// ---------- EVENT LISTENERS ----------
+// ---------- EVENTS ----------
 document.getElementById('signupForm').addEventListener('submit', signUp);
 document.getElementById('loginForm').addEventListener('submit', login);
 
-// ---------- CHECK SESSION ----------
+// ---------- SESSION CHECK ----------
 supabase.auth.getSession().then(({ data: { session } })=>{
     if(session){
         user = session.user;
-        loadPlayer(user.id);
+        loginExistingUser();
     }
 });
+
+async function loginExistingUser(){
+    const { data: player, error } = await supabase.from('players').select('*').eq('id', user.id).single();
+    if(error) return;
+    playerData = player;
+    document.getElementById('authForms').style.display = 'none';
+    document.getElementById('game').style.display = 'block';
+    document.getElementById('playerInfo').textContent = `Logged in as ${playerData.username}`;
+    updateStats();
+}
 </script>
 </body>
 </html>
-
