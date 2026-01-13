@@ -119,47 +119,78 @@ const SHINY_RATE = 4096;
 async function signUp(e){
     e.preventDefault();
 
-    const username = document.getElementById('signupUsername').value;
-    const email = document.getElementById('signupEmail').value;
-    const password = document.getElementById('signupPassword').value;
+    const username = document.getElementById('signupUsername').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPassword').value.trim();
 
-    try {
-        // 1️⃣ Sign up user
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
-        if(signUpError) { alert(signUpError.message); return; }
-
-        // 2️⃣ Auto-login immediately
-        const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
-        if(loginError) { alert(loginError.message); return; }
-
-        user = loginData.user;
-
-        // 3️⃣ Create player row in database
-        await supabase.from('players').insert({ id: user.id, username }).select();
-
-        // 4️⃣ Load game
-        loadPlayer(user.id);
-
-        // 5️⃣ Clear inputs (optional)
-        document.getElementById('signupForm').reset();
-        document.getElementById('loginForm').reset();
-
-    } catch(err){
-        console.error(err);
-        alert("Something went wrong. Check console.");
+    if(!username || !email || !password){
+        alert("Fill in all fields");
+        return;
     }
+
+    // Sign up with Supabase
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: email,
+        password: password
+    });
+
+    if(signUpError){
+        console.error("Signup error:", signUpError);
+        alert(signUpError.message);
+        return;
+    }
+
+    // signUpData.user is created
+    const user = signUpData.user;
+    console.log("User signed up:", user);
+
+    // Create player row if not exists
+    const { error: dbError } = await supabase.from('players').upsert({
+        id: user.id,
+        username: username,
+        total_rolls: 0,
+        shiny_count: 0,
+        best_pull: null,
+        best_pull_rank: 0
+    });
+
+    if(dbError){
+        console.error("DB error:", dbError);
+        alert("Failed to create player row: " + dbError.message);
+        return;
+    }
+
+    alert("Signup successful! You can now login.");
 }
+
 
 async function login(e){
     e.preventDefault();
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
+
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if(error){ alert(error.message); return; }
 
-    user = data.user;
-    loadPlayer(user.id);
+    if(error){
+        console.error("Login error:", error);
+        alert(error.message);
+        return;
+    }
+
+    const user = data.user;
+    console.log("Logged in:", user);
+
+    // Load player data
+    const { data: playerData, error: playerError } = await supabase.from('players').select('*').eq('id', user.id).single();
+
+    if(playerError){
+        alert("Failed to load player data: " + playerError.message);
+        return;
+    }
+
+    console.log("Player data:", playerData);
+    // Show the game UI here
 }
 
 async function loadPlayer(id){
