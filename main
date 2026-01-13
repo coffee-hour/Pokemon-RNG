@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pokémon RNG Challenge</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+    background: #0f1220;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    margin-bottom: 10px;
+}
+
+button {
+    background: #ff4757;
+    border: none;
+    color: white;
+    padding: 15px 30px;
+    font-size: 18px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #ff6b81;
+}
+
+.card {
+    margin: 20px auto;
+    padding: 20px;
+    max-width: 320px;
+    border-radius: 15px;
+    background: #1c1f3a;
+    box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    transition: transform 0.3s ease;
+}
+
+.card.shiny {
+    box-shadow: 0 0 30px gold;
+}
+
+.rarity-common { color: #aaa; }
+.rarity-uncommon { color: #2ecc71; }
+.rarity-rare { color: #3498db; }
+.rarity-ultra { color: #9b59b6; }
+.rarity-mythical { color: #f1c40f; }
+
+.stats {
+    margin-top: 20px;
+    font-size: 14px;
+}
+
+.history {
+    margin-top: 20px;
+    font-size: 13px;
+    opacity: 0.8;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🎲 Pokémon RNG Challenge</h1>
+<p>Roll and see what you get!</p>
+
+<button onclick="rollPokemon()">🎲 Roll Pokémon</button>
+
+<div id="result" class="card">
+    <p>Press Roll to begin!</p>
+</div>
+
+<div class="stats">
+    <p>Total Rolls: <span id="totalRolls">0</span></p>
+    <p>Shinies Found: <span id="shinyCount">0</span></p>
+    <p>Best Pull: <span id="bestPull">None</span></p>
+</div>
+
+<div class="history">
+    <p>Last Rolls:</p>
+    <div id="history"></div>
+</div>
+
+<script>
+// ---------- DATA ----------
+const rarityTable = [
+    { name: "Common", chance: 70, class: "rarity-common", pool: ["Pidgey", "Rattata", "Caterpie"] },
+    { name: "Uncommon", chance: 20, class: "rarity-uncommon", pool: ["Growlithe", "Machop", "Abra"] },
+    { name: "Rare", chance: 8, class: "rarity-rare", pool: ["Gible", "Riolu", "Larvitar"] },
+    { name: "Ultra Rare", chance: 1.8, class: "rarity-ultra", pool: ["Dragonite", "Metagross"] },
+    { name: "Mythical", chance: 0.2, class: "rarity-mythical", pool: ["Mew", "Celebi"] }
+];
+
+const SHINY_RATE = 4096;
+
+// ---------- SAVE DATA ----------
+let data = JSON.parse(localStorage.getItem("rngData")) || {
+    totalRolls: 0,
+    shinyCount: 0,
+    bestPull: "None",
+    history: []
+};
+
+// ---------- FUNCTIONS ----------
+function rollPokemon() {
+    data.totalRolls++;
+
+    const rarity = rollRarity();
+    const pokemon = rarity.pool[Math.floor(Math.random() * rarity.pool.length)];
+    const isShiny = Math.floor(Math.random() * SHINY_RATE) === 0;
+
+    if (isShiny) data.shinyCount++;
+
+    if (rarity.name === "Mythical") data.bestPull = pokemon;
+
+    data.history.unshift(
+        `${isShiny ? "✨ " : ""}${pokemon} (${rarity.name})`
+    );
+    data.history = data.history.slice(0, 5);
+
+    saveData();
+    displayResult(pokemon, rarity, isShiny);
+    updateStats();
+}
+
+function rollRarity() {
+    let roll = Math.random() * 100;
+    let cumulative = 0;
+
+    for (let r of rarityTable) {
+        cumulative += r.chance;
+        if (roll <= cumulative) return r;
+    }
+    return rarityTable[0];
+}
+
+function displayResult(name, rarity, shiny) {
+    const card = document.getElementById("result");
+    card.className = `card ${shiny ? "shiny" : ""}`;
+    card.innerHTML = `
+        <h2>${shiny ? "✨ Shiny " : ""}${name}</h2>
+        <p class="${rarity.class}">${rarity.name}</p>
+    `;
+}
+
+function updateStats() {
+    document.getElementById("totalRolls").textContent = data.totalRolls;
+    document.getElementById("shinyCount").textContent = data.shinyCount;
+    document.getElementById("bestPull").textContent = data.bestPull;
+
+    document.getElementById("history").innerHTML =
+        data.history.map(r => `<div>${r}</div>`).join("");
+}
+
+function saveData() {
+    localStorage.setItem("rngData", JSON.stringify(data));
+}
+
+// ---------- INIT ----------
+updateStats();
+</script>
+
+</body>
+</html>
