@@ -63,9 +63,9 @@ input{margin:5px 0;padding:8px;width:100%;border-radius:5px;border:none;}
 </div>
 
 <script>
-// ---------- SUPABASE SETUP ----------
-const SUPABASE_URL = "https://mlkhgrkayqwqlvzagvjq.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sa2hncmtheXF3cWx2emFndmpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDE3MDEsImV4cCI6MjA4MzkxNzcwMX0.YzCjC52nhY829bxDeAoipdXq-6Heu7sPtbKmg1mpV1s";
+// ---------- SUPABASE ----------
+const SUPABASE_URL = 'https://mlkhgrkayqwqlvzagvjq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sa2hncmtheXF3cWx2emFndmpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDE3MDEsImV4cCI6MjA4MzkxNzcwMX0.YzCjC52nhY829bxDeAoipdXq-6Heu7sPtbKmg1mpV1s';
 const supabase = Supabase.createClient("https://mlkhgrkayqwqlvzagvjq.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sa2hncmtheXF3cWx2emFndmpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDE3MDEsImV4cCI6MjA4MzkxNzcwMX0.YzCjC52nhY829bxDeAoipdXq-6Heu7sPtbKmg1mpV1s");
 
 let user = null;
@@ -81,7 +81,7 @@ const rarityTable = [
 ];
 const SHINY_RATE = 4096;
 
-// ---------- AUTH FUNCTIONS ----------
+// ---------- AUTH ----------
 async function signUp(e){
     e.preventDefault();
     const username = document.getElementById('signupUsername').value.trim();
@@ -95,7 +95,6 @@ async function signUp(e){
     // Create user
     const { data, error } = await supabase.from('users').insert({ username, password }).select().single();
     if(error){ alert(error.message); return; }
-
     user = data;
 
     // Create player row
@@ -114,14 +113,13 @@ async function login(e){
 
     const { data: u, error } = await supabase.from('users').select('*').eq('username', username).eq('password', password).single();
     if(error || !u){ alert("Invalid username or password"); return; }
-
     user = u;
 
-    // Load player data
+    // Load player
     const { data: p, error: playerError } = await supabase.from('players').select('*').eq('id', user.id).single();
     if(playerError){ alert(playerError.message); return; }
-
     playerData = p;
+
     document.getElementById('authForms').style.display = 'none';
     document.getElementById('game').style.display = 'block';
     document.getElementById('playerInfo').textContent = `Logged in as ${user.username}`;
