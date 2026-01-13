@@ -91,11 +91,11 @@ button:hover {
 <script>
 // ---------- DATA ----------
 const rarityTable = [
-    { name: "Common", chance: 70, class: "rarity-common", pool: ["Pidgey", "Rattata", "Caterpie"] },
-    { name: "Uncommon", chance: 20, class: "rarity-uncommon", pool: ["Growlithe", "Machop", "Abra"] },
-    { name: "Rare", chance: 8, class: "rarity-rare", pool: ["Gible", "Riolu", "Larvitar"] },
-    { name: "Ultra Rare", chance: 1.8, class: "rarity-ultra", pool: ["Dragonite", "Metagross"] },
-    { name: "Mythical", chance: 0.2, class: "rarity-mythical", pool: ["Mew", "Celebi"] }
+    { name: "Common", chance: 70, rank: 1, class: "rarity-common", pool: ["Pidgey", "Rattata", "Caterpie"] },
+    { name: "Uncommon", chance: 20, rank: 2, class: "rarity-uncommon", pool: ["Growlithe", "Machop", "Abra"] },
+    { name: "Rare", chance: 8, rank: 3, class: "rarity-rare", pool: ["Gible", "Riolu", "Larvitar"] },
+    { name: "Ultra Rare", chance: 1.8, rank: 4, class: "rarity-ultra", pool: ["Dragonite", "Metagross"] },
+    { name: "Mythical", chance: 0.2, rank: 5, class: "rarity-mythical", pool: ["Mew", "Celebi"] }
 ];
 
 const SHINY_RATE = 4096;
@@ -104,7 +104,8 @@ const SHINY_RATE = 4096;
 let data = JSON.parse(localStorage.getItem("rngData")) || {
     totalRolls: 0,
     shinyCount: 0,
-    bestPull: "None",
+    bestPull: null,
+    bestPullRank: 0,
     history: []
 };
 
@@ -118,7 +119,11 @@ function rollPokemon() {
 
     if (isShiny) data.shinyCount++;
 
-    if (rarity.name === "Mythical") data.bestPull = pokemon;
+    // ✅ BEST PULL LOGIC (FIXED)
+    if (rarity.rank > data.bestPullRank) {
+        data.bestPull = `${pokemon} (${rarity.name})`;
+        data.bestPullRank = rarity.rank;
+    }
 
     data.history.unshift(
         `${isShiny ? "✨ " : ""}${pokemon} (${rarity.name})`
@@ -153,7 +158,7 @@ function displayResult(name, rarity, shiny) {
 function updateStats() {
     document.getElementById("totalRolls").textContent = data.totalRolls;
     document.getElementById("shinyCount").textContent = data.shinyCount;
-    document.getElementById("bestPull").textContent = data.bestPull;
+    document.getElementById("bestPull").textContent = data.bestPull ?? "None";
 
     document.getElementById("history").innerHTML =
         data.history.map(r => `<div>${r}</div>`).join("");
