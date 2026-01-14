@@ -11,7 +11,7 @@
 body {
   background:#0f1220;
   color:#fff;
-  font-family:Arial,sans-serif;
+  font-family:Arial, sans-serif;
   text-align:center;
   padding:20px;
 }
@@ -28,7 +28,6 @@ button {
   color:white;
   cursor:pointer;
 }
-
 button:hover { background:#ff6b81; }
 
 #leaderboardPanel {
@@ -39,12 +38,10 @@ button:hover { background:#ff6b81; }
   background:#1c1f3a;
   padding:15px;
   border-radius:12px 0 0 12px;
-  transition: right 0.3s;
+  transition:right 0.3s;
 }
 
-#leaderboardPanel.open {
-  right:0;
-}
+#leaderboardPanel.open { right:0; }
 
 #leaderboardToggle {
   position:fixed;
@@ -58,10 +55,7 @@ table {
   width:100%;
   font-size:13px;
 }
-
-td {
-  padding:4px;
-}
+td { padding:4px; }
 </style>
 </head>
 
@@ -71,18 +65,18 @@ td {
 
 <div id="login">
   <input id="usernameInput" placeholder="Username">
-  <button id="startBtn">Start</button>
+  <button id="startBtn" type="button">Start</button>
 </div>
 
 <div id="game" style="display:none;">
   <p id="playerInfo"></p>
-  <button id="rollBtn">🎲 Roll</button>
+  <button id="rollBtn" type="button">🎲 Roll</button>
   <p id="result">Roll to begin</p>
   <p>Total Rolls: <span id="rolls">0</span></p>
   <p>Best Pull: <span id="best">None</span></p>
 </div>
 
-<button id="leaderboardToggle">🏆</button>
+<button id="leaderboardToggle" type="button">🏆</button>
 
 <div id="leaderboardPanel">
   <h3>Leaderboard</h3>
@@ -90,14 +84,28 @@ td {
 </div>
 
 <script>
-/* ---------- SUPABASE ---------- */
+/* ================= SUPABASE ================= */
 const SUPABASE_URL = "https://mlkhgrkayqwqlvzagvjq.supabase.co";
 const SUPABASE_ANON_KEY =
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sa2hncmtheXF3cWx2emFndmpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDE3MDEsImV4cCI6MjA4MzkxNzcwMX0.YzCjC52nhY829bxDeAoipdXq-6Heu7sPtbKmg1mpV1s";
-const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-/* ---------- GAME DATA ---------- */
+const db = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ================= DOM ================= */
+const usernameInput = document.getElementById("usernameInput");
+const startBtn = document.getElementById("startBtn");
+const rollBtn = document.getElementById("rollBtn");
+const login = document.getElementById("login");
+const game = document.getElementById("game");
+const result = document.getElementById("result");
+const rolls = document.getElementById("rolls");
+const best = document.getElementById("best");
+const leaderboard = document.getElementById("leaderboard");
+const leaderboardToggle = document.getElementById("leaderboardToggle");
+const leaderboardPanel = document.getElementById("leaderboardPanel");
+const playerInfo = document.getElementById("playerInfo");
+
+/* ================= GAME DATA ================= */
 const rarityTable = [
   { name:"Common", chance:70, rank:1, pool:["Pidgey","Rattata"] },
   { name:"Uncommon", chance:20, rank:2, pool:["Machop","Abra"] },
@@ -108,21 +116,26 @@ const rarityTable = [
 
 let player = null;
 
-/* ---------- LOGIN ---------- */
-document.getElementById("startBtn").onclick = async () => {
+/* ================= LOGIN ================= */
+startBtn.onclick = async () => {
   const username = usernameInput.value.trim();
   if(!username) return alert("Enter a username");
 
-  let { data } = await db.from("players").select("*").eq("username", username).single();
+  const { data } = await db
+    .from("players")
+    .select("*")
+    .eq("username", username)
+    .maybeSingle();
 
-  if(!data){
-    const res = await db.from("players")
+  if(data){
+    player = data;
+  } else {
+    const res = await db
+      .from("players")
       .insert({ username })
       .select()
       .single();
     player = res.data;
-  } else {
-    player = data;
   }
 
   login.style.display = "none";
@@ -132,40 +145,39 @@ document.getElementById("startBtn").onclick = async () => {
   loadLeaderboard();
 };
 
-/* ---------- ROLL ---------- */
-document.getElementById("rollBtn").onclick = async () => {
+/* ================= ROLL ================= */
+rollBtn.onclick = async () => {
   const rarity = rollRarity();
   const pokemon = rarity.pool[Math.floor(Math.random()*rarity.pool.length)];
 
   player.total_rolls++;
+
   if(rarity.rank > (player.best_pull_rank || 0)){
     player.best_pull_rank = rarity.rank;
     player.best_pull = `${pokemon} (${rarity.name})`;
 
-    await db.from("leaderboard")
-      .upsert({
-        username: player.username,
-        best_pull: player.best_pull,
-        best_pull_rank: player.best_pull_rank
-      });
-  }
-
-  await db.from("players")
-    .update({
-      total_rolls: player.total_rolls,
+    await db.from("leaderboard").upsert({
+      username: player.username,
       best_pull: player.best_pull,
       best_pull_rank: player.best_pull_rank
-    })
-    .eq("username", player.username);
+    });
+  }
+
+  await db.from("players").update({
+    total_rolls: player.total_rolls,
+    best_pull: player.best_pull,
+    best_pull_rank: player.best_pull_rank
+  }).eq("username", player.username);
 
   result.textContent = `${pokemon} (${rarity.name})`;
   updateUI();
   loadLeaderboard();
 };
 
+/* ================= HELPERS ================= */
 function rollRarity(){
-  let r = Math.random()*100, c=0;
-  for(let x of rarityTable){ c+=x.chance; if(r<=c) return x; }
+  let r=Math.random()*100, c=0;
+  for(const x of rarityTable){ c+=x.chance; if(r<=c) return x; }
   return rarityTable[0];
 }
 
@@ -186,7 +198,7 @@ async function loadLeaderboard(){
   ).join("");
 }
 
-/* ---------- TOGGLE ---------- */
+/* ================= TOGGLE ================= */
 leaderboardToggle.onclick = () => {
   leaderboardPanel.classList.toggle("open");
 };
@@ -194,4 +206,3 @@ leaderboardToggle.onclick = () => {
 
 </body>
 </html>
-
