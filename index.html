@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Pokémon RNG Challenge</title>
+<title>Pokémon RNG</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -59,7 +59,8 @@ button:hover { transform: scale(1.05); }
 .card.rare { color: #3498db; }
 .card.ultra { color: #9b59b6; box-shadow: 0 0 35px #9b59b6; }
 .card.mythical { color: gold; box-shadow: 0 0 50px gold; animation: pulse 1s infinite; }
-
+.card.spoiler { color: teal; box-shadow: 0 0 65px teal; animation: pulse 2s infinite; }
+  
 @keyframes flipIn { from { transform: rotateY(90deg) scale(0.8); opacity:0; } to { transform: rotateY(0deg) scale(1); opacity:1; } }
 @keyframes pulse { 0%{box-shadow:0 0 25px gold;} 50%{box-shadow:0 0 55px gold;} 100%{box-shadow:0 0 25px gold;} }
 .shake { animation: shake 0.4s; }
@@ -71,7 +72,7 @@ button:hover { transform: scale(1.05); }
 
 <body>
 
-<h1>🎲 Pokémon RNG Challenge</h1>
+<h1>🎲 Pokémon RNG</h1>
 
 <div id="login">
   <input id="usernameInput" placeholder="Enter username">
@@ -106,10 +107,13 @@ const rarityTable = [
     "Pidgeot","Rhydon","Beedrill","Fearow","Arcanine","Nidoking","Nidoqueen","Venusaur","Charmeleon","Wartortle","Raichu","Machoke","Machamp","Golem","Rapidash","Poliwrath","Kadabra","Alakazam","Hitmonlee","Hitmonchan"
   ] },
   { name:"Ultra", class:"ultra", chance:1.8, pool:[
-    "Dragonite","Mewtwo","Gyarados","Snorlax","Lapras"
+    "Dragonite","Gyarados","Snorlax","Lapras"
   ] },
-  { name:"Mythical", class:"mythical", chance:0.2, pool:[
-    "Mew","Articuno","Zapdos","Moltres","Celebi"
+  { name:"Mythical", class:"mythical", chance:0.15, pool:[
+    "Mew","Articuno","Zapdos","Moltres","Mewtwo"
+  ] },
+  { name:"Spoiler", class:"spoiler", chance:0.05, pool:[
+    "Celebi","Ho-Oh","Raikou","Entei","Suicune","Lugia"
   ] }
 ];
 
