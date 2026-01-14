@@ -1,177 +1,131 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Pokémon RNG</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-/* (your existing styles stay exactly as before) */
 body {
-  background: radial-gradient(circle at top, #1b1f4b, #0a0c1a);
-  color: #fff;
-  font-family: 'Trebuchet MS', Arial, sans-serif;
-  text-align: center;
-  padding: 30px;
-  overflow-x: hidden;
+  background:#0a0c1a;
+  color:white;
+  font-family:Arial;
+  text-align:center;
+  padding:40px;
 }
-h1 { letter-spacing: 2px; text-shadow: 0 0 15px rgba(255,255,255,0.3); }
-input, button {
-  padding: 12px;
-  margin: 10px;
-  border-radius: 12px;
-  border: none;
-  font-size: 16px;
+input,button {
+  padding:12px;
+  font-size:16px;
+  border-radius:8px;
+  border:none;
 }
 button {
-  background: linear-gradient(145deg, #ff4757, #ff6b81);
-  color: white;
-  cursor: pointer;
-  box-shadow: 0 6px 15px rgba(255,71,87,0.4);
-  transition: transform 0.2s;
+  background:#ff4757;
+  color:white;
+  cursor:pointer;
 }
-button:hover { transform: scale(1.05); }
-#game { margin-top: 25px; }
+#game { display:none; }
 .card {
-  margin: 25px auto;
-  width: 260px; height: 180px;
-  border-radius: 18px;
-  background: linear-gradient(145deg, #22265c, #14183a);
-  box-shadow: 0 0 25px rgba(0,0,0,0.6);
-  display: flex; flex-direction: column;
-  justify-content: center; align-items: center;
-  font-size: 22px;
-  animation: flipIn 0.6s ease;
+  margin:20px auto;
+  padding:20px;
+  width:220px;
+  border-radius:12px;
+  background:#1b1f4b;
 }
-.card small { font-size: 14px; opacity: 0.8; }
-.card.common { color:#aaa; }
-.card.uncommon { color:#2ecc71; }
-.card.rare { color:#3498db; }
-.card.ultra { color:#9b59b6; box-shadow:0 0 35px #9b59b6; }
-.card.mythical { color:gold; box-shadow:0 0 50px gold; animation:pulse 1s infinite; }
-@keyframes flipIn { from {transform:rotateY(90deg) scale(0.8); opacity:0;} to {transform:rotateY(0deg) scale(1); opacity:1;} }
-@keyframes pulse { 0% {box-shadow: 0 0 25px gold;} 50% {box-shadow: 0 0 55px gold;} 100% {box-shadow: 0 0 25px gold;} }
-.shake { animation:shake 0.4s; }
-@keyframes shake { 0%{transform:translateX(0);}25%{transform:translateX(-6px);}50%{transform:translateX(6px);}75%{transform:translateX(-4px);}100%{transform:translateX(0);} }
-.stats { font-size:14px; opacity:0.9; }
 </style>
 </head>
 
 <body>
 
-<h1>🎲 Pokémon RNG</h1>
+<h1>Pokémon RNG</h1>
 
 <div id="login">
-  <input id="usernameInput" placeholder="Enter username">
-  <br>
-  <button id="startBtn">Start Game</button>
+  <input id="username" placeholder="Username">
+  <br><br>
+  <button id="start">Start Game</button>
 </div>
 
-<div id="game" style="display:none;">
-  <p id="playerInfo"></p>
-
-  <button id="rollBtn">🎲 Roll Pokémon</button>
-
-  <div id="result" class="card common">Roll to begin!</div>
-
-  <div class="stats">
-    <p>Total Rolls: <span id="rolls">0</span></p>
-    <p>Best Pull: <span id="best">None</span></p>
-  </div>
+<div id="game">
+  <h3 id="playerName"></h3>
+  <button id="roll">Roll</button>
+  <div class="card" id="card">—</div>
+  <p>Rolls: <span id="rolls">0</span></p>
+  <p>Best: <span id="best">None</span></p>
 </div>
 
 <script>
-// ---------- SUPABASE ----------
-const SUPABASE_URL = "https://yunxxrofozxqmtwomegk.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1bnh4cm9mb3p4cW10d29tZWdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDEwOTYsImV4cCI6MjA4MzkxNzA5Nn0.sHSzVg4Nj9j7-dkdtsDj7Smg_cArweYBKGHfSioEZUY"; // ← PUT YOUR KEY HERE
-const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+/* ---------- SUPABASE ---------- */
+const supabase = Supabase.createClient(
+  "https://mlkhgrkayqwqlvzagvjq.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1bnh4cm9mb3p4cW10d29tZWdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDEwOTYsImV4cCI6MjA4MzkxNzA5Nn0.sHSzVg4Nj9j7-dkdtsDj7Smg_cArweYBKGHfSioEZUY"
+);
 
-// ---------- GAME DATA ----------
-const rarityTable = [
-  { name:"Common", class:"common", chance:70, pool:["Pidgey","Rattata","Caterpie"] },
-  { name:"Uncommon", class:"uncommon", chance:20, pool:["Machop","Abra","Growlithe"] },
-  { name:"Rare", class:"rare", chance:8, pool:["Riolu","Gible","Larvitar"] },
-  { name:"Ultra", class:"ultra", chance:1.8, pool:["Dragonite","Metagross"] },
-  { name:"Mythical", class:"mythical", chance:0.2, pool:["Mew","Celebi"] }
-];
-
+/* ---------- STATE ---------- */
 let player = null;
 
-// ---------- LOGIN ----------
-startBtn.onclick = async () => {
-  const username = usernameInput.value.trim();
-  if (!username) { alert("Enter a username"); return; }
+/* ---------- START GAME ---------- */
+document.getElementById("start").onclick = async () => {
+  const name = document.getElementById("username").value.trim();
+  if (!name) { alert("Username required"); return; }
 
-  // fetch or create
-  const { data: existing, error: fetchErr } = await supabase
+  // load existing
+  let { data, error } = await supabase
     .from("players")
     .select("*")
-    .eq("username", username)
+    .eq("username", name)
     .single();
 
-  if(fetchErr && fetchErr.code !== "PGRST116") {
-    alert("Error loading user: "+fetchErr.message);
-    return;
-  }
-
-  if (!existing) {
-    const { data: newPlayer, error: createErr } = await supabase
+  // create if missing
+  if (!data) {
+    const res = await supabase
       .from("players")
-      .insert({ username })
+      .insert({ username: name })
       .select()
       .single();
-    if(createErr) { alert("Failed to create: "+createErr.message); return; }
-    player = newPlayer;
-  } else {
-    player = existing;
+
+    if (res.error) {
+      alert("DB error: " + res.error.message);
+      return;
+    }
+    data = res.data;
   }
 
-  login.style.display = "none";
-  game.style.display = "block";
-  playerInfo.textContent = `Trainer: ${player.username}`;
-  updateUI();
+  player = data;
+
+  document.getElementById("login").style.display = "none";
+  document.getElementById("game").style.display = "block";
+  document.getElementById("playerName").textContent = "Trainer: " + name;
+  render();
 };
 
-// ---------- ROLL ----------
-rollBtn.onclick = async () => {
-  const rarity = rollRarity();
-  const pokemon = rarity.pool[Math.floor(Math.random()*rarity.pool.length)];
+/* ---------- ROLL ---------- */
+document.getElementById("roll").onclick = async () => {
+  if (!player) return;
+
+  const pulls = ["Pidgey","Eevee","Gengar","Mew"];
+  const pull = pulls[Math.floor(Math.random()*pulls.length)];
 
   player.total_rolls++;
+  if (pull === "Mew") player.best_pull = "Mew";
 
-  const rank = rarityTable.indexOf(rarity) + 1;
-  if (rank > player.best_rank) {
-    player.best_rank = rank;
-    player.best_pull = `${pokemon} (${rarity.name})`;
-  }
+  document.getElementById("card").textContent = pull;
 
-  result.className = `card ${rarity.class}`;
-  result.innerHTML = `<div>${pokemon}</div><small>${rarity.name}</small>`;
-  if(rank>=4){ document.body.classList.add("shake"); setTimeout(()=>document.body.classList.remove("shake"),400); }
-
-  updateUI();
-
-  const { error } = await supabase.from("players")
+  await supabase
+    .from("players")
     .update({
       total_rolls: player.total_rolls,
-      best_rank: player.best_rank,
       best_pull: player.best_pull
     })
     .eq("username", player.username);
 
-  if(error) console.error("Save failed:", error);
+  render();
 };
 
-// ---------- HELPERS ----------
-function rollRarity(){
-  let r=Math.random()*100, c=0;
-  for(const x of rarityTable){ c+=x.chance; if(r<=c) return x; }
-  return rarityTable[0];
-}
-function updateUI(){
-  rolls.textContent = player.total_rolls;
-  best.textContent = player.best_pull ?? "None";
+/* ---------- UI ---------- */
+function render() {
+  document.getElementById("rolls").textContent = player.total_rolls;
+  document.getElementById("best").textContent = player.best_pull;
 }
 </script>
 
