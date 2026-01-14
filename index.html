@@ -7,34 +7,32 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body { background:#0f1220;color:#fff;font-family:Arial;text-align:center;padding:20px }
-button{background:#ff4757;border:none;color:white;padding:12px 25px;font-size:16px;border-radius:8px;cursor:pointer}
-button:hover{background:#ff6b81}
-.card{margin:20px auto;padding:20px;max-width:320px;border-radius:12px;background:#1c1f3a}
-.shiny{box-shadow:0 0 25px gold}
-input{padding:10px;width:100%;margin:10px 0;border-radius:5px;border:none}
-table{margin:20px auto;border-collapse:collapse;width:90%;max-width:400px}
-td,th{border-bottom:1px solid #333;padding:8px}
+body { background:#0f1220; color:#fff; font-family:Arial, sans-serif; text-align:center; padding:20px; }
+input{padding:10px; width:80%; margin:10px 0; border:none; border-radius:5px;}
+button{background:#ff4757; padding:10px 20px; border:none; color:white; border-radius:8px; cursor:pointer;}
+button:hover{background:#ff6b81;}
+table{margin:20px auto; border-collapse:collapse; width:90%;}
+td,th{border-bottom:1px solid #333; padding:8px;}
 </style>
 </head>
 <body>
 
 <h1>🎲 Pokémon RNG Challenge</h1>
 
-<div id="login">
-  <input id="usernameInput" placeholder="Enter username" />
-  <button type="button" onclick="startGame()">Start</button>
+<div id="loginDiv">
+  <input type="text" id="usernameInput" placeholder="Enter username">
+  <button id="startBtn">Start</button>
 </div>
 
 <div id="game" style="display:none;">
   <p id="playerInfo"></p>
-  <button onclick="rollPokemon()">🎲 Roll</button>
-  <div id="result" class="card">Roll to begin</div>
+  <button id="rollBtn">Roll</button>
+  <p id="rollResult">Roll to begin</p>
 
   <p>Total Rolls: <span id="totalRolls">0</span></p>
   <p>Best Pull: <span id="bestPull">None</span></p>
 
-  <h3>🏆 Global Leaderboard</h3>
+  <h3>Global Leaderboard</h3>
   <table>
     <thead><tr><th>User</th><th>Best</th></tr></thead>
     <tbody id="leaderboard"></tbody>
@@ -42,15 +40,15 @@ td,th{border-bottom:1px solid #333;padding:8px}
 </div>
 
 <script>
-alert("JS LOADED");
+// ✅ Initialize Supabase correctly from CDN
+const SUPABASE_URL = "https://mlkhgrkayqwqlvzagvjq.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1bnh4cm9mb3p4cW10d29tZWdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDEwOTYsImV4cCI6MjA4MzkxNzA5Nn0.sHSzVg4Nj9j7-dkdtsDj7Smg_cArweYBKGHfSioEZUY";
+const { createClient } = supabase;
+const supa = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ---------- SUPABASE ----------
-const supabase = Supabase.createClient(
-  'https://yunxxrofozxqmtwomegk.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1bnh4cm9mb3p4cW10d29tZWdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDEwOTYsImV4cCI6MjA4MzkxNzA5Nn0.sHSzVg4Nj9j7-dkdtsDj7Smg_cArweYBKGHfSioEZUY'
-);
+let player = null;
 
-// ---------- GAME DATA ----------
+// RNG Data
 const rarityTable = [
   { name:"Common", chance:70, rank:1, pool:["Pidgey","Rattata"] },
   { name:"Uncommon", chance:20, rank:2, pool:["Machop","Abra"] },
@@ -58,87 +56,76 @@ const rarityTable = [
   { name:"Ultra", chance:1.8, rank:4, pool:["Dragonite"] },
   { name:"Mythical", chance:0.2, rank:5, pool:["Mew"] }
 ];
+const SHINY_RATE = 4096;
 
-let player = null;
-
-// ---------- START ----------
-async function startGame(){
-  const username = usernameInput.value.trim();
+// Start game with username
+document.getElementById("startBtn").addEventListener("click", async () => {
+  const username = document.getElementById("usernameInput").value.trim();
   if(!username) return alert("Enter a username");
 
-  localStorage.setItem("rng_user", username);
-
-  let { data } = await supabase.from('players').select('*').eq('username', username).single();
-
+  // Load or create player
+  let { data } = await supa.from("players").select("*").eq("username", username).single();
   if(!data){
-    const res = await supabase.from('players').insert({ username }).select().single();
-    player = res.data;
-  } else {
-    player = data;
-  }
+    const ins = await supa.from("players").insert({ username }).select().single();
+    player = ins.data;
+  } else player = data;
 
-  login.style.display = "none";
-  game.style.display = "block";
-  playerInfo.textContent = `Player: ${player.username}`;
+  document.getElementById("loginDiv").style.display = "none";
+  document.getElementById("game").style.display = "block";
+  document.getElementById("playerInfo").textContent = "Player: " + player.username;
   updateStats();
   loadLeaderboard();
-}
+});
 
-// ---------- RNG ----------
-function rollRarity(){
-  let r=Math.random()*100,c=0;
-  for(let x of rarityTable){ c+=x.chance; if(r<=c) return x; }
-  return rarityTable[0];
-}
-
-async function rollPokemon(){
+// Roll button
+document.getElementById("rollBtn").addEventListener("click", async () => {
   const rarity = rollRarity();
   const pokemon = rarity.pool[Math.floor(Math.random()*rarity.pool.length)];
+  const isShiny = Math.floor(Math.random()*SHINY_RATE)===0;
 
-  player.total_rolls++;
-
-  if(rarity.rank > player.best_pull_rank){
+  player.total_rolls = (player.total_rolls||0) + 1;
+  if(rarity.rank > (player.best_pull_rank||0)){
     player.best_pull_rank = rarity.rank;
     player.best_pull = `${pokemon} (${rarity.name})`;
 
-    // UPDATE LEADERBOARD
-    await supabase.from('leaderboard')
+    // Update leaderboard
+    await supa.from("leaderboard")
       .upsert({ username: player.username, best_pull_rank: rarity.rank, best_pull: player.best_pull });
   }
 
-  await supabase.from('players').update({
+  await supa.from("players").update({
     total_rolls: player.total_rolls,
-    best_pull_rank: player.best_pull_rank,
-    best_pull: player.best_pull
-  }).eq('id', player.id);
+    best_pull: player.best_pull,
+    best_pull_rank: player.best_pull_rank
+  }).eq("id", player.id);
 
-  result.innerHTML = `<h2>${pokemon}</h2><p>${rarity.name}</p>`;
+  document.getElementById("rollResult").textContent = `${isShiny?"✨ ":""}${pokemon} (${rarity.name})`;
   updateStats();
   loadLeaderboard();
+});
+
+function rollRarity(){
+  let r = Math.random()*100, c=0;
+  for(let item of rarityTable){ c+=item.chance; if(r<=c) return item; }
+  return rarityTable[0];
 }
 
-// ---------- UI ----------
 function updateStats(){
-  totalRolls.textContent = player.total_rolls;
-  bestPull.textContent = player.best_pull ?? "None";
+  document.getElementById("totalRolls").textContent = player.total_rolls;
+  document.getElementById("bestPull").textContent = player.best_pull||"None";
 }
 
-// ---------- LEADERBOARD ----------
 async function loadLeaderboard(){
-  const { data } = await supabase
-    .from('leaderboard')
-    .select('*')
-    .order('best_pull_rank', { ascending:false })
+  const { data } = await supa.from("leaderboard")
+    .select("*")
+    .order("best_pull_rank", { ascending:false })
     .limit(10);
 
-  leaderboard.innerHTML = data.map(
-    r => `<tr><td>${r.username}</td><td>${r.best_pull}</td></tr>`
-  ).join('');
+  document.getElementById("leaderboard").innerHTML = data.map(r =>
+    `<tr><td>${r.username}</td><td>${r.best_pull}</td></tr>`
+  ).join("");
 }
-
-// ---------- AUTO LOGIN ----------
-const saved = localStorage.getItem("rng_user");
-if(saved){ usernameInput.value=saved; startGame(); }
 </script>
+
 </body>
 </html>
