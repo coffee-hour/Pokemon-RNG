@@ -96,7 +96,9 @@ async function signUp(e){
   user = data.user;
 
   // Insert player row
-  const { error: playerError } = await supabase.from('players').insert({ id: user.id, username }).select().single();
+  const { data: playerInsert, error: playerError } = await supabase.from('players')
+    .insert({ id: user.id, username })
+    .select();
   if(playerError){ alert(playerError.message); return; }
 
   alert("Signup successful! You can now login.");
@@ -114,7 +116,8 @@ async function login(e){
   user = data.user;
 
   // Load player
-  const { data: p, error: playerError } = await supabase.from('players').select('*').eq('id', user.id).single();
+  const { data: p, error: playerError } = await supabase.from('players')
+    .select('*').eq('id', user.id).single();
   if(playerError){ alert(playerError.message); return; }
   playerData = p;
 
@@ -133,7 +136,7 @@ async function restoreSession(){
   if(!sessionData) return;
 
   const session = JSON.parse(sessionData);
-  supabase.auth.setSession(session);
+  await supabase.auth.setSession(session);
 
   if(!session.user) return;
   user = session.user;
@@ -200,4 +203,5 @@ restoreSession();
 </script>
 </body>
 </html>
+
 
