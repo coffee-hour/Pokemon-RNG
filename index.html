@@ -1,135 +1,110 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Pokémon RNG</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-  
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
 body {
-  background:#0a0c1a;
-  color:white;
-  font-family:Arial;
-  text-align:center;
-  padding:40px;
+  background: radial-gradient(circle at top, #1b1f4b, #0a0c1a);
+  color: #fff;
+  font-family: 'Trebuchet MS', Arial, sans-serif;
+  text-align: center;
+  padding: 30px;
 }
-input,button {
-  padding:12px;
-  font-size:16px;
-  border-radius:8px;
-  border:none;
+button, input {
+  padding: 12px;
+  margin: 10px;
+  border-radius: 12px;
+  border: none;
 }
 button {
-  background:#ff4757;
-  color:white;
-  cursor:pointer;
+  background: #ff4757;
+  color: white;
+  cursor: pointer;
 }
-#game { display:none; }
-.card {
-  margin:20px auto;
-  padding:20px;
-  width:220px;
-  border-radius:12px;
-  background:#1b1f4b;
-}
+#game { display: none; }
 </style>
 </head>
 
 <body>
 
-<h1>Pokémon RNG</h1>
+<h1>🎲 Pokémon RNG</h1>
 
 <div id="login">
-  <input id="username" placeholder="Username">
-  <br><br>
-  <button id="start">Start Game</button>
+  <input id="usernameInput" placeholder="Enter username">
+  <br>
+  <button id="startBtn">Start Game</button>
 </div>
 
 <div id="game">
-  <h3 id="playerName"></h3>
-  <button id="roll">Roll</button>
-  <div class="card" id="card">—</div>
-  <p>Rolls: <span id="rolls">0</span></p>
-  <p>Best: <span id="best">None</span></p>
+  <p id="playerInfo"></p>
+  <button id="rollBtn">Roll</button>
+  <p>Total Rolls: <span id="rolls">0</span></p>
 </div>
 
-<script>
-/* ---------- SUPABASE ---------- */
+<!-- ✅ CORRECT SUPABASE BROWSER BUILD -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
 <script>
+/* ---------- SUPABASE INIT (THIS WAS YOUR BUG) ---------- */
 const supabase = supabaseJs.createClient(
   "https://yunxxrofozxqmtwomegk.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1bnh4cm9mb3p4cW10d29tZWdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDEwOTYsImV4cCI6MjA4MzkxNzA5Nn0.sHSzVg4Nj9j7-dkdtsDj7Smg_cArweYBKGHfSioEZUY"
 );
-</script>
-
 
 /* ---------- STATE ---------- */
-let player = null;
+let player = {
+  username: "",
+  total_rolls: 0
+};
+
+/* ---------- ELEMENTS ---------- */
+const startBtn = document.getElementById("startBtn");
+const rollBtn = document.getElementById("rollBtn");
+const login = document.getElementById("login");
+const game = document.getElementById("game");
+const rolls = document.getElementById("rolls");
+const playerInfo = document.getElementById("playerInfo");
 
 /* ---------- START GAME ---------- */
-document.getElementById("start").onclick = async () => {
-  const name = document.getElementById("username").value.trim();
-  if (!name) { alert("Username required"); return; }
+startBtn.addEventListener("click", async () => {
+  const name = usernameInput.value.trim();
+  if (!name) return alert("Enter a username");
 
-  // load existing
-  let { data, error } = await supabase
+  player.username = name;
+
+  // 🔐 Create or load player row
+  const { data } = await supabase
     .from("players")
     .select("*")
     .eq("username", name)
     .single();
 
-  // create if missing
-  if (!data) {
-    const res = await supabase
-      .from("players")
-      .insert({ username: name })
-      .select()
-      .single();
-
-    if (res.error) {
-      alert("DB error: " + res.error.message);
-      return;
-    }
-    data = res.data;
+  if (data) {
+    player.total_rolls = data.total_rolls;
+  } else {
+    await supabase.from("players").insert(player);
   }
 
-  player = data;
+  rolls.textContent = player.total_rolls;
+  playerInfo.textContent = "Trainer: " + name;
 
-  document.getElementById("login").style.display = "none";
-  document.getElementById("game").style.display = "block";
-  document.getElementById("playerName").textContent = "Trainer: " + name;
-  render();
-};
+  login.style.display = "none";
+  game.style.display = "block";
+});
 
 /* ---------- ROLL ---------- */
-document.getElementById("roll").onclick = async () => {
-  if (!player) return;
-
-  const pulls = ["Pidgey","Eevee","Gengar","Mew"];
-  const pull = pulls[Math.floor(Math.random()*pulls.length)];
-
+rollBtn.addEventListener("click", async () => {
   player.total_rolls++;
-  if (pull === "Mew") player.best_pull = "Mew";
-
-  document.getElementById("card").textContent = pull;
+  rolls.textContent = player.total_rolls;
 
   await supabase
     .from("players")
-    .update({
-      total_rolls: player.total_rolls,
-      best_pull: player.best_pull
-    })
+    .update({ total_rolls: player.total_rolls })
     .eq("username", player.username);
-
-  render();
-};
-
-/* ---------- UI ---------- */
-function render() {
-  document.getElementById("rolls").textContent = player.total_rolls;
-  document.getElementById("best").textContent = player.best_pull;
-}
+});
 </script>
 
 </body>
