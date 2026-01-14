@@ -15,10 +15,7 @@ body {
   overflow-x: hidden;
 }
 
-h1 {
-  letter-spacing: 2px;
-  text-shadow: 0 0 15px rgba(255,255,255,0.3);
-}
+h1 { letter-spacing: 2px; text-shadow: 0 0 15px rgba(255,255,255,0.3); }
 
 input, button {
   padding: 12px;
@@ -36,15 +33,10 @@ button {
   transition: transform 0.2s;
 }
 
-button:hover {
-  transform: scale(1.05);
-}
+button:hover { transform: scale(1.05); }
 
-#game {
-  margin-top: 25px;
-}
+#game { margin-top: 25px; }
 
-/* Pokémon Card */
 .card {
   margin: 25px auto;
   width: 260px;
@@ -60,52 +52,20 @@ button:hover {
   animation: flipIn 0.6s ease;
 }
 
-.card small {
-  font-size: 14px;
-  opacity: 0.8;
-}
+.card small { font-size: 14px; opacity: 0.8; }
 
 .card.common { color: #aaa; }
 .card.uncommon { color: #2ecc71; }
 .card.rare { color: #3498db; }
-.card.ultra {
-  color: #9b59b6;
-  box-shadow: 0 0 35px #9b59b6;
-}
-.card.mythical {
-  color: gold;
-  box-shadow: 0 0 50px gold;
-  animation: pulse 1s infinite;
-}
+.card.ultra { color: #9b59b6; box-shadow: 0 0 35px #9b59b6; }
+.card.mythical { color: gold; box-shadow: 0 0 50px gold; animation: pulse 1s infinite; }
 
-@keyframes flipIn {
-  from { transform: rotateY(90deg) scale(0.8); opacity: 0; }
-  to { transform: rotateY(0deg) scale(1); opacity: 1; }
-}
+@keyframes flipIn { from { transform: rotateY(90deg) scale(0.8); opacity:0; } to { transform: rotateY(0deg) scale(1); opacity:1; } }
+@keyframes pulse { 0%{box-shadow:0 0 25px gold;} 50%{box-shadow:0 0 55px gold;} 100%{box-shadow:0 0 25px gold;} }
+.shake { animation: shake 0.4s; }
+@keyframes shake { 0%{transform:translateX(0);}25%{transform:translateX(-6px);}50%{transform:translateX(6px);}75%{transform:translateX(-4px);}100%{transform:translateX(0);} }
 
-@keyframes pulse {
-  0% { box-shadow: 0 0 25px gold; }
-  50% { box-shadow: 0 0 55px gold; }
-  100% { box-shadow: 0 0 25px gold; }
-}
-
-/* Screen shake */
-.shake {
-  animation: shake 0.4s;
-}
-
-@keyframes shake {
-  0% { transform: translateX(0); }
-  25% { transform: translateX(-6px); }
-  50% { transform: translateX(6px); }
-  75% { transform: translateX(-4px); }
-  100% { transform: translateX(0); }
-}
-
-.stats {
-  font-size: 14px;
-  opacity: 0.9;
-}
+.stats { font-size: 14px; opacity: 0.9; }
 </style>
 </head>
 
@@ -144,33 +104,48 @@ const rarityTable = [
   { name:"Mythical", class:"mythical", chance:0.2, pool:["Mew","Celebi"] }
 ];
 
-let player = {
-  username: "",
-  totalRolls: 0,
-  bestRank: 0,
-  bestPull: null
-};
+let player = { username:"", totalRolls:0, bestRank:0, bestPull:null };
+
+/* ---------- LOCAL STORAGE ---------- */
+function savePlayer() {
+  localStorage.setItem('pokemonRNGPlayer', JSON.stringify(player));
+}
+
+function loadPlayer() {
+  const saved = localStorage.getItem('pokemonRNGPlayer');
+  if(saved) {
+    player = JSON.parse(saved);
+    login.style.display = "none";
+    game.style.display = "block";
+    playerInfo.textContent = `Trainer: ${player.username}`;
+    rolls.textContent = player.totalRolls;
+    best.textContent = player.bestPull ?? "None";
+  }
+}
 
 /* ---------- LOGIN ---------- */
 startBtn.addEventListener("click", () => {
   const name = usernameInput.value.trim();
-  if(!name) {
-    alert("Please enter a username!");
-    return;
-  }
+  if(!name){ alert("Please enter a username!"); return; }
 
   player.username = name;
+  player.totalRolls = 0;
+  player.bestRank = 0;
+  player.bestPull = null;
   login.style.display = "none";
   game.style.display = "block";
   playerInfo.textContent = `Trainer: ${player.username}`;
+  rolls.textContent = player.totalRolls;
+  best.textContent = player.bestPull ?? "None";
+  savePlayer();
 });
 
 /* ---------- RNG ---------- */
 function rollRarity(){
-  let r = Math.random()*100, c = 0;
+  let r = Math.random()*100, c=0;
   for(const x of rarityTable){
-    c += x.chance;
-    if(r <= c) return x;
+    c+=x.chance;
+    if(r<=c) return x;
   }
   return rarityTable[0];
 }
@@ -188,19 +163,21 @@ rollBtn.addEventListener("click", () => {
   }
 
   result.className = `card ${rarity.class}`;
-  result.innerHTML = `
-    <div>${pokemon}</div>
-    <small>${rarity.name}</small>
-  `;
+  result.innerHTML = `<div>${pokemon}</div><small>${rarity.name}</small>`;
 
-  if(rarity.name === "Ultra" || rarity.name === "Mythical"){
+  if(rarity.name==="Ultra" || rarity.name==="Mythical"){
     document.body.classList.add("shake");
     setTimeout(()=>document.body.classList.remove("shake"),400);
   }
 
   rolls.textContent = player.totalRolls;
   best.textContent = player.bestPull ?? "None";
+
+  savePlayer();
 });
+
+/* ---------- INIT ---------- */
+loadPlayer();
 </script>
 
 </body>
