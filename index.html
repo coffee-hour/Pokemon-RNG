@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Pokémon RNG – Stable</title>
+<title>Pokémon RNG – Rarity Layer</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -28,12 +28,18 @@ button, input {
   width:260px;
   border:2px solid #444;
 }
+
+.card.common { color:#aaa; }
+.card.uncommon { color:#2ecc71; }
+.card.rare { color:#3498db; }
+.card.ultra { color:#9b59b6; }
+.card.mythical { color:gold; }
 </style>
 </head>
 
 <body>
 
-<h1>Pokémon RNG (Stable)</h1>
+<h1>Pokémon RNG – Rarity</h1>
 
 <div id="login">
   <input id="usernameInput" placeholder="Username">
@@ -46,19 +52,28 @@ button, input {
   <button id="rollBtn">Roll Pokémon</button>
   <div id="result" class="card">Roll to begin</div>
   <p>Total Rolls: <span id="rolls">0</span></p>
+  <p>Best Pull: <span id="best">None</span></p>
 </div>
 
 <script>
-const rarityPool = [
-  "Pidgey","Rattata","Caterpie","Weedle","Zubat",
-  "Pikachu","Eevee","Snorlax","Dragonite","Mew"
+// ---------- RARITY TABLE ----------
+const rarityTable = [
+  { name:"Common", class:"common", chance:70, pool:["Pidgey","Rattata","Caterpie","Weedle","Zubat"] },
+  { name:"Uncommon", class:"uncommon", chance:20, pool:["Pidgeotto","Raticate","Metapod","Kakuna","Golbat"] },
+  { name:"Rare", class:"rare", chance:8, pool:["Pidgeot","Rhydon","Beedrill","Fearow","Arcanine"] },
+  { name:"Ultra", class:"ultra", chance:1.8, pool:["Dragonite","Gyarados","Snorlax","Lapras"] },
+  { name:"Mythical", class:"mythical", chance:0.2, pool:["Mew","Articuno","Zapdos","Moltres","Mewtwo"] }
 ];
 
+// ---------- PLAYER DATA ----------
 let player = {
   username:"",
-  rolls:0
+  rolls:0,
+  bestRank:0,
+  bestPull:null
 };
 
+// ---------- LOCAL STORAGE ----------
 function save() {
   localStorage.setItem("rngSave", JSON.stringify(player));
 }
@@ -76,23 +91,50 @@ function load() {
 function updateUI(){
   playerInfo.textContent = "Trainer: " + player.username;
   rolls.textContent = player.rolls;
+  best.textContent = player.bestPull ?? "None";
 }
 
+// ---------- START BUTTON ----------
 startBtn.onclick = () => {
   const name = usernameInput.value.trim();
   if(!name) return alert("Enter a username");
   player.username = name;
   player.rolls = 0;
-  save();
+  player.bestRank = 0;
+  player.bestPull = null;
   login.style.display="none";
   game.style.display="block";
   updateUI();
+  save();
 };
 
+// ---------- ROLL LOGIC ----------
+function rollRarity(){
+  let r = Math.random()*100, c=0;
+  for(const rarity of rarityTable){
+    c += rarity.chance;
+    if(r <= c) return rarity;
+  }
+  return rarityTable[0];
+}
+
 rollBtn.onclick = () => {
-  const poke = rarityPool[Math.floor(Math.random()*rarityPool.length)];
+  const rarity = rollRarity();
+  const poke = rarity.pool[Math.floor(Math.random()*rarity.pool.length)];
+
   player.rolls++;
+
+  // Update best pull
+  const rank = rarityTable.indexOf(rarity)+1;
+  if(rank > player.bestRank){
+    player.bestRank = rank;
+    player.bestPull = `${poke} (${rarity.name})`;
+  }
+
+  // Show result with color
   result.textContent = poke;
+  result.className = `card ${rarity.class}`;
+
   updateUI();
   save();
 };
@@ -102,4 +144,3 @@ load();
 
 </body>
 </html>
-
