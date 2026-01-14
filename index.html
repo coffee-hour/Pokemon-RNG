@@ -58,62 +58,63 @@ button, input {
 <script>
 // ---------- RARITY TABLE ----------
 const rarityTable = [
-  { name:"Common", class:"common", chance:70, pool:["Pidgey","Rattata","Caterpie","Weedle","Zubat"] },
-  { name:"Uncommon", class:"uncommon", chance:20, pool:["Pidgeotto","Raticate","Metapod","Kakuna","Golbat"] },
-  { name:"Rare", class:"rare", chance:8, pool:["Pidgeot","Rhydon","Beedrill","Fearow","Arcanine"] },
-  { name:"Ultra", class:"ultra", chance:1.8, pool:["Dragonite","Gyarados","Snorlax","Lapras"] },
-  { name:"Mythical", class:"mythical", chance:0.2, pool:["Mew","Articuno","Zapdos","Moltres","Mewtwo"] }
+  { name:"Common", class:"common", chance:70, pool:["Pidgey","Rattata","Caterpie","Weedle","Zubat"], rank:1 },
+  { name:"Uncommon", class:"uncommon", chance:20, pool:["Pidgeotto","Raticate","Metapod","Kakuna","Golbat"], rank:2 },
+  { name:"Rare", class:"rare", chance:8, pool:["Pidgeot","Rhydon","Beedrill","Fearow","Arcanine"], rank:3 },
+  { name:"Ultra", class:"ultra", chance:1.8, pool:["Dragonite","Gyarados","Snorlax","Lapras"], rank:4 },
+  { name:"Mythical", class:"mythical", chance:0.2, pool:["Mew","Articuno","Zapdos","Moltres","Mewtwo"], rank:5 }
 ];
 
 // ---------- PLAYER DATA ----------
 let player = {
-  username:"",
-  rolls:0,
-  bestRank:0,
-  bestPull:null
+  username: "",
+  rolls: 0,
+  bestRank: 0,
+  bestPull: null,
+  pokedex: {} // Tracks total of each Pokémon rolled
 };
 
 // ---------- LOCAL STORAGE ----------
 function save() {
-  localStorage.setItem("rngSave", JSON.stringify(player));
+  localStorage.setItem('pokemonRNGPlayer', JSON.stringify(player));
 }
 
 function load() {
-  const data = localStorage.getItem("rngSave");
-  if(data){
-    player = JSON.parse(data);
-    login.style.display="none";
-    game.style.display="block";
+  const saved = localStorage.getItem('pokemonRNGPlayer');
+  if(saved){
+    player = JSON.parse(saved);
+    login.style.display = "none";
+    game.style.display = "block";
     updateUI();
   }
 }
 
+// ---------- UPDATE UI ----------
 function updateUI(){
-  playerInfo.textContent = "Trainer: " + player.username;
+  playerInfo.textContent = `Trainer: ${player.username}`;
   rolls.textContent = player.rolls;
   best.textContent = player.bestPull ?? "None";
+
+  // Show pokedex summary
+  let pokedexHTML = Object.keys(player.pokedex).length
+    ? Object.entries(player.pokedex).map(([p, count]) => `${p}: ${count}`).join(" | ")
+    : "No Pokémon yet!";
+  document.getElementById('pokedex')?.remove();
+  const pd = document.createElement("div");
+  pd.id = "pokedex";
+  pd.style.marginTop = "15px";
+  pd.style.fontSize = "13px";
+  pd.style.opacity = "0.8";
+  pd.textContent = `Pokédex: ${pokedexHTML}`;
+  game.appendChild(pd);
 }
 
-// ---------- START BUTTON ----------
-startBtn.onclick = () => {
-  const name = usernameInput.value.trim();
-  if(!name) return alert("Enter a username");
-  player.username = name;
-  player.rolls = 0;
-  player.bestRank = 0;
-  player.bestPull = null;
-  login.style.display="none";
-  game.style.display="block";
-  updateUI();
-  save();
-};
-
-// ---------- ROLL LOGIC ----------
+// ---------- ROLL FUNCTIONS ----------
 function rollRarity(){
   let r = Math.random()*100, c=0;
-  for(const rarity of rarityTable){
-    c += rarity.chance;
-    if(r <= c) return rarity;
+  for(const x of rarityTable){
+    c += x.chance;
+    if(r <= c) return x;
   }
   return rarityTable[0];
 }
@@ -125,20 +126,42 @@ rollBtn.onclick = () => {
   player.rolls++;
 
   // Update best pull
-  const rank = rarityTable.indexOf(rarity)+1;
-  if(rank > player.bestRank){
-    player.bestRank = rank;
+  if(rarity.rank > player.bestRank){
+    player.bestRank = rarity.rank;
     player.bestPull = `${poke} (${rarity.name})`;
   }
 
-  // Show result with color
+  // Update Pokédex count
+  if(player.pokedex[poke]) player.pokedex[poke]++;
+  else player.pokedex[poke] = 1;
+
+  // Update card display
   result.textContent = poke;
   result.className = `card ${rarity.class}`;
+
+  // Screen shake for rare pulls
+  if(rarity.rank >= 4){ // Ultra or Mythical
+    document.body.classList.add("shake");
+    setTimeout(()=>document.body.classList.remove("shake"),400);
+  }
 
   updateUI();
   save();
 };
 
+// ---------- START BUTTON ----------
+startBtn.onclick = () => {
+  const name = usernameInput.value.trim();
+  if(!name){ alert("Please enter a username!"); return; }
+
+  player.username = name;
+  login.style.display = "none";
+  game.style.display = "block";
+  updateUI();
+  save();
+};
+
+// ---------- LOAD ON START ----------
 load();
 </script>
 
