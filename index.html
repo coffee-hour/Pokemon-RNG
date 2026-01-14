@@ -5,8 +5,6 @@
 <title>Pokémon RNG Challenge</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
 body {
   background: radial-gradient(circle at top, #1b1f4b, #0a0c1a);
@@ -17,7 +15,10 @@ body {
   overflow-x: hidden;
 }
 
-h1 { letter-spacing: 2px; text-shadow: 0 0 15px rgba(255,255,255,0.3); }
+h1 {
+  letter-spacing: 2px;
+  text-shadow: 0 0 15px rgba(255,255,255,0.3);
+}
 
 input, button {
   padding: 12px;
@@ -35,9 +36,13 @@ button {
   transition: transform 0.2s;
 }
 
-button:hover { transform: scale(1.05); }
+button:hover {
+  transform: scale(1.05);
+}
 
-#game { margin-top: 25px; }
+#game {
+  margin-top: 25px;
+}
 
 /* Pokémon Card */
 .card {
@@ -55,45 +60,52 @@ button:hover { transform: scale(1.05); }
   animation: flipIn 0.6s ease;
 }
 
-.card small { font-size: 14px; opacity: 0.8; }
+.card small {
+  font-size: 14px;
+  opacity: 0.8;
+}
 
 .card.common { color: #aaa; }
 .card.uncommon { color: #2ecc71; }
 .card.rare { color: #3498db; }
-.card.ultra { color: #9b59b6; box-shadow: 0 0 35px #9b59b6; }
-.card.mythical { color: gold; box-shadow: 0 0 50px gold; animation: pulse 1s infinite; }
-
-@keyframes flipIn { from { transform: rotateY(90deg) scale(0.8); opacity: 0; } to { transform: rotateY(0deg) scale(1); opacity: 1; } }
-@keyframes pulse { 0% { box-shadow: 0 0 25px gold; } 50% { box-shadow: 0 0 55px gold; } 100% { box-shadow: 0 0 25px gold; } }
-.shake { animation: shake 0.4s; }
-@keyframes shake { 0%{transform:translateX(0);}25%{transform:translateX(-6px);}50%{transform:translateX(6px);}75%{transform:translateX(-4px);}100%{transform:translateX(0);} }
-
-.stats { font-size: 14px; opacity: 0.9; }
-
-/* Leaderboard */
-#leaderboardPanel {
-  position: fixed;
-  top: 20px;
-  right: -260px;
-  width: 240px;
-  background: #1c1f3a;
-  padding: 15px;
-  border-radius: 12px 0 0 12px;
-  transition: right 0.3s;
-  font-size: 13px;
+.card.ultra {
+  color: #9b59b6;
+  box-shadow: 0 0 35px #9b59b6;
 }
-#leaderboardPanel.open { right: 0; }
-#leaderboardToggle {
-  position: fixed;
-  top: 20px;
-  right: 0;
-  background: #3498db;
-  border-radius: 8px 0 0 8px;
-  padding: 8px 12px;
-  cursor: pointer;
+.card.mythical {
+  color: gold;
+  box-shadow: 0 0 50px gold;
+  animation: pulse 1s infinite;
 }
-table { width: 100%; border-collapse: collapse; }
-td { padding: 4px; text-align: left; }
+
+@keyframes flipIn {
+  from { transform: rotateY(90deg) scale(0.8); opacity: 0; }
+  to { transform: rotateY(0deg) scale(1); opacity: 1; }
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 25px gold; }
+  50% { box-shadow: 0 0 55px gold; }
+  100% { box-shadow: 0 0 25px gold; }
+}
+
+/* Screen shake */
+.shake {
+  animation: shake 0.4s;
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(6px); }
+  75% { transform: translateX(-4px); }
+  100% { transform: translateX(0); }
+}
+
+.stats {
+  font-size: 14px;
+  opacity: 0.9;
+}
 </style>
 </head>
 
@@ -109,107 +121,86 @@ td { padding: 4px; text-align: left; }
 
 <div id="game" style="display:none;">
   <p id="playerInfo"></p>
+
   <button id="rollBtn">🎲 Roll Pokémon</button>
-  <div id="result" class="card common">Roll to begin!</div>
+
+  <div id="result" class="card common">
+    Roll to begin!
+  </div>
+
   <div class="stats">
     <p>Total Rolls: <span id="rolls">0</span></p>
     <p>Best Pull: <span id="best">None</span></p>
   </div>
 </div>
 
-<button id="leaderboardToggle">🏆</button>
-<div id="leaderboardPanel">
-  <h3>Leaderboard</h3>
-  <table id="leaderboard"></table>
-</div>
-
 <script>
-// ---------- SUPABASE ----------
-const SUPABASE_URL = "https://mlkhgrkayqwqlvzagvjq.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sa2hncmtheXF3cWx2emFndmpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDE3MDEsImV4cCI6MjA4MzkxNzcwMX0.YzCjC52nhY829bxDeAoipdXq-6Heu7sPtbKmg1mpV1s";
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// ---------- GEN 1 POKEMON ----------
+/* ---------- GAME DATA ---------- */
 const rarityTable = [
-  { name:"Common", class:"common", chance:70, pool:["Pidgey","Rattata","Caterpie","Weedle","Spearow","Ekans","Sandshrew","Nidoran♀","Nidoran♂","Zubat","Oddish","Paras","Venonat","Diglett","Meowth","Psyduck","Mankey","Poliwag","Bellsprout","Geodude"] },
-  { name:"Uncommon", class:"uncommon", chance:20, pool:["Pidgeotto","Raticate","Metapod","Kakuna","Fearow","Arbok","Sandslash","Nidorina","Nidorino","Golbat","Gloom","Parasect","Venomoth","Dugtrio","Persian","Golduck","Primeape","Poliwhirl","Weepinbell","Graveler"] },
-  { name:"Rare", class:"rare", chance:8, pool:["Pidgeot","Rhydon","Beedrill","Arcanine","Nidoking","Nidoqueen","Venusaur","Charmeleon","Wartortle","Raichu","Machoke","Machamp","Golem","Rapidash","Poliwrath","Kadabra","Alakazam","Hitmonlee","Hitmonchan"] },
-  { name:"Ultra", class:"ultra", chance:1.8, pool:["Dragonite","Mewtwo","Gyarados","Snorlax","Lapras"] },
-  { name:"Mythical", class:"mythical", chance:0.2, pool:["Mew","Articuno","Zapdos","Moltres","Celebi"] }
+  { name:"Common", class:"common", chance:70, pool:["Pidgey","Rattata","Caterpie"] },
+  { name:"Uncommon", class:"uncommon", chance:20, pool:["Machop","Abra","Growlithe"] },
+  { name:"Rare", class:"rare", chance:8, pool:["Riolu","Gible","Larvitar"] },
+  { name:"Ultra", class:"ultra", chance:1.8, pool:["Dragonite","Metagross"] },
+  { name:"Mythical", class:"mythical", chance:0.2, pool:["Mew","Celebi"] }
 ];
 
-let player = { username:"", totalRolls:0, bestRank:0, bestPull:null };
+let player = {
+  username: "",
+  totalRolls: 0,
+  bestRank: 0,
+  bestPull: null
+};
 
-// ---------- LOGIN ----------
-startBtn.addEventListener("click", async () => {
+/* ---------- LOGIN ---------- */
+startBtn.addEventListener("click", () => {
   const name = usernameInput.value.trim();
-  if(!name){ alert("Enter a username!"); return; }
+  if(!name) {
+    alert("Please enter a username!");
+    return;
+  }
 
   player.username = name;
-  let { data } = await supabase.from("players").select("*").eq("username", player.username).single();
-  if(!data){
-    const res = await supabase.from("players").insert({ username: player.username, total_rolls:0, best_pull_rank:0 }).select().single();
-    player = res.data;
-  } else { player = data; }
-
-  login.style.display="none";
-  game.style.display="block";
+  login.style.display = "none";
+  game.style.display = "block";
   playerInfo.textContent = `Trainer: ${player.username}`;
-  updateUI();
-  loadLeaderboard();
 });
 
-// ---------- ROLL ----------
-rollBtn.addEventListener("click", async () => {
+/* ---------- RNG ---------- */
+function rollRarity(){
+  let r = Math.random()*100, c = 0;
+  for(const x of rarityTable){
+    c += x.chance;
+    if(r <= c) return x;
+  }
+  return rarityTable[0];
+}
+
+/* ---------- ROLL BUTTON ---------- */
+rollBtn.addEventListener("click", () => {
   const rarity = rollRarity();
   const pokemon = rarity.pool[Math.floor(Math.random()*rarity.pool.length)];
 
   player.totalRolls++;
-  if(rarityTable.indexOf(rarity)+1 > (player.bestRank || 0)){
+
+  if(rarityTable.indexOf(rarity)+1 > player.bestRank){
     player.bestRank = rarityTable.indexOf(rarity)+1;
     player.bestPull = `${pokemon} (${rarity.name})`;
-
-    await supabase.from("leaderboard").upsert({
-      username: player.username,
-      best_pull: player.bestPull,
-      best_pull_rank: player.bestRank
-    });
   }
 
-  await supabase.from("players").update({
-    total_rolls: player.totalRolls,
-    best_pull_rank: player.bestRank,
-    best_pull: player.bestPull
-  }).eq("username", player.username);
-
   result.className = `card ${rarity.class}`;
-  result.innerHTML = `<div>${pokemon}</div><small>${rarity.name}</small>`;
+  result.innerHTML = `
+    <div>${pokemon}</div>
+    <small>${rarity.name}</small>
+  `;
 
-  if(rarity.name==="Ultra"||rarity.name==="Mythical"){ document.body.classList.add("shake"); setTimeout(()=>document.body.classList.remove("shake"),400); }
+  if(rarity.name === "Ultra" || rarity.name === "Mythical"){
+    document.body.classList.add("shake");
+    setTimeout(()=>document.body.classList.remove("shake"),400);
+  }
 
-  updateUI();
-  loadLeaderboard();
-});
-
-function rollRarity(){
-  let r=Math.random()*100, c=0;
-  for(const x of rarityTable){ c+=x.chance; if(r<=c) return x; }
-  return rarityTable[0];
-}
-
-function updateUI(){
   rolls.textContent = player.totalRolls;
   best.textContent = player.bestPull ?? "None";
-}
-
-// ---------- LEADERBOARD ----------
-async function loadLeaderboard(){
-  const { data } = await supabase.from("leaderboard").select("*").order("best_pull_rank",{ascending:false}).limit(10);
-  leaderboard.innerHTML = data.map(r=>`<tr><td>${r.username}</td><td>${r.best_pull}</td></tr>`).join("");
-}
-
-// ---------- TOGGLE ----------
-leaderboardToggle.addEventListener("click", ()=>leaderboardPanel.classList.toggle("open"));
+});
 </script>
 
 </body>
