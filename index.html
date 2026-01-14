@@ -1,110 +1,53 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Pokémon RNG</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-body {
-  background: radial-gradient(circle at top, #1b1f4b, #0a0c1a);
-  color: #fff;
-  font-family: 'Trebuchet MS', Arial, sans-serif;
-  text-align: center;
-  padding: 30px;
-}
-button, input {
-  padding: 12px;
-  margin: 10px;
-  border-radius: 12px;
-  border: none;
-}
-button {
-  background: #ff4757;
-  color: white;
-  cursor: pointer;
-}
-#game { display: none; }
-</style>
+<title>Supabase Username Test</title>
 </head>
-
 <body>
 
-<h1>🎲 Pokémon RNG</h1>
+<h2>Lookup Player</h2>
 
-<div id="login">
-  <input id="usernameInput" placeholder="Enter username">
-  <br>
-  <button id="startBtn">Start Game</button>
-</div>
+<input id="name" placeholder="username">
+<button id="btn">Fetch Player</button>
 
-<div id="game">
-  <p id="playerInfo"></p>
-  <button id="rollBtn">Roll</button>
-  <p>Total Rolls: <span id="rolls">0</span></p>
-</div>
+<pre id="output">Waiting...</pre>
 
-<!-- ✅ CORRECT SUPABASE BROWSER BUILD -->
+<!-- CORRECT browser build -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <script>
-/* ---------- SUPABASE INIT (THIS WAS YOUR BUG) ---------- */
-const supabase = supabaseJs.createClient(
-  "https://yunxxrofozxqmtwomegk.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1bnh4cm9mb3p4cW10d29tZWdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDEwOTYsImV4cCI6MjA4MzkxNzA5Nn0.sHSzVg4Nj9j7-dkdtsDj7Smg_cArweYBKGHfSioEZUY"
-);
+const SUPABASE_URL = "https://mlkhgrkayqwqlvzagvjq.supabase.co";
+const SUPABASE_KEY = "YOUR_ANON_KEY_HERE";
 
-/* ---------- STATE ---------- */
-let player = {
-  username: "",
-  total_rolls: 0
-};
+const client = supabaseJs.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-/* ---------- ELEMENTS ---------- */
-const startBtn = document.getElementById("startBtn");
-const rollBtn = document.getElementById("rollBtn");
-const login = document.getElementById("login");
-const game = document.getElementById("game");
-const rolls = document.getElementById("rolls");
-const playerInfo = document.getElementById("playerInfo");
+const btn = document.getElementById("btn");
+const output = document.getElementById("output");
 
-/* ---------- START GAME ---------- */
-startBtn.addEventListener("click", async () => {
-  const name = usernameInput.value.trim();
-  if (!name) return alert("Enter a username");
+btn.onclick = async () => {
+  output.textContent = "Querying...";
 
-  player.username = name;
-
-  // 🔐 Create or load player row
-  const { data } = await supabase
-    .from("players")
-    .select("*")
-    .eq("username", name)
-    .single();
-
-  if (data) {
-    player.total_rolls = data.total_rolls;
-  } else {
-    await supabase.from("players").insert(player);
+  const username = document.getElementById("name").value.trim();
+  if (!username) {
+    output.textContent = "No username entered";
+    return;
   }
 
-  rolls.textContent = player.total_rolls;
-  playerInfo.textContent = "Trainer: " + name;
-
-  login.style.display = "none";
-  game.style.display = "block";
-});
-
-/* ---------- ROLL ---------- */
-rollBtn.addEventListener("click", async () => {
-  player.total_rolls++;
-  rolls.textContent = player.total_rolls;
-
-  await supabase
+  const { data, error } = await client
     .from("players")
-    .update({ total_rolls: player.total_rolls })
-    .eq("username", player.username);
-});
+    .select("*")
+    .eq("username", username)
+    .maybeSingle();
+
+  if (error) {
+    output.textContent = "ERROR:\n" + JSON.stringify(error, null, 2);
+  } else if (!data) {
+    output.textContent = "No user found";
+  } else {
+    output.textContent = "FOUND:\n" + JSON.stringify(data, null, 2);
+  }
+};
 </script>
 
 </body>
