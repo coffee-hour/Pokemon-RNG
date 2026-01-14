@@ -95,13 +95,22 @@ button:hover { transform: scale(1.05); }
 </div>
 
 <script>
-/* ---------- GAME DATA ---------- */
 const rarityTable = [
-  { name:"Common", class:"common", chance:70, pool:["Pidgey","Rattata","Caterpie"] },
-  { name:"Uncommon", class:"uncommon", chance:20, pool:["Machop","Abra","Growlithe"] },
-  { name:"Rare", class:"rare", chance:8, pool:["Riolu","Gible","Larvitar"] },
-  { name:"Ultra", class:"ultra", chance:1.8, pool:["Dragonite","Metagross"] },
-  { name:"Mythical", class:"mythical", chance:0.2, pool:["Mew","Celebi"] }
+  { name:"Common", class:"common", chance:70, pool:[
+    "Pidgey","Rattata","Caterpie","Weedle","Spearow","Ekans","Sandshrew","Nidoran♀","Nidoran♂","Zubat","Oddish","Paras","Venonat","Diglett","Meowth","Psyduck","Mankey","Poliwag","Bellsprout","Geodude"
+  ] },
+  { name:"Uncommon", class:"uncommon", chance:20, pool:[
+    "Pidgeotto","Raticate","Metapod","Kakuna","Fearow","Arbok","Sandslash","Nidorina","Nidorino","Golbat","Gloom","Parasect","Venomoth","Dugtrio","Persian","Golduck","Primeape","Poliwhirl","Weepinbell","Graveler"
+  ] },
+  { name:"Rare", class:"rare", chance:8, pool:[
+    "Pidgeot","Rhydon","Beedrill","Fearow","Arcanine","Nidoking","Nidoqueen","Venusaur","Charmeleon","Wartortle","Raichu","Machoke","Machamp","Golem","Rapidash","Poliwrath","Kadabra","Alakazam","Hitmonlee","Hitmonchan"
+  ] },
+  { name:"Ultra", class:"ultra", chance:1.8, pool:[
+    "Dragonite","Mewtwo","Gyarados","Snorlax","Lapras"
+  ] },
+  { name:"Mythical", class:"mythical", chance:0.2, pool:[
+    "Mew","Articuno","Zapdos","Moltres","Celebi"
+  ] }
 ];
 
 let player = { username:"", totalRolls:0, bestRank:0, bestPull:null };
@@ -122,8 +131,6 @@ function loadPlayer() {
     best.textContent = player.bestPull ?? "None";
   }
 }
-
-/* ---------- LOGIN ---------- */
 startBtn.addEventListener("click", () => {
   const name = usernameInput.value.trim();
   if(!name){ alert("Please enter a username!"); return; }
@@ -139,8 +146,6 @@ startBtn.addEventListener("click", () => {
   best.textContent = player.bestPull ?? "None";
   savePlayer();
 });
-
-/* ---------- RNG ---------- */
 function rollRarity(){
   let r = Math.random()*100, c=0;
   for(const x of rarityTable){
@@ -149,8 +154,6 @@ function rollRarity(){
   }
   return rarityTable[0];
 }
-
-/* ---------- ROLL BUTTON ---------- */
 rollBtn.addEventListener("click", () => {
   const rarity = rollRarity();
   const pokemon = rarity.pool[Math.floor(Math.random()*rarity.pool.length)];
@@ -176,7 +179,7 @@ rollBtn.addEventListener("click", () => {
   savePlayer();
 });
 
-/* ---------- INIT ---------- */
+
 loadPlayer();
 </script>
 
