@@ -60,13 +60,36 @@ button:hover { transform: scale(1.05); }
 .card.ultra { color: #9b59b6; box-shadow: 0 0 35px #9b59b6; }
 .card.mythical { color: gold; box-shadow: 0 0 50px gold; animation: pulse 1s infinite; }
 .card.spoiler { color: teal; box-shadow: 0 0 65px teal; animation: pulse 2s infinite; }
-  
-@keyframes flipIn { from { transform: rotateY(90deg) scale(0.8); opacity:0; } to { transform: rotateY(0deg) scale(1); opacity:1; } }
-@keyframes pulse { 0%{box-shadow:0 0 25px gold;} 50%{box-shadow:0 0 55px gold;} 100%{box-shadow:0 0 25px gold;} }
-.shake { animation: shake 0.4s; }
-@keyframes shake { 0%{transform:translateX(0);}25%{transform:translateX(-6px);}50%{transform:translateX(6px);}75%{transform:translateX(-4px);}100%{transform:translateX(0);} }
+
+@keyframes flipIn {
+  from { transform: rotateY(90deg) scale(0.8); opacity:0; }
+  to { transform: rotateY(0deg) scale(1); opacity:1; }
+}
+@keyframes pulse {
+  0%{box-shadow:0 0 25px gold;}
+  50%{box-shadow:0 0 55px gold;}
+  100%{box-shadow:0 0 25px gold;}
+}
 
 .stats { font-size: 14px; opacity: 0.9; }
+
+#pokedex {
+  display: none;
+  max-height: 220px;
+  overflow-y: auto;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.3);
+  font-size: 14px;
+}
+
+#pokedex div {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 6px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
 </style>
 </head>
 
@@ -92,123 +115,84 @@ button:hover { transform: scale(1.05); }
   <div class="stats">
     <p>Total Rolls: <span id="rolls">0</span></p>
     <p>Best Pull: <span id="best">None</span></p>
+    <p>Unique Pokémon: <span id="uniqueCount">0</span></p>
+    <button id="toggleDex">📘 View Pokédex</button>
+    <div id="pokedex"></div>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-
 <script>
-/* ---------- SUPABASE ---------- */
-const SUPABASE_URL = "https://yunxxrofozxqmtwomegk.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1bnh4cm9mb3p4cW10d29tZWdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDEwOTYsImV4cCI6MjA4MzkxNzA5Nn0.sHSzVg4Nj9j7-dkdtsDj7Smg_cArweYBKGHfSioEZUY";
-const db = supabaseJs.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-/* ---------- GAME DATA ---------- */
 const rarityTable = [
-  { name:"Common", class:"common", chance:70, pool:[
-    "Pidgey","Rattata","Caterpie","Weedle","Spearow","Ekans","Sandshrew","Nidoran♀","Nidoran♂","Zubat","Oddish","Paras","Venonat","Diglett","Meowth","Psyduck","Mankey","Poliwag","Bellsprout","Geodude"
-  ] },
-  { name:"Uncommon", class:"uncommon", chance:20, pool:[
-    "Pidgeotto","Raticate","Metapod","Kakuna","Fearow","Arbok","Sandslash","Nidorina","Nidorino","Golbat","Gloom","Parasect","Venomoth","Dugtrio","Persian","Golduck","Primeape","Poliwhirl","Weepinbell","Graveler"
-  ] },
-  { name:"Rare", class:"rare", chance:8, pool:[
-    "Pidgeot","Rhydon","Beedrill","Fearow","Arcanine","Nidoking","Nidoqueen","Venusaur","Charmeleon","Wartortle","Raichu","Machoke","Machamp","Golem","Rapidash","Poliwrath","Kadabra","Alakazam","Hitmonlee","Hitmonchan"
-  ] },
-  { name:"Ultra", class:"ultra", chance:1.8, pool:[
-    "Dragonite","Gyarados","Snorlax","Lapras"
-  ] },
-  { name:"Mythical", class:"mythical", chance:0.15, pool:[
-    "Mew","Articuno","Zapdos","Moltres","Mewtwo"
-  ] },
-  { name:"Spoiler", class:"spoiler", chance:0.05, pool:[
-    "Celebi","Ho-Oh","Raikou","Entei","Suicune","Lugia"
-  ] }
+  { name:"Common", class:"common", chance:70, pool:["Pidgey","Rattata","Caterpie","Weedle","Spearow","Ekans","Sandshrew","Nidoran♀","Nidoran♂","Zubat","Oddish","Paras","Venonat","Diglett","Meowth","Psyduck","Mankey","Poliwag","Bellsprout","Geodude"] },
+  { name:"Uncommon", class:"uncommon", chance:20, pool:["Pidgeotto","Raticate","Metapod","Kakuna","Fearow","Arbok","Sandslash","Nidorina","Nidorino","Golbat","Gloom","Parasect","Venomoth","Dugtrio","Persian","Golduck","Primeape","Poliwhirl","Weepinbell","Graveler"] },
+  { name:"Rare", class:"rare", chance:8, pool:["Pidgeot","Rhydon","Beedrill","Fearow","Arcanine","Nidoking","Nidoqueen","Venusaur","Charmeleon","Wartortle","Raichu","Machoke","Machamp","Golem","Rapidash","Poliwrath","Kadabra","Alakazam","Hitmonlee","Hitmonchan"] },
+  { name:"Ultra", class:"ultra", chance:1.8, pool:["Dragonite","Gyarados","Snorlax","Lapras"] },
+  { name:"Mythical", class:"mythical", chance:0.15, pool:["Mew","Articuno","Zapdos","Moltres","Mewtwo"] },
+  { name:"Spoiler", class:"spoiler", chance:0.05, pool:["Celebi","Ho-Oh","Raikou","Entei","Suicune","Lugia"] }
 ];
 
 let player = {
-  username: "",
-  totalRolls: 0,
-  bestRank: 0,
-  bestPull: null
+  username:"",
+  totalRolls:0,
+  bestRank:0,
+  bestPull:null,
+  pokedex:{} // Pokémon name → count
 };
 
-/* ---------- LOAD PLAYER ---------- */
-async function loadPlayer(username){
-  const { data, error } = await db
-    .from("players")
-    .select("*")
-    .eq("username", username)
-    .maybeSingle();
+function savePlayer(){
+  localStorage.setItem("pokemonRNGPlayer", JSON.stringify(player));
+}
 
-  if(error){
-    alert("Supabase error (load): " + error.message);
-    return;
+function loadPlayer(){
+  const saved = localStorage.getItem("pokemonRNGPlayer");
+  if(saved){
+    player = JSON.parse(saved);
+    login.style.display="none";
+    game.style.display="block";
+    updateUI();
   }
+}
 
-  if(data){
-    player = {
-      username: data.username,
-      totalRolls: data.total_rolls,
-      bestRank: data.best_rank,
-      bestPull: data.best_pull
-    };
-  } else {
-    // Create new user row
-    await db.from("players").insert({
-      username
-    });
-    player.username = username;
-  }
-
-  login.style.display = "none";
-  game.style.display = "block";
+function updateUI(){
   playerInfo.textContent = `Trainer: ${player.username}`;
   rolls.textContent = player.totalRolls;
   best.textContent = player.bestPull ?? "None";
+  uniqueCount.textContent = Object.keys(player.pokedex).length;
+  renderDex();
 }
 
-/* ---------- SAVE PLAYER ---------- */
-async function savePlayer(){
-  const { error } = await db
-    .from("players")
-    .upsert({
-      username: player.username,
-      total_rolls: player.totalRolls,
-      best_pull: player.bestPull,
-      best_rank: player.bestRank
+function renderDex(){
+  pokedex.innerHTML = "";
+  Object.entries(player.pokedex)
+    .sort((a,b)=>a[0].localeCompare(b[0]))
+    .forEach(([name,count])=>{
+      const row = document.createElement("div");
+      row.innerHTML = `<span>${name}</span><span>x${count}</span>`;
+      pokedex.appendChild(row);
     });
-
-  if(error){
-    console.error("Save failed:", error.message);
-  }
 }
 
-/* ---------- START BUTTON ---------- */
-startBtn.addEventListener("click", async () => {
+startBtn.onclick = () => {
   const name = usernameInput.value.trim();
-  if(!name){
-    alert("Please enter a username!");
-    return;
-  }
-  await loadPlayer(name);
-});
+  if(!name) return alert("Enter a username!");
+  player = { username:name, totalRolls:0, bestRank:0, bestPull:null, pokedex:{} };
+  login.style.display="none";
+  game.style.display="block";
+  updateUI();
+  savePlayer();
+};
 
-/* ---------- RNG ---------- */
 function rollRarity(){
-  let r = Math.random()*100, c=0;
-  for(const x of rarityTable){
-    c+=x.chance;
-    if(r<=c) return x;
-  }
-  return rarityTable[0];
+  let r=Math.random()*100,c=0;
+  for(const x of rarityTable){ c+=x.chance; if(r<=c) return x; }
 }
 
-/* ---------- ROLL BUTTON ---------- */
-rollBtn.addEventListener("click", async () => {
+rollBtn.onclick = () => {
   const rarity = rollRarity();
   const pokemon = rarity.pool[Math.floor(Math.random()*rarity.pool.length)];
 
   player.totalRolls++;
+  player.pokedex[pokemon] = (player.pokedex[pokemon]||0)+1;
 
   const rank = rarityTable.indexOf(rarity)+1;
   if(rank > player.bestRank){
@@ -219,13 +203,16 @@ rollBtn.addEventListener("click", async () => {
   result.className = `card ${rarity.class}`;
   result.innerHTML = `<div>${pokemon}</div><small>${rarity.name}</small>`;
 
-  rolls.textContent = player.totalRolls;
-  best.textContent = player.bestPull ?? "None";
+  updateUI();
+  savePlayer();
+};
 
-  await savePlayer();
-});
+toggleDex.onclick = () => {
+  pokedex.style.display = pokedex.style.display==="none" ? "block" : "none";
+};
+
+loadPlayer();
 </script>
-
 
 </body>
 </html>
