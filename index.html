@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 <title>Pokémon RNG</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+  
 <style>
 body {
   background:#0a0c1a;
@@ -56,10 +55,14 @@ button {
 
 <script>
 /* ---------- SUPABASE ---------- */
-const supabase = Supabase.createClient(
-  "https://mlkhgrkayqwqlvzagvjq.supabase.co",
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const supabase = supabaseJs.createClient(
+  "https://yunxxrofozxqmtwomegk.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1bnh4cm9mb3p4cW10d29tZWdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDEwOTYsImV4cCI6MjA4MzkxNzA5Nn0.sHSzVg4Nj9j7-dkdtsDj7Smg_cArweYBKGHfSioEZUY"
 );
+</script>
+
 
 /* ---------- STATE ---------- */
 let player = null;
