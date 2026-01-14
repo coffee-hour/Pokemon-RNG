@@ -7,7 +7,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body { background:#0f1220; color:#fff; font-family:Arial,sans-serif; text-align:center; margin:0; padding:20px; }
+body { background:#0f1220;color:#fff;font-family:Arial,sans-serif;text-align:center;margin:0;padding:20px;}
 h1{margin-bottom:10px;}
 button{background:#ff4757;border:none;color:white;padding:15px 30px;font-size:18px;border-radius:10px;cursor:pointer;}
 button:hover{background:#ff6b81;}
@@ -33,14 +33,13 @@ input{margin:5px 0;padding:8px;width:100%;border-radius:5px;border:none;}
   <h3>Sign Up</h3>
   <form id="signupForm">
     <input type="text" placeholder="Username" id="signupUsername" required />
-    <input type="email" placeholder="Email" id="signupEmail" required />
     <input type="password" placeholder="Password" id="signupPassword" required />
     <button type="submit">Sign Up</button>
   </form>
 
   <h3>Login</h3>
   <form id="loginForm">
-    <input type="email" placeholder="Email" id="loginEmail" required />
+    <input type="text" placeholder="Username" id="loginUsername" required />
     <input type="password" placeholder="Password" id="loginPassword" required />
     <button type="submit">Login</button>
   </form>
@@ -65,15 +64,13 @@ input{margin:5px 0;padding:8px;width:100%;border-radius:5px;border:none;}
 </div>
 
 <script>
-// ---------- SUPABASE ----------
 const SUPABASE_URL = 'https://yunxxrofozxqmtwomegk.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1bnh4cm9mb3p4cW10d29tZWdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDEwOTYsImV4cCI6MjA4MzkxNzA5Nn0.sHSzVg4Nj9j7-dkdtsDj7Smg_cArweYBKGHfSioEZUY';
 const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let user = null;
 let playerData = null;
 
-// ---------- RNG DATA ----------
+// RNG Data
 const rarityTable = [
   { name:"Common", chance:70, rank:1, class:"rarity-common", pool:["Pidgey","Rattata","Caterpie"] },
   { name:"Uncommon", chance:20, rank:2, class:"rarity-uncommon", pool:["Growlithe","Machop","Abra"] },
@@ -83,23 +80,22 @@ const rarityTable = [
 ];
 const SHINY_RATE = 4096;
 
-// ---------- AUTH ----------
+// --------- AUTH ----------
 async function signUp(e){
   e.preventDefault();
   const username = document.getElementById('signupUsername').value.trim();
-  const email = document.getElementById('signupEmail').value.trim();
   const password = document.getElementById('signupPassword').value.trim();
-  if(!username || !email || !password){ alert("Fill all fields"); return; }
+  if(!username || !password){ alert("Fill all fields"); return; }
 
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  // Check username exists
+  const { data: existing } = await supabase.from('players').select('id').eq('username', username);
+  if(existing.length>0){ alert("Username already exists"); return; }
+
+  const { data, error } = await supabase.from('players')
+      .insert({ username, password })
+      .select()
+      .single();
   if(error){ alert(error.message); return; }
-  user = data.user;
-
-  // Insert player row
-  const { data: playerInsert, error: playerError } = await supabase.from('players')
-    .insert({ id: user.id, username })
-    .select();
-  if(playerError){ alert(playerError.message); return; }
 
   alert("Signup successful! You can now login.");
   document.getElementById('signupForm').reset();
@@ -107,76 +103,57 @@ async function signUp(e){
 
 async function login(e){
   e.preventDefault();
-  const email = document.getElementById('loginEmail').value.trim();
+  const username = document.getElementById('loginUsername').value.trim();
   const password = document.getElementById('loginPassword').value.trim();
-  if(!email || !password){ alert("Fill all fields"); return; }
+  if(!username || !password){ alert("Fill all fields"); return; }
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if(error){ alert(error.message); return; }
-  user = data.user;
+  const { data, error } = await supabase.from('players')
+      .select('*').eq('username', username).eq('password', password).single();
+  if(error){ alert("Login failed"); return; }
 
-  // Load player
-  const { data: p, error: playerError } = await supabase.from('players')
-    .select('*').eq('id', user.id).single();
-  if(playerError){ alert(playerError.message); return; }
-  playerData = p;
+  playerData = data;
 
   document.getElementById('authForms').style.display='none';
   document.getElementById('game').style.display='block';
   document.getElementById('playerInfo').textContent = `Logged in as ${playerData.username}`;
 
-  // Store session
-  localStorage.setItem("rngSession", JSON.stringify(data.session));
+  localStorage.setItem("rngUsername", username);
   updateStats();
 }
 
-// ---------- SESSION RESTORE ----------
+// Auto-login if username stored
 async function restoreSession(){
-  const sessionData = localStorage.getItem("rngSession");
-  if(!sessionData) return;
+  const username = localStorage.getItem("rngUsername");
+  if(!username) return;
 
-  const session = JSON.parse(sessionData);
-  await supabase.auth.setSession(session);
+  const { data, error } = await supabase.from('players')
+      .select('*').eq('username', username).single();
+  if(error) return;
 
-  if(!session.user) return;
-  user = session.user;
-
-  const { data: p } = await supabase.from('players').select('*').eq('id', user.id).single();
-  if(!p) return;
-  playerData = p;
-
+  playerData = data;
   document.getElementById('authForms').style.display='none';
   document.getElementById('game').style.display='block';
   document.getElementById('playerInfo').textContent = `Logged in as ${playerData.username}`;
   updateStats();
 }
 
-// ---------- RNG GAME ----------
-function rollRarity(){
-  let roll=Math.random()*100, cum=0;
-  for(let r of rarityTable){ cum+=r.chance; if(roll<=cum) return r; }
-  return rarityTable[0];
-}
+// -------- RNG ----------
+function rollRarity(){ let r=Math.random()*100, cum=0; for(let x of rarityTable){ cum+=x.chance; if(r<=cum) return x;} return rarityTable[0]; }
 
 async function rollPokemon(){
-  const rarity = rollRarity();
-  const pokemon = rarity.pool[Math.floor(Math.random()*rarity.pool.length)];
-  const isShiny = Math.floor(Math.random()*SHINY_RATE)===0;
+  const rarity=rollRarity();
+  const pokemon=rarity.pool[Math.floor(Math.random()*rarity.pool.length)];
+  const shiny=Math.floor(Math.random()*SHINY_RATE)===0;
 
   playerData.total_rolls++;
-  if(isShiny) playerData.shiny_count++;
-  if(rarity.rank>playerData.best_pull_rank){
-    playerData.best_pull = `${pokemon} (${rarity.name})`;
-    playerData.best_pull_rank = rarity.rank;
-  }
-
-  if(!playerData.history) playerData.history = [];
-  playerData.history.unshift(`${isShiny?"✨ ":""}${pokemon} (${rarity.name})`);
-  playerData.history = playerData.history.slice(0,5);
+  if(shiny) playerData.shiny_count++;
+  if(rarity.rank>playerData.best_pull_rank){ playerData.best_pull=`${pokemon} (${rarity.name})`; playerData.best_pull_rank=rarity.rank; }
+  if(!playerData.history) playerData.history=[];
+  playerData.history.unshift(`${shiny?"✨ ":""}${pokemon} (${rarity.name})`);
+  playerData.history=playerData.history.slice(0,5);
 
   updateStats();
 
-  // Save to Supabase
   await supabase.from('players').update({
     total_rolls: playerData.total_rolls,
     shiny_count: playerData.shiny_count,
@@ -186,22 +163,20 @@ async function rollPokemon(){
   }).eq('id', playerData.id);
 }
 
-// ---------- DISPLAY ----------
+// -------- DISPLAY ----------
 function updateStats(){
-  document.getElementById("totalRolls").textContent = playerData.total_rolls;
-  document.getElementById("shinyCount").textContent = playerData.shiny_count;
-  document.getElementById("bestPull").textContent = playerData.best_pull ?? "None";
-  document.getElementById("history").innerHTML = (playerData.history||[]).map(r=>`<div>${r}</div>`).join('');
+  document.getElementById("totalRolls").textContent=playerData.total_rolls;
+  document.getElementById("shinyCount").textContent=playerData.shiny_count;
+  document.getElementById("bestPull").textContent=playerData.best_pull??"None";
+  document.getElementById("history").innerHTML=(playerData.history||[]).map(r=>`<div>${r}</div>`).join('');
 }
 
-// ---------- EVENTS ----------
+// -------- EVENTS ----------
 document.getElementById('signupForm').addEventListener('submit', signUp);
 document.getElementById('loginForm').addEventListener('submit', login);
 
-// ---------- INIT ----------
+// -------- INIT --------
 restoreSession();
 </script>
 </body>
 </html>
-
-
