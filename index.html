@@ -23,7 +23,6 @@ form{margin:10px auto;max-width:300px;}
 input{margin:5px 0;padding:8px;width:100%;border-radius:5px;border:none;}
 </style>
 </head>
-
 <body>
 
 <h1>🎲 Pokémon RNG Challenge</h1>
@@ -63,13 +62,12 @@ input{margin:5px 0;padding:8px;width:100%;border-radius:5px;border:none;}
 </div>
 
 <script>
+// --- SUPABASE SETUP ---
 const SUPABASE_URL = 'https://yunxxrofozxqmtwomegk.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1bnh4cm9mb3p4cW10d29tZWdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDEwOTYsImV4cCI6MjA4MzkxNzA5Nn0.sHSzVg4Nj9j7-dkdtsDj7Smg_cArweYBKGHfSioEZUY';
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let playerData = null;
-
-// RNG Data
+// --- RNG DATA ---
 const rarityTable = [
   { name:"Common", chance:70, rank:1, class:"rarity-common", pool:["Pidgey","Rattata","Caterpie"] },
   { name:"Uncommon", chance:20, rank:2, class:"rarity-uncommon", pool:["Growlithe","Machop","Abra"] },
@@ -79,42 +77,50 @@ const rarityTable = [
 ];
 const SHINY_RATE = 4096;
 
-// --------- AUTH ----------
+let playerData = null;
+
+// --- AUTH ---
 async function signUp(e){
   e.preventDefault();
   const username = document.getElementById('signupUsername').value.trim();
   const password = document.getElementById('signupPassword').value.trim();
-  if(!username || !password){ alert("Fill all fields"); return; }
+  if(!username||!password){ alert("Fill all fields"); return; }
 
-  // Check username exists
-  const { data: existing } = await supabase.from('players').select('id').eq('username', username);
-  if(existing.length>0){ alert("Username already exists"); return; }
+  try{
+    // Check if username exists
+    const { data: existing } = await supabase.from('players').select('id').eq('username', username);
+    if(existing.length>0){ alert("Username already exists"); return; }
 
-  const { data, error } = await supabase.from('players')
-      .insert({ username, password })
-      .select()
-      .single();
-  if(error){ alert(error.message); return; }
+    const { data, error } = await supabase.from('players').insert({ username,password }).select().single();
+    if(error){ throw error; }
 
-  playerData = data;
-  showGame();
+    playerData = data;
+    showGame();
+  }catch(err){
+    console.error(err);
+    alert(err.message);
+  }
 }
 
 async function login(e){
   e.preventDefault();
   const username = document.getElementById('loginUsername').value.trim();
   const password = document.getElementById('loginPassword').value.trim();
-  if(!username || !password){ alert("Fill all fields"); return; }
+  if(!username||!password){ alert("Fill all fields"); return; }
 
-  const { data, error } = await supabase.from('players')
-      .select('*').eq('username', username).eq('password', password).single();
-  if(error){ alert("Login failed"); return; }
+  try{
+    const { data, error } = await supabase.from('players').select('*').eq('username',username).eq('password',password).single();
+    if(error){ throw error; }
 
-  playerData = data;
-  showGame();
+    playerData = data;
+    showGame();
+  }catch(err){
+    console.error(err);
+    alert("Login failed");
+  }
 }
 
-// --------- GAME UI ----------
+// --- SHOW GAME UI ---
 function showGame(){
   document.getElementById('authForms').style.display='none';
   document.getElementById('game').style.display='block';
@@ -123,20 +129,17 @@ function showGame(){
   updateStats();
 }
 
-// --------- SESSION RESTORE ----------
+// --- SESSION RESTORE ---
 async function restoreSession(){
   const username = localStorage.getItem("rngUsername");
   if(!username) return;
-
-  const { data, error } = await supabase.from('players')
-      .select('*').eq('username', username).single();
-  if(error) return;
-
-  playerData = data;
-  showGame();
+  try{
+    const { data } = await supabase.from('players').select('*').eq('username',username).single();
+    if(data){ playerData=data; showGame(); }
+  }catch(err){ console.error(err); }
 }
 
-// --------- RNG ----------
+// --- RNG ---
 function rollRarity(){ let r=Math.random()*100, cum=0; for(let x of rarityTable){ cum+=x.chance; if(r<=cum) return x;} return rarityTable[0]; }
 
 async function rollPokemon(){
@@ -162,7 +165,7 @@ async function rollPokemon(){
   }).eq('id', playerData.id);
 }
 
-// --------- DISPLAY ----------
+// --- DISPLAY STATS ---
 function updateStats(){
   document.getElementById("totalRolls").textContent=playerData.total_rolls;
   document.getElementById("shinyCount").textContent=playerData.shiny_count;
@@ -170,11 +173,11 @@ function updateStats(){
   document.getElementById("history").innerHTML=(playerData.history||[]).map(r=>`<div>${r}</div>`).join('');
 }
 
-// -------- EVENTS ----------
+// --- EVENTS ---
 document.getElementById('signupForm').addEventListener('submit', signUp);
 document.getElementById('loginForm').addEventListener('submit', login);
 
-// -------- INIT --------
+// --- INIT ---
 restoreSession();
 </script>
 </body>
