@@ -135,8 +135,6 @@ button { background: #ff4757; color: white; cursor: pointer; }
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-  
-const genAllOrder = gen1DexOrder.concat(gen2DexOrder);
 
 const rarityTable = [
   { name:"Common", class:"common", chance:65, rank:1, pool:[
@@ -195,11 +193,10 @@ const rarityTable = [
   ]}
 ];
 
-
 const rarityMap = {};
 rarityTable.forEach(tier => tier.pool.forEach(p => rarityMap[p] = tier.class));
 
-const gen1DexOrder = [
+const genAllOrder = [
   "Bulbasaur","Ivysaur","Venusaur","Charmander","Charmeleon","Charizard","Squirtle","Wartortle","Blastoise",
   "Caterpie","Metapod","Butterfree","Weedle","Kakuna","Beedrill","Pidgey","Pidgeotto","Pidgeot",
   "Rattata","Raticate","Spearow","Fearow","Ekans","Arbok","Sandshrew","Sandslash",
@@ -214,10 +211,7 @@ const gen1DexOrder = [
   "Hitmonlee","Hitmonchan","Lickitung","Koffing","Weezing","Rhyhorn","Rhydon","Chansey","Tangela","Kangaskhan",
   "Horsea","Seadra","Goldeen","Seaking","Staryu","Starmie","MrMime","Scyther","Jynx","Electabuzz","Magmar","Pinsir","Tauros",
   "Magikarp","Gyarados","Lapras","Ditto","Eevee","Vaporeon","Jolteon","Flareon","Porygon","Omanyte","Omastar",
-  "Kabuto","Kabutops","Aerodactyl","Snorlax","Articuno","Zapdos","Moltres","Dratini","Dragonair","Dragonite","Mewtwo","Mew"
-];
-const gen2DexOrder = [
-  "Chikorita","Bayleef","Meganium",
+  "Kabuto","Kabutops","Aerodactyl","Snorlax","Articuno","Zapdos","Moltres","Dratini","Dragonair","Dragonite","Mewtwo","Mew","Chikorita","Bayleef","Meganium",
   "Cyndaquil","Quilava","Typhlosion",
   "Totodile","Croconaw","Feraligatr",
   "Sentret","Furret",
@@ -279,7 +273,6 @@ const gen2DexOrder = [
   "Lugia","Ho-Oh",
   "Celebi"
 ];
-
 
 const pokedexDropdown = document.getElementById("pokedexDropdown");
 const dexSearch = document.getElementById("dexSearch");
