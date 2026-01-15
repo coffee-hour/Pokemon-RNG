@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Pokémon RNG</title>
+<title>Pokemon RNG</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -12,10 +12,9 @@ body {
   font-family: 'Trebuchet MS', Arial, sans-serif;
   text-align: center;
   padding: 30px;
-  overflow-x: hidden;
 }
 
-h1 { letter-spacing: 2px; text-shadow: 0 0 15px rgba(255,255,255,0.3); }
+h1 { letter-spacing: 2px; }
 
 input, button {
   padding: 12px;
@@ -29,11 +28,7 @@ button {
   background: linear-gradient(145deg, #ff4757, #ff6b81);
   color: white;
   cursor: pointer;
-  box-shadow: 0 6px 15px rgba(255,71,87,0.4);
-  transition: transform 0.2s;
 }
-
-button:hover { transform: scale(1.05); }
 
 #game { margin-top: 25px; }
 
@@ -42,36 +37,20 @@ button:hover { transform: scale(1.05); }
   width: 260px;
   height: 180px;
   border-radius: 18px;
-  background: linear-gradient(145deg, #22265c, #14183a);
-  box-shadow: 0 0 25px rgba(0,0,0,0.6);
+  background: #14183a;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   font-size: 22px;
-  animation: flipIn 0.6s ease;
 }
-
-.card small { font-size: 14px; opacity: 0.8; }
 
 .card.common { color: #aaa; }
 .card.uncommon { color: #2ecc71; }
 .card.rare { color: #3498db; }
-.card.ultra { color: #9b59b6; box-shadow: 0 0 35px #9b59b6; }
-.card.mythical { color: gold; box-shadow: 0 0 50px gold; animation: pulse 1s infinite; }
-.card.spoiler { color: teal; box-shadow: 0 0 65px teal; animation: pulse 2s infinite; }
-  
-@keyframes flipIn { from { transform: rotateY(90deg) scale(0.8); opacity:0; } to { transform: rotateY(0deg) scale(1); opacity:1; } }
-@keyframes pulse { 0%{box-shadow:0 0 25px gold;} 50%{box-shadow:0 0 55px gold;} 100%{box-shadow:0 0 25px gold;} }
-.shake { animation: shake 0.4s; }
-@keyframes shake { 0%{transform:translateX(0);}25%{transform:translateX(-6px);}50%{transform:translateX(6px);}75%{transform:translateX(-4px);}100%{transform:translateX(0);} }
-
-.stats { font-size: 14px; opacity: 0.9; margin-top: 15px; }
-#pokedex {
-  margin-top: 25px;
-  font-size: 13px;
-  opacity: 0.9;
-}
+.card.ultra { color: #9b59b6; }
+.card.mythical { color: gold; }
+.card.spoiler { color: teal; }
 
 .dex-grid {
   display: grid;
@@ -87,26 +66,17 @@ button:hover { transform: scale(1.05); }
   background: #0f1233;
   font-size: 13px;
   opacity: 0.35;
-  transition: 0.2s;
 }
 
 .dex-entry.collected {
   opacity: 1;
-  box-shadow: 0 0 10px rgba(255,255,255,0.15);
 }
-
-.dex-entry small {
-  display: block;
-  font-size: 11px;
-  opacity: 0.7;
-}
-
 </style>
 </head>
 
 <body>
 
-<h1>🎲 Pokémon RNG</h1>
+<h1>🎲 Pokemon RNG</h1>
 
 <div id="login">
   <input id="usernameInput" placeholder="Enter username">
@@ -117,128 +87,141 @@ button:hover { transform: scale(1.05); }
 <div id="game" style="display:none;">
   <p id="playerInfo"></p>
 
-  <button id="rollBtn">🎲 Roll Pokémon</button>
+  <button id="rollBtn">🎲 Roll Pokemon</button>
 
   <div id="result" class="card common">
     Roll to begin!
   </div>
 
-  <div class="stats">
-    <p>Total Rolls: <span id="rolls">0</span></p>
-    <p>Best Pull: <span id="best">None</span></p>
-  </div>
+  <p>Total Rolls: <span id="rolls">0</span></p>
+  <p>Best Pull: <span id="best">None</span></p>
 
-  <h3>📖 Pokédex</h3>
-<div id="pokedex" class="dex-grid"></div>
+  <h3>📖 Pokedex</h3>
+  <div id="pokedex" class="dex-grid"></div>
 </div>
 
 <script>
-  alert("JS is running");
 const rarityTable = [
   { name:"Common", class:"common", chance:70, pool:[
-    "Pidgey","Rattata","Caterpie","Weedle","Spearow","Ekans","Sandshrew","Nidoran-F","Nidoran-M","Zubat","Oddish","Paras","Venonat","Diglett","Meowth","Psyduck","Mankey","Poliwag","Bellsprout","Geodude"
+    "Pidgey","Rattata","Caterpie","Weedle","Spearow","Ekans",
+    "Sandshrew","NidoranF","NidoranM","Zubat","Oddish","Paras"
   ], rank:1 },
+
   { name:"Uncommon", class:"uncommon", chance:20, pool:[
-    "Pidgeotto","Raticate","Metapod","Kakuna","Fearow","Arbok","Sandslash","Nidorina","Nidorino","Golbat","Gloom","Parasect","Venomoth","Dugtrio","Persian","Golduck","Primeape","Poliwhirl","Weepinbell","Graveler"
+    "Pidgeotto","Raticate","Fearow","Arbok","Sandslash",
+    "Nidorina","Nidorino","Golbat","Gloom","Parasect"
   ], rank:2 },
+
   { name:"Rare", class:"rare", chance:8, pool:[
-    "Pidgeot","Rhydon","Beedrill","Fearow","Arcanine","Nidoking","Nidoqueen","Venusaur","Charmeleon","Wartortle","Raichu","Machoke","Machamp","Golem","Rapidash","Poliwrath","Kadabra","Alakazam","Hitmonlee","Hitmonchan"
+    "Pidgeot","Arcanine","Nidoking","Nidoqueen",
+    "Venusaur","Charmeleon","Wartortle","Raichu"
   ], rank:3 },
+
   { name:"Ultra", class:"ultra", chance:1.8, pool:[
     "Dragonite","Gyarados","Snorlax","Lapras"
   ], rank:4 },
+
   { name:"Mythical", class:"mythical", chance:0.15, pool:[
     "Mew","Articuno","Zapdos","Moltres","Mewtwo"
   ], rank:5 },
+
   { name:"Spoiler", class:"spoiler", chance:0.05, pool:[
-    "Celebi","Ho-Oh","Raikou","Entei","Suicune","Lugia"
+    "Celebi","HoOh","Raikou","Entei","Suicune","Lugia"
   ], rank:6 }
 ];
 
 const fullDex = rarityTable.flatMap(r =>
-  r.pool.map(p => ({ name: p, rarity: r.name }))
+  r.pool.map(p => ({ name:p, rarity:r.name }))
 );
 
-let player = { username:"", totalRolls:0, bestRank:0, bestPull:null, pokedex:{} };
+let player = {
+  username:"",
+  totalRolls:0,
+  bestRank:0,
+  bestPull:null,
+  pokedex:{}
+};
 
 function savePlayer() {
-  localStorage.setItem('pokemonRNGPlayer', JSON.stringify(player));
+  localStorage.setItem("pokemonRNGPlayer", JSON.stringify(player));
 }
 
 function loadPlayer() {
-  const saved = localStorage.getItem('pokemonRNGPlayer');
-  if (saved) {
-    player = JSON.parse(saved);
-    document.getElementById('login').style.display = "none";
-    document.getElementById('game').style.display = "block";
-    updateUI();
-  }
+  const saved = localStorage.getItem("pokemonRNGPlayer");
+  if (!saved) return;
+  player = JSON.parse(saved);
+  document.getElementById("login").style.display = "none";
+  document.getElementById("game").style.display = "block";
+  updateUI();
 }
 
-function renderPokedex(){
+function renderPokedex() {
   const dex = document.getElementById("pokedex");
   dex.innerHTML = "";
   fullDex.forEach(p => {
-    const owned = player.pokedex[p.name] || 0;
+    const owned = player.pokedex[p.name];
     const div = document.createElement("div");
     div.className = "dex-entry" + (owned ? " collected" : "");
-    div.innerHTML = `
-      ${owned ? p.name : "?????"}
-      <small>${owned ? `${p.rarity} • x${owned}` : "Not Collected"}</small>
-    `;
+    div.textContent = owned ? p.name : "?????";
     dex.appendChild(div);
   });
 }
 
 function updateUI() {
-  document.getElementById('playerInfo').textContent = `Trainer: ${player.username}`;
-  document.getElementById('rolls').textContent = player.totalRolls;
-  document.getElementById('best').textContent = player.bestPull ?? "None";
+  document.getElementById("playerInfo").textContent =
+    "Trainer: " + player.username;
+  document.getElementById("rolls").textContent = player.totalRolls;
+  document.getElementById("best").textContent =
+    player.bestPull || "None";
   renderPokedex();
 }
 
 function rollRarity() {
-  let r = Math.random() * 100, c = 0;
-  for (const x of rarityTable) {
-    c += x.chance;
-    if (r <= c) return x;
+  let roll = Math.random() * 100;
+  let total = 0;
+  for (const r of rarityTable) {
+    total += r.chance;
+    if (roll <= total) return r;
   }
   return rarityTable[0];
 }
 
-document.getElementById('rollBtn').addEventListener("click", () => {
+document.getElementById("rollBtn").onclick = () => {
   const rarity = rollRarity();
-  const poke = rarity.pool[Math.floor(Math.random()*rarity.pool.length)];
+  const poke = rarity.pool[Math.floor(Math.random() * rarity.pool.length)];
+
   player.totalRolls++;
+  player.pokedex[poke] = (player.pokedex[poke] || 0) + 1;
+
   if (rarity.rank > player.bestRank) {
     player.bestRank = rarity.rank;
-    player.bestPull = `${poke} (${rarity.name})`;
+    player.bestPull = poke + " (" + rarity.name + ")";
   }
-  player.pokedex[poke] = (player.pokedex[poke] || 0) + 1;
-  const result = document.getElementById('result');
-  result.className = `card ${rarity.class}`;
-  result.innerHTML = `<div>${poke}</div><small>${rarity.name}</small>`;
-  updateUI();
-  savePlayer();
-});
 
-document.getElementById('startBtn').addEventListener("click", () => {
-  const name = document.getElementById('usernameInput').value.trim();
-  if (!name) { alert("Please enter a username!"); return; }
+  const card = document.getElementById("result");
+  card.className = "card " + rarity.class;
+  card.innerHTML = "<div>" + poke + "</div><small>" + rarity.name + "</small>";
+
+  savePlayer();
+  updateUI();
+};
+
+document.getElementById("startBtn").onclick = () => {
+  const name = document.getElementById("usernameInput").value.trim();
+  if (!name) return alert("Enter a username!");
   player.username = name;
   player.totalRolls = 0;
   player.bestRank = 0;
   player.bestPull = null;
   player.pokedex = {};
-  document.getElementById('login').style.display = "none";
-  document.getElementById('game').style.display = "block";
-  updateUI();
+  document.getElementById("login").style.display = "none";
+  document.getElementById("game").style.display = "block";
   savePlayer();
-});
+  updateUI();
+};
 
 loadPlayer();
 </script>
-
 
 </body>
 </html>
