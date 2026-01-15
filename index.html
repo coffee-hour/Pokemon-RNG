@@ -10,49 +10,46 @@ body {
   background: radial-gradient(circle at top, #1b1f4b, #0a0c1a);
   color: #fff;
   font-family: Arial, sans-serif;
-  text-align: center;
   padding: 30px;
-}
-
-button, input {
-  padding: 12px;
-  margin: 8px;
-  border-radius: 10px;
-  border: none;
-  font-size: 16px;
-}
-
-button {
-  background: #ff4757;
-  color: white;
-  cursor: pointer;
-}
-
-.card {
-  margin: 20px auto;
-  width: 250px;
-  height: 160px;
-  border-radius: 15px;
-  background: #14183a;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  font-size: 20px;
+  flex-direction: row;
 }
 
-/* Pokédex dropdown */
+/* Main content on right */
+#mainContent {
+  flex: 1;
+  text-align: center;
+}
+
+/* Pokédex sidebar on left */
+#pokedexSidebar {
+  width: 220px;
+  margin-right: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Search box */
+#dexSearch {
+  padding: 8px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+}
+
+/* Dropdown / scrollable Pokédex */
 #pokedexDropdown {
-  display: none;
-  max-height: 400px;
+  display: block;
+  max-height: 600px;
   overflow-y: auto;
-  margin-top: 10px;
   border: 2px solid #444;
   border-radius: 10px;
   padding: 10px;
   background: #0f1233;
 }
 
+/* Dex entries */
 .dex-entry {
   padding: 6px 10px;
   border-radius: 6px;
@@ -74,10 +71,34 @@ button {
 .ultra { background:#ab47bc; color:#fff; }
 .mythical { background: linear-gradient(45deg, gold, orange); color:#000; font-weight:700; }
 
+/* Buttons */
+button, input { padding: 10px; margin: 6px; border-radius: 10px; border: none; font-size: 14px; }
+button { background: #ff4757; color: white; cursor: pointer; }
+
+.card {
+  margin: 20px auto;
+  width: 250px;
+  height: 160px;
+  border-radius: 15px;
+  background: #14183a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  font-size: 20px;
+}
+
 </style>
 </head>
 
 <body>
+
+<div id="pokedexSidebar">
+  <input id="dexSearch" placeholder="Search Pokémon...">
+  <div id="pokedexDropdown" class="dex-grid"></div>
+</div>
+
+<div id="mainContent">
 <h1>🎲 Pokemon RNG</h1>
 
 <div id="login">
@@ -92,9 +113,7 @@ button {
   <div id="result" class="card common">Roll to begin</div>
   <p>Rolls: <span id="rolls">0</span></p>
   <p>Best: <span id="best">None</span></p>
-
-  <button id="toggleDexBtn">Show Pokédex ▼</button>
-  <div id="pokedexDropdown" class="dex-grid"></div>
+</div>
 </div>
 
 <script>
@@ -155,16 +174,7 @@ const gen1DexOrder = [
 ];
 
 const pokedexDropdown = document.getElementById("pokedexDropdown");
-
-function renderDex() {
-  pokedexDropdown.innerHTML = "";
-  gen1DexOrder.forEach((p,index)=>{
-    const div = document.createElement("div");
-    div.className = "dex-entry "+(player.pokedex[p]?"collected "+rarityMap[p]:rarityMap[p]);
-    div.textContent = `${String(index+1).padStart(3,"0")} — ${player.pokedex[p]?p:"?????"}`;
-    pokedexDropdown.appendChild(div);
-  });
-}
+const dexSearch = document.getElementById("dexSearch");
 
 // Player
 let player = {username:"",totalRolls:0,bestRank:0,bestPull:null,pokedex:{}};
@@ -172,7 +182,6 @@ const login = document.getElementById("login");
 const game = document.getElementById("game");
 const rollBtn = document.getElementById("rollBtn");
 const startBtn = document.getElementById("startBtn");
-const toggleDexBtn = document.getElementById("toggleDexBtn");
 
 function save() { localStorage.setItem("pokemonRNG",JSON.stringify(player)); }
 function load() {
@@ -180,11 +189,22 @@ function load() {
   if(data){player=JSON.parse(data);login.style.display="none";game.style.display="block";updateUI();}
 }
 
+function renderDex(filter="") {
+  pokedexDropdown.innerHTML="";
+  gen1DexOrder.forEach((p,index)=>{
+    if(filter && !p.toLowerCase().includes(filter.toLowerCase())) return;
+    const div = document.createElement("div");
+    div.className = "dex-entry "+(player.pokedex[p]?"collected "+rarityMap[p]:rarityMap[p]);
+    div.textContent = `${String(index+1).padStart(3,"0")} — ${player.pokedex[p]?p:"?????"}`;
+    pokedexDropdown.appendChild(div);
+  });
+}
+
 function updateUI() {
   document.getElementById("playerInfo").textContent = "Trainer: "+player.username;
   document.getElementById("rolls").textContent = player.totalRolls;
   document.getElementById("best").textContent = player.bestPull||"None";
-  renderDex();
+  renderDex(dexSearch.value);
 }
 
 // Roll
@@ -214,13 +234,11 @@ startBtn.onclick = ()=>{
   login.style.display="none"; game.style.display="block"; save(); updateUI();
 };
 
-// Toggle Pokédex
-toggleDexBtn.onclick = ()=>{
-  if(pokedexDropdown.style.display==="none"){pokedexDropdown.style.display="block"; toggleDexBtn.textContent="Hide Pokédex ▲";}
-  else{pokedexDropdown.style.display="none"; toggleDexBtn.textContent="Show Pokédex ▼";}
-};
+// Search filter
+dexSearch.addEventListener("input",(e)=>{ renderDex(e.target.value); });
 
 load();
+
 });
 </script>
 
