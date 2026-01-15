@@ -95,31 +95,28 @@ button:hover { transform: scale(1.05); }
   </div>
 </div>
 
+<div id="pokedex" style="margin-top:20px; font-size:14px; text-align:left; max-width:600px; margin-left:auto; margin-right:auto;">
+  Pokédex: None yet!
+</div>
+
 <script>
 const rarityTable = [
-  { name:"Common", class:"common", chance:70, pool:[
-    "Pidgey","Rattata","Caterpie","Weedle","Spearow","Ekans","Sandshrew","Nidoran♀","Nidoran♂","Zubat","Oddish","Paras","Venonat","Diglett","Meowth","Psyduck","Mankey","Poliwag","Bellsprout","Geodude"
-  ] },
-  { name:"Uncommon", class:"uncommon", chance:20, pool:[
-    "Pidgeotto","Raticate","Metapod","Kakuna","Fearow","Arbok","Sandslash","Nidorina","Nidorino","Golbat","Gloom","Parasect","Venomoth","Dugtrio","Persian","Golduck","Primeape","Poliwhirl","Weepinbell","Graveler"
-  ] },
-  { name:"Rare", class:"rare", chance:8, pool:[
-    "Pidgeot","Rhydon","Beedrill","Fearow","Arcanine","Nidoking","Nidoqueen","Venusaur","Charmeleon","Wartortle","Raichu","Machoke","Machamp","Golem","Rapidash","Poliwrath","Kadabra","Alakazam","Hitmonlee","Hitmonchan"
-  ] },
-  { name:"Ultra", class:"ultra", chance:1.8, pool:[
-    "Dragonite","Gyarados","Snorlax","Lapras"
-  ] },
-  { name:"Mythical", class:"mythical", chance:0.15, pool:[
-    "Mew","Articuno","Zapdos","Moltres","Mewtwo"
-  ] },
-  { name:"Spoiler", class:"spoiler", chance:0.05, pool:[
-    "Celebi","Ho-Oh","Raikou","Entei","Suicune","Lugia"
-  ] }
+  { name:"Common", class:"common", chance:70, pool:["Pidgey","Rattata","Caterpie","Weedle","Zubat"], rank:1 },
+  { name:"Uncommon", class:"uncommon", chance:20, pool:["Pidgeotto","Raticate","Metapod","Kakuna","Golbat"], rank:2 },
+  { name:"Rare", class:"rare", chance:8, pool:["Pidgeot","Rhydon","Beedrill","Fearow","Arcanine"], rank:3 },
+  { name:"Ultra", class:"ultra", chance:1.8, pool:["Dragonite","Gyarados","Snorlax","Lapras"], rank:4 },
+  { name:"Mythical", class:"mythical", chance:0.2, pool:["Mew","Articuno","Zapdos","Moltres","Mewtwo"], rank:5 }
 ];
 
-let player = { username:"", totalRolls:0, bestRank:0, bestPull:null };
+let player = {
+  username: "",
+  rolls: 0,
+  bestRank: 0,
+  bestPull: null,
+  pokedex: {}
+};
 
-/* ---------- LOCAL STORAGE ---------- */
+// ---------- LOCAL STORAGE ----------
 function savePlayer() {
   localStorage.setItem('pokemonRNGPlayer', JSON.stringify(player));
 }
@@ -131,26 +128,25 @@ function loadPlayer() {
     login.style.display = "none";
     game.style.display = "block";
     playerInfo.textContent = `Trainer: ${player.username}`;
-    rolls.textContent = player.totalRolls;
+    rolls.textContent = player.rolls;
     best.textContent = player.bestPull ?? "None";
+    updatePokedex();
   }
 }
-startBtn.addEventListener("click", () => {
-  const name = usernameInput.value.trim();
-  if(!name){ alert("Please enter a username!"); return; }
 
-  player.username = name;
-  player.totalRolls = 0;
-  player.bestRank = 0;
-  player.bestPull = null;
-  login.style.display = "none";
-  game.style.display = "block";
-  playerInfo.textContent = `Trainer: ${player.username}`;
-  rolls.textContent = player.totalRolls;
-  best.textContent = player.bestPull ?? "None";
-  savePlayer();
-});
-function rollRarity(){
+// ---------- POKEDEX ----------
+function updatePokedex() {
+  const entries = Object.entries(player.pokedex);
+  if(entries.length === 0){
+    pokedex.textContent = "Pokédex: None yet!";
+    return;
+  }
+  entries.sort((a,b)=>a[0].localeCompare(b[0]));
+  pokedex.textContent = `Pokédex: ${entries.map(([p,c]) => `${p}: ${c}`).join(" | ")}`;
+}
+
+// ---------- ROLL LOGIC ----------
+function rollRarity() {
   let r = Math.random()*100, c=0;
   for(const x of rarityTable){
     c+=x.chance;
@@ -158,76 +154,59 @@ function rollRarity(){
   }
   return rarityTable[0];
 }
+
 rollBtn.addEventListener("click", () => {
   const rarity = rollRarity();
   const pokemon = rarity.pool[Math.floor(Math.random()*rarity.pool.length)];
 
-  player.totalRolls++;
+  player.rolls++;
 
-  if(rarityTable.indexOf(rarity)+1 > player.bestRank){
-    player.bestRank = rarityTable.indexOf(rarity)+1;
+  // Update best pull using rank
+  if(rarity.rank > player.bestRank){
+    player.bestRank = rarity.rank;
     player.bestPull = `${pokemon} (${rarity.name})`;
   }
 
+  // Update Pokédex
+  player.pokedex[pokemon] = (player.pokedex[pokemon] || 0) + 1;
+
+  // Update UI
   result.className = `card ${rarity.class}`;
   result.innerHTML = `<div>${pokemon}</div><small>${rarity.name}</small>`;
+  rolls.textContent = player.rolls;
+  best.textContent = player.bestPull ?? "None";
+  updatePokedex();
 
-  if(rarity.name==="Ultra" || rarity.name==="Mythical"){
+  // Screen shake for Ultra/Mythical
+  if(rarity.rank >= 4){
     document.body.classList.add("shake");
     setTimeout(()=>document.body.classList.remove("shake"),400);
   }
 
-  rolls.textContent = player.totalRolls;
-  best.textContent = player.bestPull ?? "None";
-
   savePlayer();
 });
 
+// ---------- LOGIN ----------
+startBtn.addEventListener("click", () => {
+  const name = usernameInput.value.trim();
+  if(!name){ alert("Please enter a username!"); return; }
+
+  player.username = name;
+  player.rolls = 0;
+  player.bestRank = 0;
+  player.bestPull = null;
+  player.pokedex = {};
+  login.style.display = "none";
+  game.style.display = "block";
+  playerInfo.textContent = `Trainer: ${player.username}`;
+  rolls.textContent = player.rolls;
+  best.textContent = player.bestPull ?? "None";
+  updatePokedex();
+  savePlayer();
+});
 
 loadPlayer();
 </script>
-  <div id="pokedex" style="margin-top:20px; font-size:14px; text-align:left; max-width:600px; margin-left:auto; margin-right:auto;">
-  Pokédex: None yet!
-</div>
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  const pokedexDiv = document.getElementById("pokedex");
-
-  // Example player object
-  let player = {
-    pokedex: {} // store Pokémon counts
-  };
-
-  // Function to update the Pokédex display
-  function updatePokedex() {
-    const entries = Object.entries(player.pokedex);
-    if(entries.length === 0){
-      pokedexDiv.textContent = "Pokédex: None yet!";
-      return;
-    }
-
-    // Sort alphabetically
-    entries.sort((a,b)=>a[0].localeCompare(b[0]));
-
-    // Create display string
-    const display = entries.map(([pokemon, count]) => `${pokemon}: ${count}`).join(" | ");
-    pokedexDiv.textContent = `Pokédex: ${display}`;
-  }
-
-  // Example function for rolling a Pokémon
-  function rollPokemon(pokemonName) {
-    player.pokedex[pokemonName] = (player.pokedex[pokemonName] || 0) + 1;
-    updatePokedex();
-  }
-
-  // Example test rolls
-  rollPokemon("Pidgey");
-  rollPokemon("Rattata");
-  rollPokemon("Pidgey"); // rolled again
-});
-</script>
-
 
 </body>
 </html>
