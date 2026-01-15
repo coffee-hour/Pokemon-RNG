@@ -95,227 +95,88 @@ button {
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
-const rarityTable = [ 
-const gen1Dex = [
-  { dex: 1, name: "Bulbasaur", rarity: "Common" },
-  { dex: 2, name: "Ivysaur", rarity: "Uncommon" },
-  { dex: 3, name: "Venusaur", rarity: "Rare" },
-
-  { dex: 4, name: "Charmander", rarity: "Common" },
-  { dex: 5, name: "Charmeleon", rarity: "Uncommon" },
-  { dex: 6, name: "Charizard", rarity: "Rare" },
-
-  { dex: 7, name: "Squirtle", rarity: "Common" },
-  { dex: 8, name: "Wartortle", rarity: "Uncommon" },
-  { dex: 9, name: "Blastoise", rarity: "Rare" },
-
-  { dex: 10, name: "Caterpie", rarity: "Common" },
-  { dex: 11, name: "Metapod", rarity: "Uncommon" },
-  { dex: 12, name: "Butterfree", rarity: "Rare" },
-
-  { dex: 13, name: "Weedle", rarity: "Common" },
-  { dex: 14, name: "Kakuna", rarity: "Uncommon" },
-  { dex: 15, name: "Beedrill", rarity: "Rare" },
-
-  { dex: 16, name: "Pidgey", rarity: "Common" },
-  { dex: 17, name: "Pidgeotto", rarity: "Uncommon" },
-  { dex: 18, name: "Pidgeot", rarity: "Rare" },
-
-  { dex: 19, name: "Rattata", rarity: "Common" },
-  { dex: 20, name: "Raticate", rarity: "Uncommon" },
-
-  { dex: 21, name: "Spearow", rarity: "Common" },
-  { dex: 22, name: "Fearow", rarity: "Uncommon" },
-
-  { dex: 23, name: "Ekans", rarity: "Common" },
-  { dex: 24, name: "Arbok", rarity: "Uncommon" },
-
-  { dex: 25, name: "Pikachu", rarity: "Rare" },
-  { dex: 26, name: "Raichu", rarity: "Rare" },
-
-  { dex: 27, name: "Sandshrew", rarity: "Common" },
-  { dex: 28, name: "Sandslash", rarity: "Uncommon" },
-
-  { dex: 29, name: "Nidoran-F", rarity: "Common" },
-  { dex: 30, name: "Nidorina", rarity: "Uncommon" },
-  { dex: 31, name: "Nidoqueen", rarity: "Rare" },
-
-  { dex: 32, name: "Nidoran-M", rarity: "Common" },
-  { dex: 33, name: "Nidorino", rarity: "Uncommon" },
-  { dex: 34, name: "Nidoking", rarity: "Rare" },
-
-  { dex: 35, name: "Clefairy", rarity: "Rare" },
-  { dex: 36, name: "Clefable", rarity: "Rare" },
-
-  { dex: 37, name: "Vulpix", rarity: "Common" },
-  { dex: 38, name: "Ninetales", rarity: "Rare" },
-
-  { dex: 39, name: "Jigglypuff", rarity: "Common" },
-  { dex: 40, name: "Wigglytuff", rarity: "Rare" },
-
-  { dex: 41, name: "Zubat", rarity: "Common" },
-  { dex: 42, name: "Golbat", rarity: "Uncommon" },
-
-  { dex: 43, name: "Oddish", rarity: "Common" },
-  { dex: 44, name: "Gloom", rarity: "Uncommon" },
-  { dex: 45, name: "Vileplume", rarity: "Rare" },
-
-  { dex: 46, name: "Paras", rarity: "Common" },
-  { dex: 47, name: "Parasect", rarity: "Uncommon" },
-
-  { dex: 48, name: "Venonat", rarity: "Common" },
-  { dex: 49, name: "Venomoth", rarity: "Uncommon" },
-
-  { dex: 50, name: "Diglett", rarity: "Common" },
-  { dex: 51, name: "Dugtrio", rarity: "Uncommon" },
-
-  { dex: 52, name: "Meowth", rarity: "Common" },
-  { dex: 53, name: "Persian", rarity: "Uncommon" },
-
-  { dex: 54, name: "Psyduck", rarity: "Common" },
-  { dex: 55, name: "Golduck", rarity: "Uncommon" },
-
-  { dex: 56, name: "Mankey", rarity: "Common" },
-  { dex: 57, name: "Primeape", rarity: "Uncommon" },
-
-  { dex: 58, name: "Growlithe", rarity: "Common" },
-  { dex: 59, name: "Arcanine", rarity: "Rare" },
-
-  { dex: 60, name: "Poliwag", rarity: "Common" },
-  { dex: 61, name: "Poliwhirl", rarity: "Uncommon" },
-  { dex: 62, name: "Poliwrath", rarity: "Rare" },
-
-  { dex: 63, name: "Abra", rarity: "Rare" },
-  { dex: 64, name: "Kadabra", rarity: "Rare" },
-  { dex: 65, name: "Alakazam", rarity: "Rare" },
-
-  { dex: 66, name: "Machop", rarity: "Common" },
-  { dex: 67, name: "Machoke", rarity: "Uncommon" },
-  { dex: 68, name: "Machamp", rarity: "Rare" },
-
-  { dex: 69, name: "Bellsprout", rarity: "Common" },
-  { dex: 70, name: "Weepinbell", rarity: "Uncommon" },
-  { dex: 71, name: "Victreebel", rarity: "Rare" },
-
-  { dex: 72, name: "Tentacool", rarity: "Common" },
-  { dex: 73, name: "Tentacruel", rarity: "Uncommon" },
-
-  { dex: 74, name: "Geodude", rarity: "Common" },
-  { dex: 75, name: "Graveler", rarity: "Uncommon" },
-  { dex: 76, name: "Golem", rarity: "Rare" },
-
-  { dex: 77, name: "Ponyta", rarity: "Common" },
-  { dex: 78, name: "Rapidash", rarity: "Rare" },
-
-  { dex: 79, name: "Slowpoke", rarity: "Common" },
-  { dex: 80, name: "Slowbro", rarity: "Rare" },
-
-  { dex: 81, name: "Magnemite", rarity: "Common" },
-  { dex: 82, name: "Magneton", rarity: "Uncommon" },
-
-  { dex: 83, name: "Farfetchd", rarity: "Ultra" },
-
-  { dex: 84, name: "Doduo", rarity: "Ultra" },
-  { dex: 85, name: "Dodrio", rarity: "Rare" },
-
-  { dex: 86, name: "Seel", rarity: "Ultra" },
-  { dex: 87, name: "Dewgong", rarity: "Rare" },
-
-  { dex: 88, name: "Grimer", rarity: "Ultra" },
-  { dex: 89, name: "Muk", rarity: "Rare" },
-
-  { dex: 90, name: "Shellder", rarity: "Common" },
-  { dex: 91, name: "Cloyster", rarity: "Uncommon" },
-
-  { dex: 92, name: "Gastly", rarity: "Ultra" },
-  { dex: 93, name: "Haunter", rarity: "Ultra" },
-  { dex: 94, name: "Gengar", rarity: "Rare" },
-
-  { dex: 95, name: "Onix", rarity: "Rare" },
-
-  { dex: 96, name: "Drowzee", rarity: "Common" },
-  { dex: 97, name: "Hypno", rarity: "Uncommon" },
-
-  { dex: 98, name: "Krabby", rarity: "Common" },
-  { dex: 99, name: "Kingler", rarity: "Uncommon" },
-
-  { dex: 100, name: "Voltorb", rarity: "Common" },
-  { dex: 101, name: "Electrode", rarity: "Uncommon" },
-
-  { dex: 102, name: "Exeggcute", rarity: "Common" },
-  { dex: 103, name: "Exeggutor", rarity: "Uncommon" },
-
-  { dex: 104, name: "Cubone", rarity: "Ultra" },
-  { dex: 105, name: "Marowak", rarity: "Rare" },
-
-  { dex: 106, name: "Hitmonlee", rarity: "Rare" },
-  { dex: 107, name: "Hitmonchan", rarity: "Rare" },
-
-  { dex: 108, name: "Lickitung", rarity: "Ultra" },
-
-  { dex: 109, name: "Koffing", rarity: "Common" },
-  { dex: 110, name: "Weezing", rarity: "Uncommon" },
-
-  { dex: 111, name: "Rhyhorn", rarity: "Ultra" },
-  { dex: 112, name: "Rhydon", rarity: "Rare" },
-
-  { dex: 113, name: "Chansey", rarity: "Ultra" },
-
-  { dex: 114, name: "Tangela", rarity: "Rare" },
-  { dex: 115, name: "Kangaskhan", rarity: "Rare" },
-
-  { dex: 116, name: "Horsea", rarity: "Common" },
-  { dex: 117, name: "Seadra", rarity: "Uncommon" },
-
-  { dex: 118, name: "Goldeen", rarity: "Common" },
-  { dex: 119, name: "Seaking", rarity: "Uncommon" },
-
-  { dex: 120, name: "Staryu", rarity: "Common" },
-  { dex: 121, name: "Starmie", rarity: "Rare" },
-
-  { dex: 122, name: "MrMime", rarity: "Ultra" },
-
-  { dex: 123, name: "Scyther", rarity: "Rare" },
-  { dex: 124, name: "Jynx", rarity: "Rare" },
-  { dex: 125, name: "Electabuzz", rarity: "Rare" },
-  { dex: 126, name: "Magmar", rarity: "Rare" },
-
-  { dex: 127, name: "Pinsir", rarity: "Rare" },
-  { dex: 128, name: "Tauros", rarity: "Rare" },
-
-  { dex: 129, name: "Magikarp", rarity: "Common" },
-  { dex: 130, name: "Gyarados", rarity: "Uncommon" },
-
-  { dex: 131, name: "Lapras", rarity: "Rare" },
-  { dex: 132, name: "Ditto", rarity: "Rare" },
-
-  { dex: 133, name: "Eevee", rarity: "Rare" },
-  { dex: 134, name: "Vaporeon", rarity: "Rare" },
-  { dex: 135, name: "Jolteon", rarity: "Rare" },
-  { dex: 136, name: "Flareon", rarity: "Rare" },
-
-  { dex: 137, name: "Porygon", rarity: "Rare" },
-
-  { dex: 138, name: "Omanyte", rarity: "Ultra" },
-  { dex: 139, name: "Omastar", rarity: "Rare" },
-
-  { dex: 140, name: "Kabuto", rarity: "Ultra" },
-  { dex: 141, name: "Kabutops", rarity: "Rare" },
-
-  { dex: 142, name: "Aerodactyl", rarity: "Ultra" },
-
-  { dex: 143, name: "Snorlax", rarity: "Rare" },
-
-  { dex: 144, name: "Articuno", rarity: "Mythical" },
-  { dex: 145, name: "Zapdos", rarity: "Mythical" },
-  { dex: 146, name: "Moltres", rarity: "Mythical" },
-
-  { dex: 147, name: "Dratini", rarity: "Ultra" },
-  { dex: 148, name: "Dragonair", rarity: "Ultra" },
-  { dex: 149, name: "Dragonite", rarity: "Mythical" },
-
-  { dex: 150, name: "Mewtwo", rarity: "Mythical" },
-  { dex: 151, name: "Mew", rarity: "Mythical" }
+  const rarityTable = [
+  {
+    name: "Common",
+    class: "common",
+    chance: 70,
+    rank: 1,
+    pool: [
+      "Bulbasaur","Charmander","Squirtle",
+      "Caterpie","Weedle","Pidgey","Rattata","Spearow",
+      "Ekans","Sandshrew","Nidoran-F","Nidoran-M",
+      "Zubat","Oddish","Paras","Venonat","Diglett",
+      "Meowth","Psyduck","Mankey","Poliwag",
+      "Bellsprout","Geodude","Magnemite",
+      "Shellder","Krabby","Voltorb","Exeggcute",
+      "Koffing","Horsea","Goldeen","Magikarp"
+    ]
+  },
+
+  {
+    name: "Uncommon",
+    class: "uncommon",
+    chance: 20,
+    rank: 2,
+    pool: [
+      "Ivysaur","Charmeleon","Wartortle",
+      "Metapod","Kakuna","Pidgeotto","Raticate","Fearow",
+      "Arbok","Sandslash","Nidorina","Nidorino",
+      "Golbat","Gloom","Parasect","Venomoth",
+      "Dugtrio","Persian","Golduck","Primeape",
+      "Poliwhirl","Weepinbell","Graveler",
+      "Magneton","Cloyster","Hypno","Kingler",
+      "Electrode","Exeggutor","Weezing",
+      "Seadra","Seaking","Gyarados"
+    ]
+  },
+
+  {
+    name: "Rare",
+    class: "rare",
+    chance: 8,
+    rank: 3,
+    pool: [
+      "Venusaur","Charizard","Blastoise",
+      "Butterfree","Beedrill","Pidgeot",
+      "Pikachu","Raichu",
+      "Nidoqueen","Nidoking",
+      "Clefable","Ninetales","Wigglytuff",
+      "Vileplume","Arcanine","Poliwrath",
+      "Alakazam","Machamp","Golem",
+      "Rapidash","Slowbro","Dodrio",
+      "Dewgong","Muk","Gengar","Marowak",
+      "Hitmonlee","Hitmonchan","Rhydon",
+      "Tangela","Kangaskhan","Scyther",
+      "Jynx","Electabuzz","Magmar",
+      "Pinsir","Tauros","Lapras",
+      "Ditto","Vaporeon","Jolteon","Flareon",
+      "Porygon","Omastar","Kabutops","Snorlax"
+    ]
+  },
+
+  {
+    name: "Ultra",
+    class: "ultra",
+    chance: 1.8,
+    rank: 4,
+    pool: [
+      "Farfetchd","Chansey","MrMime",
+      "Aerodactyl",
+      "Dratini","Dragonair","Dragonite"
+    ]
+  },
+
+  {
+    name: "Mythical",
+    class: "mythical",
+    chance: 0.2,
+    rank: 5,
+    pool: [
+      "Articuno","Zapdos","Moltres",
+      "Mewtwo","Mew"
+    ]
+  }
 ];
   
 const fullDex = rarityTable.flatMap(r => r.pool);
