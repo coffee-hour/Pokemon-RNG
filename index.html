@@ -86,7 +86,24 @@ button { background: #ff4757; color: white; cursor: pointer; }
   justify-content: center;
   flex-direction: column;
   font-size: 20px;
+  transition: transform 0.3s ease, color 0.3s ease;
+  animation: pop 0.3s ease;
 }
+
+/* Card animation */
+@keyframes pop {
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Rarity text colors for card */
+.card.common { color: #aaa; }
+.card.uncommon { color: #2ecc71; }
+.card.rare { color: #3498db; }
+.card.ultra { color: #9b59b6; }
+.card.mythical { color: gold; }
+.card.spoiler { color: teal; }
 
 </style>
 </head>
@@ -119,7 +136,6 @@ button { background: #ff4757; color: white; cursor: pointer; }
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
-// Rarity table
 const rarityTable = [
   { name:"Common", class:"common", chance:70, rank:1, pool:[
     "Bulbasaur","Charmander","Squirtle","Caterpie","Weedle","Pidgey","Rattata","Spearow",
@@ -150,11 +166,9 @@ const rarityTable = [
   ]}
 ];
 
-// Map for quick rarity lookup
 const rarityMap = {};
 rarityTable.forEach(tier => tier.pool.forEach(p => rarityMap[p] = tier.class));
 
-// Dex order
 const gen1DexOrder = [
   "Bulbasaur","Ivysaur","Venusaur","Charmander","Charmeleon","Charizard","Squirtle","Wartortle","Blastoise",
   "Caterpie","Metapod","Butterfree","Weedle","Kakuna","Beedrill","Pidgey","Pidgeotto","Pidgeot",
@@ -176,7 +190,6 @@ const gen1DexOrder = [
 const pokedexDropdown = document.getElementById("pokedexDropdown");
 const dexSearch = document.getElementById("dexSearch");
 
-// Player
 let player = {username:"",totalRolls:0,bestRank:0,bestPull:null,pokedex:{}};
 const login = document.getElementById("login");
 const game = document.getElementById("game");
@@ -184,10 +197,7 @@ const rollBtn = document.getElementById("rollBtn");
 const startBtn = document.getElementById("startBtn");
 
 function save() { localStorage.setItem("pokemonRNG",JSON.stringify(player)); }
-function load() {
-  const data = localStorage.getItem("pokemonRNG");
-  if(data){player=JSON.parse(data);login.style.display="none";game.style.display="block";updateUI();}
-}
+function load() { const data = localStorage.getItem("pokemonRNG"); if(data){player=JSON.parse(data);login.style.display="none";game.style.display="block";updateUI();} }
 
 function renderDex(filter="") {
   pokedexDropdown.innerHTML="";
@@ -222,6 +232,7 @@ rollBtn.onclick = ()=>{
   if(r.rank>player.bestRank){player.bestRank=r.rank;player.bestPull=p+" ("+r.name+")";}
   const card = document.getElementById("result");
   card.className = "card "+r.class;
+  card.style.animation = "pop 0.3s ease";
   card.innerHTML=`<div>${p}</div><small>${r.name}</small>`;
   save(); updateUI();
 };
