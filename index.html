@@ -9,67 +9,62 @@
 body {
   background: radial-gradient(circle at top, #1b1f4b, #0a0c1a);
   color: #fff;
-  font-family: 'Trebuchet MS', Arial, sans-serif;
+  font-family: Arial, sans-serif;
   text-align: center;
   padding: 30px;
 }
 
-h1 { letter-spacing: 2px; }
-
-input, button {
+button, input {
   padding: 12px;
-  margin: 10px;
-  border-radius: 12px;
+  margin: 8px;
+  border-radius: 10px;
   border: none;
   font-size: 16px;
 }
 
 button {
-  background: linear-gradient(145deg, #ff4757, #ff6b81);
+  background: #ff4757;
   color: white;
   cursor: pointer;
 }
 
-#game { margin-top: 25px; }
-
 .card {
-  margin: 25px auto;
-  width: 260px;
-  height: 180px;
-  border-radius: 18px;
+  margin: 20px auto;
+  width: 250px;
+  height: 160px;
+  border-radius: 15px;
   background: #14183a;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
-  font-size: 22px;
+  justify-content: center;
+  flex-direction: column;
+  font-size: 20px;
 }
 
-.card.common { color: #aaa; }
-.card.uncommon { color: #2ecc71; }
-.card.rare { color: #3498db; }
-.card.ultra { color: #9b59b6; }
-.card.mythical { color: gold; }
-.card.spoiler { color: teal; }
+.common { color:#aaa; }
+.uncommon { color:#2ecc71; }
+.rare { color:#3498db; }
+.ultra { color:#9b59b6; }
+.mythical { color:gold; }
+.spoiler { color:teal; }
 
 .dex-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 10px;
-  max-width: 700px;
-  margin: auto;
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px,1fr));
+  gap:8px;
+  max-width:700px;
+  margin:auto;
 }
 
 .dex-entry {
-  padding: 8px;
-  border-radius: 10px;
-  background: #0f1233;
-  font-size: 13px;
-  opacity: 0.35;
+  background:#0f1233;
+  padding:6px;
+  border-radius:8px;
+  opacity:0.35;
 }
 
 .dex-entry.collected {
-  opacity: 1;
+  opacity:1;
 }
 </style>
 </head>
@@ -79,60 +74,37 @@ button {
 <h1>🎲 Pokemon RNG</h1>
 
 <div id="login">
-  <input id="usernameInput" placeholder="Enter username">
+  <input id="usernameInput" placeholder="Username">
   <br>
-  <button id="startBtn">Start Game</button>
+  <button id="startBtn">Start</button>
 </div>
 
 <div id="game" style="display:none;">
   <p id="playerInfo"></p>
+  <button id="rollBtn">Roll Pokemon</button>
 
-  <button id="rollBtn">🎲 Roll Pokemon</button>
+  <div id="result" class="card common">Roll to begin</div>
 
-  <div id="result" class="card common">
-    Roll to begin!
-  </div>
+  <p>Rolls: <span id="rolls">0</span></p>
+  <p>Best: <span id="best">None</span></p>
 
-  <p>Total Rolls: <span id="rolls">0</span></p>
-  <p>Best Pull: <span id="best">None</span></p>
-
-  <h3>📖 Pokedex</h3>
+  <h3>Pokedex</h3>
   <div id="pokedex" class="dex-grid"></div>
 </div>
 
 <script>
+document.addEventListener("DOMContentLoaded", () => {
+
 const rarityTable = [
-  { name:"Common", class:"common", chance:70, pool:[
-    "Pidgey","Rattata","Caterpie","Weedle","Spearow","Ekans",
-    "Sandshrew","NidoranF","NidoranM","Zubat","Oddish","Paras"
-  ], rank:1 },
-
-  { name:"Uncommon", class:"uncommon", chance:20, pool:[
-    "Pidgeotto","Raticate","Fearow","Arbok","Sandslash",
-    "Nidorina","Nidorino","Golbat","Gloom","Parasect"
-  ], rank:2 },
-
-  { name:"Rare", class:"rare", chance:8, pool:[
-    "Pidgeot","Arcanine","Nidoking","Nidoqueen",
-    "Venusaur","Charmeleon","Wartortle","Raichu"
-  ], rank:3 },
-
-  { name:"Ultra", class:"ultra", chance:1.8, pool:[
-    "Dragonite","Gyarados","Snorlax","Lapras"
-  ], rank:4 },
-
-  { name:"Mythical", class:"mythical", chance:0.15, pool:[
-    "Mew","Articuno","Zapdos","Moltres","Mewtwo"
-  ], rank:5 },
-
-  { name:"Spoiler", class:"spoiler", chance:0.05, pool:[
-    "Celebi","HoOh","Raikou","Entei","Suicune","Lugia"
-  ], rank:6 }
+  {name:"Common", class:"common", chance:70, pool:["Pidgey","Rattata","Zubat"], rank:1},
+  {name:"Uncommon", class:"uncommon", chance:20, pool:["Golbat","Fearow"], rank:2},
+  {name:"Rare", class:"rare", chance:8, pool:["Arcanine","Raichu"], rank:3},
+  {name:"Ultra", class:"ultra", chance:1.8, pool:["Dragonite"], rank:4},
+  {name:"Mythical", class:"mythical", chance:0.15, pool:["Mewtwo"], rank:5},
+  {name:"Spoiler", class:"spoiler", chance:0.05, pool:["Lugia"], rank:6}
 ];
 
-const fullDex = rarityTable.flatMap(r =>
-  r.pool.map(p => ({ name:p, rarity:r.name }))
-);
+const fullDex = rarityTable.flatMap(r => r.pool);
 
 let player = {
   username:"",
@@ -142,84 +114,83 @@ let player = {
   pokedex:{}
 };
 
-function savePlayer() {
-  localStorage.setItem("pokemonRNGPlayer", JSON.stringify(player));
+const login = document.getElementById("login");
+const game = document.getElementById("game");
+const rollBtn = document.getElementById("rollBtn");
+const startBtn = document.getElementById("startBtn");
+
+function save() {
+  localStorage.setItem("pokemonRNG", JSON.stringify(player));
 }
 
-function loadPlayer() {
-  const saved = localStorage.getItem("pokemonRNGPlayer");
-  if (!saved) return;
-  player = JSON.parse(saved);
-  document.getElementById("login").style.display = "none";
-  document.getElementById("game").style.display = "block";
+function load() {
+  const data = localStorage.getItem("pokemonRNG");
+  if (!data) return;
+  player = JSON.parse(data);
+  login.style.display="none";
+  game.style.display="block";
   updateUI();
 }
 
-function renderPokedex() {
+function updateUI() {
+  document.getElementById("playerInfo").textContent = "Trainer: " + player.username;
+  document.getElementById("rolls").textContent = player.totalRolls;
+  document.getElementById("best").textContent = player.bestPull || "None";
+  renderDex();
+}
+
+function renderDex() {
   const dex = document.getElementById("pokedex");
-  dex.innerHTML = "";
+  dex.innerHTML="";
   fullDex.forEach(p => {
-    const owned = player.pokedex[p.name];
     const div = document.createElement("div");
-    div.className = "dex-entry" + (owned ? " collected" : "");
-    div.textContent = owned ? p.name : "?????";
+    div.className = "dex-entry" + (player.pokedex[p] ? " collected" : "");
+    div.textContent = player.pokedex[p] ? p : "?????";
     dex.appendChild(div);
   });
 }
 
-function updateUI() {
-  document.getElementById("playerInfo").textContent =
-    "Trainer: " + player.username;
-  document.getElementById("rolls").textContent = player.totalRolls;
-  document.getElementById("best").textContent =
-    player.bestPull || "None";
-  renderPokedex();
-}
-
 function rollRarity() {
-  let roll = Math.random() * 100;
-  let total = 0;
-  for (const r of rarityTable) {
-    total += r.chance;
-    if (roll <= total) return r;
+  let r = Math.random()*100, sum=0;
+  for (const x of rarityTable) {
+    sum+=x.chance;
+    if (r<=sum) return x;
   }
-  return rarityTable[0];
 }
 
-document.getElementById("rollBtn").onclick = () => {
-  const rarity = rollRarity();
-  const poke = rarity.pool[Math.floor(Math.random() * rarity.pool.length)];
-
+rollBtn.onclick = () => {
+  const r = rollRarity();
+  const p = r.pool[Math.floor(Math.random()*r.pool.length)];
   player.totalRolls++;
-  player.pokedex[poke] = (player.pokedex[poke] || 0) + 1;
-
-  if (rarity.rank > player.bestRank) {
-    player.bestRank = rarity.rank;
-    player.bestPull = poke + " (" + rarity.name + ")";
+  player.pokedex[p] = (player.pokedex[p]||0)+1;
+  if (r.rank > player.bestRank) {
+    player.bestRank = r.rank;
+    player.bestPull = p + " (" + r.name + ")";
   }
-
   const card = document.getElementById("result");
-  card.className = "card " + rarity.class;
-  card.innerHTML = "<div>" + poke + "</div><small>" + rarity.name + "</small>";
-
-  savePlayer();
+  card.className = "card " + r.class;
+  card.innerHTML = `<div>${p}</div><small>${r.name}</small>`;
+  save();
   updateUI();
 };
 
-document.getElementById("startBtn").onclick = () => {
+startBtn.onclick = () => {
   const name = document.getElementById("usernameInput").value.trim();
-  if (!name) return alert("Enter a username!");
-  player.username = name;
-  player.totalRolls = 0;
-  player.bestRank = 0;
-  player.bestPull = null;
-  player.pokedex = {};
-  document.getElementById("login").style.display = "none";
-  document.getElementById("game").style.display = "block";
-  savePlayer();
+  if (!name) return alert("Enter a name");
+  player = {username:name,totalRolls:0,bestRank:0,bestPull:null,pokedex:{}};
+  login.style.display="none";
+  game.style.display="block";
+  save();
   updateUI();
 };
 
+load();
+
+});
+</script>
+
+</body>
+</html>
 loadPlayer();
 </script>
 
