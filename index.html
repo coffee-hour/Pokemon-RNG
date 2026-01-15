@@ -136,154 +136,64 @@ button { background: #ff4757; color: white; cursor: pointer; }
 document.addEventListener("DOMContentLoaded", () => {
 
 // --- Rarities & Pools ---
-const genAllOrder = [
-  "Bulbasaur","Ivysaur","Venusaur",
-  "Charmander","Charmeleon","Charizard",
-  "Squirtle","Wartortle","Blastoise",
-  "Caterpie","Metapod","Butterfree",
-  "Weedle","Kakuna","Beedrill",
-  "Pidgey","Pidgeotto","Pidgeot",
-  "Rattata","Raticate",
-  "Spearow","Fearow",
-  "Ekans","Arbok",
-  "Sandshrew","Sandslash",
-  "Nidoran-F","Nidorina","Nidoqueen",
-  "Nidoran-M","Nidorino","Nidoking",
-  "Clefairy","Clefable",
-  "Vulpix","Ninetales",
-  "Jigglypuff","Wigglytuff",
-  "Zubat","Golbat",
-  "Oddish","Gloom","Vileplume",
-  "Paras","Parasect",
-  "Venonat","Venomoth",
-  "Diglett","Dugtrio",
-  "Meowth","Persian",
-  "Psyduck","Golduck",
-  "Mankey","Primeape",
-  "Growlithe","Arcanine",
-  "Poliwag","Poliwhirl","Poliwrath",
-  "Abra","Kadabra","Alakazam",
-  "Machop","Machoke","Machamp",
-  "Bellsprout","Weepinbell","Victreebel",
-  "Tentacool","Tentacruel",
-  "Geodude","Graveler","Golem",
-  "Ponyta","Rapidash",
-  "Slowpoke","Slowbro",
-  "Magnemite","Magneton",
-  "Farfetchd",
-  "Doduo","Dodrio",
-  "Seel","Dewgong",
-  "Grimer","Muk",
-  "Shellder","Cloyster",
-  "Gastly","Haunter","Gengar",
-  "Onix",
-  "Drowzee","Hypno",
-  "Krabby","Kingler",
-  "Voltorb","Electrode",
-  "Exeggcute","Exeggutor",
-  "Cubone","Marowak",
-  "Hitmonlee","Hitmonchan",
-  "Lickitung",
-  "Koffing","Weezing",
-  "Rhyhorn","Rhydon",
-  "Chansey",
-  "Tangela",
-  "Kangaskhan",
-  "Horsea","Seadra",
-  "Goldeen","Seaking",
-  "Staryu","Starmie",
-  "MrMime",
-  "Scyther",
-  "Jynx",
-  "Electabuzz",
-  "Magmar",
-  "Pinsir",
-  "Tauros",
-  "Magikarp","Gyarados",
-  "Lapras",
-  "Ditto",
-  "Eevee","Vaporeon","Jolteon","Flareon",
-  "Porygon",
-  "Omanyte","Omastar",
-  "Kabuto","Kabutops",
-  "Aerodactyl",
-  "Snorlax",
-  "Articuno","Zapdos","Moltres",
-  "Dratini","Dragonair","Dragonite",
-  "Mewtwo",
-  "Mew"
-   "Chikorita","Bayleef","Meganium",
-  "Cyndaquil","Quilava","Typhlosion",
-  "Totodile","Croconaw","Feraligatr",
-  "Sentret","Furret",
-  "Hoothoot","Noctowl",
-  "Ledyba","Ledian",
-  "Spinarak","Ariados",
-  "Crobat",
-  "Chinchou","Lanturn",
-  "Pichu","Cleffa","Igglybuff",
-  "Togepi","Togetic",
-  "Natu","Xatu",
-  "Mareep","Flaaffy","Ampharos",
-  "Bellossom","Marill","Azumarill",
-  "Sudowoodo","Politoed",
-  "Hoppip","Skiploom","Jumpluff",
-  "Aipom",
-  "Sunkern","Sunflora",
-  "Yanma",
-  "Wooper","Quagsire",
-  "Espeon","Umbreon",
-  "Murkrow",
-  "Slowking",
-  "Misdreavous",
-  "Unown",
-  "Wobbuffet",
-  "Girafarig",
-  "Pineco","Forretress",
-  "Dunsparce",
-  "Gligar",
-  "Steelix",
-  "Snubbull","Granbull",
-  "Qwilfish",
-  "Scizor",
-  "Shuckle",
-  "Heracross",
-  "Sneasel",
-  "Teddiursa","Ursaring",
-  "Slugma","Magcargo",
-  "Swinub","Piloswine",
-  "Corsola",
-  "Remoraid","Octillery",
-  "Delibird",
-  "Mantine",
-  "Skarmory",
-  "Houndour","Houndoom",
-  "Kingdra",
-  "Phanpy","Donphan",
-  "Porygon2",
-  "Stantler",
-  "Smeargle",
-  "Tyrogue","Hitmontop",
-  "Smoochum",
-  "Elekid",
-  "Magby",
-  "Miltank",
-  "Blissey",
-  "Raikou","Entei","Suicune",
-  "Larvitar","Pupitar","Tyranitar",
-  "Lugia","Ho-Oh",
-  "Celebi"];
+const rarityTable = [
+  { name:"Common", class:"common", chance:65, pool:[
+    "Bulbasaur","Charmander","Squirtle","Caterpie","Weedle","Pidgey","Rattata","Spearow",
+    "Ekans","Sandshrew","Nidoran-F","Nidoran-M","Zubat","Oddish","Paras","Venonat",
+    "Diglett","Meowth","Psyduck","Mankey","Poliwag","Bellsprout","Geodude","Magnemite",
+    "Shellder","Krabby","Voltorb","Exeggcute","Koffing","Horsea","Goldeen","Magikarp",
+    "Chikorita","Cyndaquil","Totodile","Sentret","Hoothoot","Ledyba","Spinarak","Chinchou",
+    "Pichu","Cleffa","Igglybuff","Togepi","Natu","Mareep","Marill","Hoppip","Sunkern",
+    "Wooper","Murkrow","Gligar","Snubbull","Swinub","Remoraid","Delibird","Phanpy","Tyrogue"
+  ]},
+  { name:"Uncommon", class:"uncommon", chance:20, pool:[
+    "Ivysaur","Charmeleon","Wartortle","Metapod","Kakuna","Pidgeotto","Raticate","Fearow",
+    "Arbok","Sandslash","Nidorina","Nidorino","Golbat","Gloom","Parasect","Venomoth",
+    "Dugtrio","Persian","Golduck","Primeape","Poliwhirl","Weepinbell","Graveler",
+    "Magneton","Cloyster","Hypno","Kingler","Electrode","Exeggutor","Weezing",
+    "Seadra","Seaking","Gyarados",
+    "Bayleef","Quilava","Croconaw","Furret","Noctowl","Ledian","Ariados","Crobat",
+    "Lanturn","Togetic","Xatu","Flaaffy","Bellossom","Azumarill","Sudowoodo","Politoed",
+    "Skiploom","Jumpluff","Aipom","Sunflora","Yanma","Quagsire","Espeon","Umbreon",
+    "Slowking","Misdreavous","Unown","Wobbuffet","Girafarig","Forretress","Dunsparce",
+    "Steelix","Granbull","Qwilfish","Scizor","Shuckle","Heracross","Sneasel","Ursaring",
+    "Magcargo","Piloswine","Corsola","Octillery","Mantine","Skarmory","Houndour","Kingdra",
+    "Porygon2","Stantler","Smeargle","Hitmontop","Smoochum","Elekid","Magby","Miltank"
+  ]},
+  { name:"Rare", class:"rare", chance:8, pool:[
+    "Venusaur","Charizard","Blastoise","Butterfree","Beedrill","Pidgeot","Pikachu","Raichu",
+    "Nidoqueen","Nidoking","Clefable","Ninetales","Wigglytuff","Vileplume","Arcanine",
+    "Poliwrath","Alakazam","Machamp","Golem","Rapidash","Slowbro","Dodrio","Dewgong",
+    "Muk","Gengar","Marowak","Hitmonlee","Hitmonchan","Rhydon","Tangela","Kangaskhan",
+    "Scyther","Jynx","Electabuzz","Magmar","Pinsir","Tauros","Lapras","Ditto",
+    "Vaporeon","Jolteon","Flareon","Porygon","Omastar","Kabutops","Snorlax",
+    "Bayleef","Quilava","Croconaw","Furret","Noctowl","Ledian","Ariados","Crobat",
+    "Lanturn","Togetic","Xatu","Flaaffy","Bellossom","Azumarill","Sudowoodo","Politoed",
+    "Skiploom","Jumpluff","Aipom","Sunflora","Yanma","Quagsire","Espeon","Umbreon",
+    "Slowking","Misdreavous","Unown","Wobbuffet","Girafarig","Forretress","Dunsparce",
+    "Steelix","Granbull","Qwilfish","Scizor","Shuckle","Heracross","Sneasel","Ursaring",
+    "Magcargo","Piloswine","Corsola","Octillery","Mantine","Skarmory","Houndour","Kingdra",
+    "Porygon2","Stantler","Smeargle","Hitmontop","Smoochum","Elekid","Magby","Miltank"
+  ]},
+  { name:"Ultra", class:"ultra", chance:1.5, pool:[
+    "Farfetchd","Chansey","MrMime","Aerodactyl","Dratini","Dragonair","Dragonite"
+  ]},
+  { name:"Mythical", class:"mythical", chance:0.2, pool:[
+    "Articuno","Zapdos","Moltres","Mewtwo","Mew","Lugia","Ho-Oh","Celebi"
+  ]}
+];
+
 // Map rarity by Pokémon
 const rarityMap = {};
 rarityTable.forEach(tier => tier.pool.forEach(p => rarityMap[p] = tier.class));
 
-// Full Dex order
+// Dex order
 const genAllOrder = [].concat(...rarityTable.map(t=>t.pool));
 
 const pokedexDropdown = document.getElementById("pokedexDropdown");
 const dexSearch = document.getElementById("dexSearch");
 
-let player = {username:"",totalRolls:0,bestRank:0,bestPull:null,pokedex:{}};
+let player = {username:"", totalRolls:0, bestRank:0, bestPull:null, pokedex:{}};
 const login = document.getElementById("login");
 const game = document.getElementById("game");
 const rollBtn = document.getElementById("rollBtn");
@@ -296,7 +206,7 @@ function load(){
   if(data){ player=JSON.parse(data); login.style.display="none"; game.style.display="block"; updateUI(); }
 }
 
-// Render Dex with shiny stars
+// Render Dex
 function renderDex(filter=""){
   pokedexDropdown.innerHTML="";
   genAllOrder.forEach((p,index)=>{
@@ -346,7 +256,7 @@ rollBtn.onclick=()=>{
   const isShiny = Math.random() < 0.01; // 1% shiny chance
 
   player.totalRolls++;
-  if(!player.pokedex[p]) player.pokedex[p]={normal:0,shiny:0};
+  if(!player.pokedex[p]) player.pokedex[p]={normal:0, shiny:0};
   if(isShiny) player.pokedex[p].shiny++; else player.pokedex[p].normal++;
 
   if(r.rank>player.bestRank){
@@ -357,7 +267,7 @@ rollBtn.onclick=()=>{
   const card = document.getElementById("result");
   card.className = "card "+r.class;
   card.style.animation="POP 0.5s ease";
-  card.innerHTML=`<div>${p}${isShiny?" ☆":""}</div><small>${r.name}${isShiny?" ★":""}</small>`;
+  card.innerHTML=`<div>${p}${isShiny?" ★":""}</div><small>${r.name}</small>`;
 
   save(); updateUI();
 };
