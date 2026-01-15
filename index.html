@@ -95,14 +95,13 @@ button {
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
-const rarityTable = [
-  {name:"Common", class:"common", chance:70, pool:["Pidgey","Rattata","Zubat"], rank:1},
-  {name:"Uncommon", class:"uncommon", chance:20, pool:["Golbat","Fearow"], rank:2},
-  {name:"Rare", class:"rare", chance:8, pool:["Arcanine","Raichu"], rank:3},
-  {name:"Ultra", class:"ultra", chance:1.8, pool:["Dragonite"], rank:4},
-  {name:"Mythical", class:"mythical", chance:0.15, pool:["Mewtwo"], rank:5},
-  {name:"Spoiler", class:"spoiler", chance:0.05, pool:["Lugia"], rank:6}
-];
+const rarityTable = [ 
+{ name:"Common", class:"common", chance:70, pool:[ "Pidgey","Rattata","Caterpie","Weedle","Spearow","Ekans","Sandshrew","Nidoran-F","Nidoran-M","Zubat","Oddish","Paras","Venonat","Diglett","Meowth","Psyduck","Mankey","Poliwag","Bellsprout","Geodude" ], rank:1 }, 
+{ name:"Uncommon", class:"uncommon", chance:20, pool:[ "Pidgeotto","Raticate","Metapod","Kakuna","Fearow","Arbok","Sandslash","Nidorina","Nidorino","Golbat","Gloom","Parasect","Venomoth","Dugtrio","Persian","Golduck","Primeape","Poliwhirl","Weepinbell","Graveler" ], rank:2 }, 
+{ name:"Rare", class:"rare", chance:8, pool:[ "Pidgeot","Rhydon","Beedrill","Fearow","Arcanine","Nidoking","Nidoqueen","Venusaur","Charmeleon","Wartortle","Raichu","Machoke","Machamp","Golem","Rapidash","Poliwrath","Kadabra","Alakazam","Hitmonlee","Hitmonchan" ], rank:3 }, 
+{ name:"Ultra", class:"ultra", chance:1.8, pool:[ "Dragonite","Gyarados","Snorlax","Lapras" ], rank:4 }, 
+{ name:"Mythical", class:"mythical", chance:0.15, pool:[ "Mew","Articuno","Zapdos","Moltres","Mewtwo" ], rank:5 }, 
+{ name:"Spoiler", class:"spoiler", chance:0.05, pool:[ "Celebi","Ho-Oh","Raikou","Entei","Suicune","Lugia" ], rank:6 } ];
 
 const fullDex = rarityTable.flatMap(r => r.pool);
 
@@ -191,7 +190,6 @@ load();
 
 </body>
 </html>
-loadPlayer();
 </script>
 
 </body>
