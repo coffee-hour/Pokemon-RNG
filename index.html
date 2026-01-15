@@ -153,110 +153,91 @@ const rarityTable = [
     "Celebi","Ho-Oh","Raikou","Entei","Suicune","Lugia"
   ], rank:6 }
 ];
-  const fullDex = rarityTable.flatMap(r =>
+
+const fullDex = rarityTable.flatMap(r =>
   r.pool.map(p => ({ name: p, rarity: r.name }))
 );
 
 let player = { username:"", totalRolls:0, bestRank:0, bestPull:null, pokedex:{} };
 
-// ---------- LOCAL STORAGE ----------
 function savePlayer() {
   localStorage.setItem('pokemonRNGPlayer', JSON.stringify(player));
 }
 
 function loadPlayer() {
   const saved = localStorage.getItem('pokemonRNGPlayer');
-  if(saved) {
+  if (saved) {
     player = JSON.parse(saved);
-    login.style.display = "none";
-    game.style.display = "block";
+    document.getElementById('login').style.display = "none";
+    document.getElementById('game').style.display = "block";
     updateUI();
   }
 }
 
-// ---------- UPDATE UI ----------
- function renderPokedex(){
+function renderPokedex(){
   const dex = document.getElementById("pokedex");
   dex.innerHTML = "";
-
   fullDex.forEach(p => {
     const owned = player.pokedex[p.name] || 0;
-
     const div = document.createElement("div");
     div.className = "dex-entry" + (owned ? " collected" : "");
     div.innerHTML = `
       ${owned ? p.name : "?????"}
       <small>${owned ? `${p.rarity} • x${owned}` : "Not Collected"}</small>
     `;
-
     dex.appendChild(div);
   });
 }
 
 function updateUI() {
-  playerInfo.textContent = `Trainer: ${player.username}`;
-  rolls.textContent = player.totalRolls;
-  best.textContent = player.bestPull ?? "None";
-  renderPokedex(); // ✅ correct place
+  document.getElementById('playerInfo').textContent = `Trainer: ${player.username}`;
+  document.getElementById('rolls').textContent = player.totalRolls;
+  document.getElementById('best').textContent = player.bestPull ?? "None";
+  renderPokedex();
 }
-// ---------- ROLL FUNCTIONS ----------
-function rollRarity(){
-  let r = Math.random()*100, c=0;
-  for(const x of rarityTable){
+
+function rollRarity() {
+  let r = Math.random() * 100, c = 0;
+  for (const x of rarityTable) {
     c += x.chance;
-    if(r <= c) return x;
+    if (r <= c) return x;
   }
   return rarityTable[0];
 }
 
-rollBtn.addEventListener("click", ()=>{
+document.getElementById('rollBtn').addEventListener("click", () => {
   const rarity = rollRarity();
   const poke = rarity.pool[Math.floor(Math.random()*rarity.pool.length)];
-
   player.totalRolls++;
-
-  // Update best pull
-  if(rarity.rank > player.bestRank){
+  if (rarity.rank > player.bestRank) {
     player.bestRank = rarity.rank;
     player.bestPull = `${poke} (${rarity.name})`;
   }
-
-  // Update Pokédex
   player.pokedex[poke] = (player.pokedex[poke] || 0) + 1;
-
-  // Update card display
+  const result = document.getElementById('result');
   result.className = `card ${rarity.class}`;
   result.innerHTML = `<div>${poke}</div><small>${rarity.name}</small>`;
-
-  // Screen shake for rare pulls
-  if(rarity.rank >= 4){ // Ultra or Mythical
-    document.body.classList.add("shake");
-    setTimeout(()=>document.body.classList.remove("shake"),400);
-  }
-
   updateUI();
   savePlayer();
 });
 
-// ---------- START BUTTON ----------
-startBtn.addEventListener("click", ()=>{
-  const name = usernameInput.value.trim();
-  if(!name){ alert("Please enter a username!"); return; }
-
+document.getElementById('startBtn').addEventListener("click", () => {
+  const name = document.getElementById('usernameInput').value.trim();
+  if (!name) { alert("Please enter a username!"); return; }
   player.username = name;
   player.totalRolls = 0;
   player.bestRank = 0;
   player.bestPull = null;
   player.pokedex = {};
-  login.style.display = "none";
-  game.style.display = "block";
+  document.getElementById('login').style.display = "none";
+  document.getElementById('game').style.display = "block";
   updateUI();
   savePlayer();
 });
 
-// ---------- LOAD ON START ----------
 loadPlayer();
 </script>
+
 
 </body>
 </html>
