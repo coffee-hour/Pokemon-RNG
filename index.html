@@ -186,6 +186,48 @@ rollBtn.addEventListener("click", () => {
 
 loadPlayer();
 </script>
+  <div id="pokedex" style="margin-top:20px; font-size:14px; text-align:left; max-width:600px; margin-left:auto; margin-right:auto;">
+  Pokédex: None yet!
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const pokedexDiv = document.getElementById("pokedex");
+
+  // Example player object
+  let player = {
+    pokedex: {} // store Pokémon counts
+  };
+
+  // Function to update the Pokédex display
+  function updatePokedex() {
+    const entries = Object.entries(player.pokedex);
+    if(entries.length === 0){
+      pokedexDiv.textContent = "Pokédex: None yet!";
+      return;
+    }
+
+    // Sort alphabetically
+    entries.sort((a,b)=>a[0].localeCompare(b[0]));
+
+    // Create display string
+    const display = entries.map(([pokemon, count]) => `${pokemon}: ${count}`).join(" | ");
+    pokedexDiv.textContent = `Pokédex: ${display}`;
+  }
+
+  // Example function for rolling a Pokémon
+  function rollPokemon(pokemonName) {
+    player.pokedex[pokemonName] = (player.pokedex[pokemonName] || 0) + 1;
+    updatePokedex();
+  }
+
+  // Example test rolls
+  rollPokemon("Pidgey");
+  rollPokemon("Rattata");
+  rollPokemon("Pidgey"); // rolled again
+});
+</script>
+
 
 </body>
 </html>
