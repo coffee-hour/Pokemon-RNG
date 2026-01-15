@@ -104,7 +104,6 @@ button { background: #ff4757; color: white; cursor: pointer; }
 .card.ultra { color: #9b59b6; }
 .card.mythical { color: gold; }
 .card.spoiler { color: teal; }
-
 </style>
 </head>
 
@@ -136,143 +135,52 @@ button { background: #ff4757; color: white; cursor: pointer; }
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
+// --- Rarities & Pools ---
 const rarityTable = [
   { name:"Common", class:"common", chance:65, rank:1, pool:[
-    // Kanto Commons
     "Bulbasaur","Charmander","Squirtle","Caterpie","Weedle","Pidgey","Rattata","Spearow",
     "Ekans","Sandshrew","Nidoran-F","Nidoran-M","Zubat","Oddish","Paras","Venonat",
     "Diglett","Meowth","Psyduck","Mankey","Poliwag","Bellsprout","Geodude","Magnemite",
     "Shellder","Krabby","Voltorb","Exeggcute","Koffing","Horsea","Goldeen","Magikarp",
-    // Johto Commons
     "Chikorita","Cyndaquil","Totodile","Sentret","Hoothoot","Ledyba","Spinarak","Chinchou",
     "Pichu","Cleffa","Igglybuff","Togepi","Natu","Mareep","Marill","Hoppip","Sunkern",
     "Wooper","Murkrow","Gligar","Snubbull","Swinub","Remoraid","Delibird","Phanpy","Tyrogue"
   ]},
-
   { name:"Uncommon", class:"uncommon", chance:20, rank:2, pool:[
-    // Kanto Uncommons
     "Ivysaur","Charmeleon","Wartortle","Metapod","Kakuna","Pidgeotto","Raticate","Fearow",
     "Arbok","Sandslash","Nidorina","Nidorino","Golbat","Gloom","Parasect","Venomoth",
     "Dugtrio","Persian","Golduck","Primeape","Poliwhirl","Weepinbell","Graveler",
     "Magneton","Cloyster","Hypno","Kingler","Electrode","Exeggutor","Weezing",
-    "Seadra","Seaking","Gyarados",
-    // Johto Uncommons
-    "Bayleef","Quilava","Croconaw","Furret","Noctowl","Ledian","Ariados","Crobat",
-    "Lanturn","Togetic","Xatu","Flaaffy","Bellossom","Azumarill","Sudowoodo","Politoed",
-    "Skiploom","Jumpluff","Aipom","Sunflora","Yanma","Quagsire","Espeon","Umbreon",
-    "Slowking","Misdreavous","Unown","Wobbuffet","Girafarig","Forretress","Dunsparce",
-    "Steelix","Granbull","Qwilfish","Scizor","Shuckle","Heracross","Sneasel","Ursaring",
-    "Magcargo","Piloswine","Corsola","Octillery","Mantine","Skarmory","Houndour","Kingdra",
-    "Porygon2","Stantler","Smeargle","Hitmontop","Smoochum","Elekid","Magby","Miltank"
+    "Seadra","Seaking","Gyarados","Bayleef","Quilava","Croconaw","Furret","Noctowl",
+    "Ledian","Ariados","Crobat","Lanturn","Togetic","Xatu","Flaaffy","Bellossom","Azumarill",
+    "Sudowoodo","Politoed","Skiploom","Jumpluff","Aipom","Sunflora","Yanma","Quagsire",
+    "Espeon","Umbreon","Slowking","Misdreavous","Unown","Wobbuffet","Girafarig",
+    "Forretress","Dunsparce","Steelix","Granbull","Qwilfish","Scizor","Shuckle","Heracross",
+    "Sneasel","Ursaring","Magcargo","Piloswine","Corsola","Octillery","Mantine","Skarmory",
+    "Houndour","Kingdra","Porygon2","Stantler","Smeargle","Hitmontop","Smoochum","Elekid","Magby","Miltank"
   ]},
-
   { name:"Rare", class:"rare", chance:8, rank:3, pool:[
-    // Kanto Rares
     "Venusaur","Charizard","Blastoise","Butterfree","Beedrill","Pidgeot","Pikachu","Raichu",
     "Nidoqueen","Nidoking","Clefable","Ninetales","Wigglytuff","Vileplume","Arcanine",
     "Poliwrath","Alakazam","Machamp","Golem","Rapidash","Slowbro","Dodrio","Dewgong",
     "Muk","Gengar","Marowak","Hitmonlee","Hitmonchan","Rhydon","Tangela","Kangaskhan",
     "Scyther","Jynx","Electabuzz","Magmar","Pinsir","Tauros","Lapras","Ditto",
-    "Vaporeon","Jolteon","Flareon","Porygon","Omastar","Kabutops","Snorlax",
-    // Johto Rares
-    "Bayleef","Quilava","Croconaw","Furret","Noctowl","Ledian","Ariados","Crobat",
-    "Lanturn","Togetic","Xatu","Flaaffy","Bellossom","Azumarill","Sudowoodo","Politoed",
-    "Skiploom","Jumpluff","Aipom","Sunflora","Yanma","Quagsire","Espeon","Umbreon",
-    "Slowking","Misdreavous","Unown","Wobbuffet","Girafarig","Forretress","Dunsparce",
-    "Steelix","Granbull","Qwilfish","Scizor","Shuckle","Heracross","Sneasel","Ursaring",
-    "Magcargo","Piloswine","Corsola","Octillery","Mantine","Skarmory","Houndour","Kingdra",
-    "Porygon2","Stantler","Smeargle","Hitmontop","Smoochum","Elekid","Magby","Miltank"
+    "Vaporeon","Jolteon","Flareon","Porygon","Omastar","Kabutops","Snorlax"
   ]},
-
   { name:"Ultra", class:"ultra", chance:1.5, rank:4, pool:[
     "Farfetchd","Chansey","MrMime","Aerodactyl","Dratini","Dragonair","Dragonite"
   ]},
-
   { name:"Mythical", class:"mythical", chance:0.2, rank:5, pool:[
     "Articuno","Zapdos","Moltres","Mewtwo","Mew","Lugia","Ho-Oh","Celebi"
   ]}
 ];
 
+// Map rarity by Pokémon
 const rarityMap = {};
 rarityTable.forEach(tier => tier.pool.forEach(p => rarityMap[p] = tier.class));
 
-const genAllOrder = [
-  "Bulbasaur","Ivysaur","Venusaur","Charmander","Charmeleon","Charizard","Squirtle","Wartortle","Blastoise",
-  "Caterpie","Metapod","Butterfree","Weedle","Kakuna","Beedrill","Pidgey","Pidgeotto","Pidgeot",
-  "Rattata","Raticate","Spearow","Fearow","Ekans","Arbok","Sandshrew","Sandslash",
-  "Nidoran-F","Nidorina","Nidoqueen","Nidoran-M","Nidorino","Nidoking","Clefairy","Clefable","Vulpix","Ninetales",
-  "Jigglypuff","Wigglytuff","Zubat","Golbat","Oddish","Gloom","Vileplume","Paras","Parasect","Venonat","Venomoth",
-  "Diglett","Dugtrio","Meowth","Persian","Psyduck","Golduck","Mankey","Primeape","Growlithe","Arcanine",
-  "Poliwag","Poliwhirl","Poliwrath","Abra","Kadabra","Alakazam","Machop","Machoke","Machamp",
-  "Bellsprout","Weepinbell","Victreebel","Tentacool","Tentacruel","Geodude","Graveler","Golem",
-  "Ponyta","Rapidash","Slowpoke","Slowbro","Magnemite","Magneton","Farfetchd","Doduo","Dodrio",
-  "Seel","Dewgong","Grimer","Muk","Shellder","Cloyster","Gastly","Haunter","Gengar","Onix",
-  "Drowzee","Hypno","Krabby","Kingler","Voltorb","Electrode","Exeggcute","Exeggutor","Cubone","Marowak",
-  "Hitmonlee","Hitmonchan","Lickitung","Koffing","Weezing","Rhyhorn","Rhydon","Chansey","Tangela","Kangaskhan",
-  "Horsea","Seadra","Goldeen","Seaking","Staryu","Starmie","MrMime","Scyther","Jynx","Electabuzz","Magmar","Pinsir","Tauros",
-  "Magikarp","Gyarados","Lapras","Ditto","Eevee","Vaporeon","Jolteon","Flareon","Porygon","Omanyte","Omastar",
-  "Kabuto","Kabutops","Aerodactyl","Snorlax","Articuno","Zapdos","Moltres","Dratini","Dragonair","Dragonite","Mewtwo","Mew","Chikorita","Bayleef","Meganium",
-  "Cyndaquil","Quilava","Typhlosion",
-  "Totodile","Croconaw","Feraligatr",
-  "Sentret","Furret",
-  "Hoothoot","Noctowl",
-  "Ledyba","Ledian",
-  "Spinarak","Ariados",
-  "Crobat",
-  "Chinchou","Lanturn",
-  "Pichu","Cleffa","Igglybuff",
-  "Togepi","Togetic",
-  "Natu","Xatu",
-  "Mareep","Flaaffy","Ampharos",
-  "Bellossom","Marill","Azumarill",
-  "Sudowoodo","Politoed",
-  "Hoppip","Skiploom","Jumpluff",
-  "Aipom",
-  "Sunkern","Sunflora",
-  "Yanma",
-  "Wooper","Quagsire",
-  "Espeon","Umbreon",
-  "Murkrow",
-  "Slowking",
-  "Misdreavous",
-  "Unown",
-  "Wobbuffet",
-  "Girafarig",
-  "Pineco","Forretress",
-  "Dunsparce",
-  "Gligar",
-  "Steelix",
-  "Snubbull","Granbull",
-  "Qwilfish",
-  "Scizor",
-  "Shuckle",
-  "Heracross",
-  "Sneasel",
-  "Teddiursa","Ursaring",
-  "Slugma","Magcargo",
-  "Swinub","Piloswine",
-  "Corsola",
-  "Remoraid","Octillery",
-  "Delibird",
-  "Mantine",
-  "Skarmory",
-  "Houndour","Houndoom",
-  "Kingdra",
-  "Phanpy","Donphan",
-  "Porygon2",
-  "Stantler",
-  "Smeargle",
-  "Tyrogue","Hitmontop",
-  "Smoochum",
-  "Elekid",
-  "Magby",
-  "Miltank",
-  "Blissey",
-  "Raikou","Entei","Suicune",
-  "Larvitar","Pupitar","Tyranitar",
-  "Lugia","Ho-Oh",
-  "Celebi"
-];
+// Full Dex order
+const genAllOrder = [].concat(...rarityTable.map(t=>t.pool));
 
 const pokedexDropdown = document.getElementById("pokedexDropdown");
 const dexSearch = document.getElementById("dexSearch");
@@ -283,21 +191,44 @@ const game = document.getElementById("game");
 const rollBtn = document.getElementById("rollBtn");
 const startBtn = document.getElementById("startBtn");
 
-function save() { localStorage.setItem("pokemonRNG",JSON.stringify(player)); }
-function load() { const data = localStorage.getItem("pokemonRNG"); if(data){player=JSON.parse(data);login.style.display="none";game.style.display="block";updateUI();} }
+// Save/load
+function save(){ localStorage.setItem("pokemonRNG",JSON.stringify(player)); }
+function load(){ 
+  const data = localStorage.getItem("pokemonRNG"); 
+  if(data){ player=JSON.parse(data); login.style.display="none"; game.style.display="block"; updateUI(); }
+}
 
-function renderDex(filter="") {
+// Render Dex with shiny stars
+function renderDex(filter=""){
   pokedexDropdown.innerHTML="";
   genAllOrder.forEach((p,index)=>{
     if(filter && !p.toLowerCase().includes(filter.toLowerCase())) return;
+
     const div = document.createElement("div");
-    div.className = "dex-entry "+(player.pokedex[p]?"collected "+rarityMap[p]:rarityMap[p]);
-    div.textContent = `${String(index+1).padStart(3,"0")} — ${player.pokedex[p]?p:"?????"}`;
+    div.className = "dex-entry "+rarityMap[p];
+
+    if(player.pokedex[p]){
+      div.classList.add("collected");
+      div.textContent = `${String(index+1).padStart(3,"0")} — ${p}`;
+      // Shiny
+      if(player.pokedex[p].shiny>0){
+        const star = document.createElement("span");
+        star.textContent=" ★";
+        star.style.color="red";
+        div.appendChild(star);
+      } else {
+        div.textContent += " ☆";
+      }
+    } else {
+      div.textContent = `${String(index+1).padStart(3,"0")} — ????`;
+    }
+
     pokedexDropdown.appendChild(div);
   });
 }
 
-function updateUI() {
+// Update UI
+function updateUI(){
   document.getElementById("playerInfo").textContent = "Trainer: "+player.username;
   document.getElementById("rolls").textContent = player.totalRolls;
   document.getElementById("best").textContent = player.bestPull||"None";
@@ -305,34 +236,43 @@ function updateUI() {
 }
 
 // Roll
-function rollRarity() {
-  let r = Math.random()*100, sum=0;
+function rollRarity(){
+  let r=Math.random()*100, sum=0;
   for(const x of rarityTable){ sum+=x.chance; if(r<=sum) return x; }
   return rarityTable[0];
 }
 
-rollBtn.onclick = ()=>{
-  const r = rollRarity();
-  const p = r.pool[Math.floor(Math.random()*r.pool.length)];
+rollBtn.onclick=()=>{
+  const r=rollRarity();
+  const p=r.pool[Math.floor(Math.random()*r.pool.length)];
+  const isShiny = Math.random() < 0.01; // 1% shiny chance
+
   player.totalRolls++;
-  player.pokedex[p] = (player.pokedex[p]||0)+1;
-  if(r.rank>player.bestRank){player.bestRank=r.rank;player.bestPull=p+" ("+r.name+")";}
+  if(!player.pokedex[p]) player.pokedex[p]={normal:0,shiny:0};
+  if(isShiny) player.pokedex[p].shiny++; else player.pokedex[p].normal++;
+
+  if(r.rank>player.bestRank){
+    player.bestRank=r.rank;
+    player.bestPull = p + (isShiny?" (Shiny)":"") + " ("+r.name+")";
+  }
+
   const card = document.getElementById("result");
   card.className = "card "+r.class;
-  card.style.animation = "pop 0.3s ease";
-  card.innerHTML=`<div>${p}</div><small>${r.name}</small>`;
+  card.style.animation="POP 0.5s ease";
+  card.innerHTML=`<div>${p}${isShiny?" ☆":""}</div><small>${r.name}${isShiny?" ★":""}</small>`;
+
   save(); updateUI();
 };
 
 // Start
-startBtn.onclick = ()=>{
+startBtn.onclick=()=>{
   const name = document.getElementById("usernameInput").value.trim();
   if(!name) return alert("Enter a name");
   player={username:name,totalRolls:0,bestRank:0,bestPull:null,pokedex:{}};
   login.style.display="none"; game.style.display="block"; save(); updateUI();
 };
 
-// Search filter
+// Search
 dexSearch.addEventListener("input",(e)=>{ renderDex(e.target.value); });
 
 load();
