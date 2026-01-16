@@ -178,7 +178,7 @@ const rarityTable = [
   { name:"Ultra", class:"ultra", chance:1.5, pool:[
     "Farfetchd","Chansey","MrMime","Aerodactyl","Dratini","Dragonair","Dragonite"
   ]},
-  { name:"Mythical", class:"mythical", chance:0.2, pool:[
+  { name:"Mythical", class:"mythical", chance:0.5, pool:[
     "Articuno","Zapdos","Moltres","Mewtwo","Mew","Lugia","Ho-Oh","Celebi"
   ]}
 ];
@@ -273,7 +273,7 @@ function rollRarity(){
 rollBtn.onclick=()=>{
   const r=rollRarity();
   const p=r.pool[Math.floor(Math.random()*r.pool.length)];
-  const isShiny = Math.random() < 0.01;
+  const isShiny = Math.random() < 0.001;
   player.totalRolls++;
   if(!player.pokedex[p]) player.pokedex[p]={normal:0, shiny:0};
   if(isShiny) player.pokedex[p].shiny++; else player.pokedex[p].normal++;
