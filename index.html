@@ -8,88 +8,86 @@
 <style>
 body{
   margin:0;
-  background:radial-gradient(circle at top,#1b1f4b,#0a0c1a);
-  color:#fff;
-  font-family:Arial,sans-serif;
-  display:flex;
   padding:20px;
+  font-family:Arial,sans-serif;
+  background:radial-gradient(circle at top,#1b1f4b,#0a0c1a);
+  color:white;
+  display:flex;
 }
 
 /* Sidebar */
-#pokedexSidebar{
+#sidebar{
   width:260px;
   margin-right:20px;
   display:flex;
   flex-direction:column;
 }
+
 #dexSearch{
   padding:8px;
   border-radius:8px;
   border:none;
   margin-bottom:10px;
 }
-#pokedex{
+
+#dex{
   background:#0f1233;
-  border:2px solid #444;
   border-radius:10px;
   padding:10px;
-  max-height:80vh;
   overflow-y:auto;
+  max-height:80vh;
 }
 
-/* Dex entries */
 .dex-entry{
+  font-size:14px;
   padding:5px 8px;
-  margin:3px 0;
   border-radius:6px;
-  font-size:13px;
+  margin:3px 0;
   opacity:.35;
 }
+
 .dex-entry.collected{opacity:1}
 
 /* Rarity colors */
-.common{background:#b0bec5;color:#000}
-.uncommon{background:#66bb6a;color:#000}
+.common{background:#b0bec5;color:black}
+.uncommon{background:#66bb6a;color:black}
 .rare{background:#42a5f5}
 .ultra{background:#ab47bc}
-.mythical{background:linear-gradient(45deg,gold,orange);color:#000;font-weight:bold}
+.mythical{background:linear-gradient(45deg,gold,orange);color:black}
 
 /* Main */
-#main{
-  flex:1;
-  text-align:center;
-}
+#main{flex:1;text-align:center}
 
-button,input{
-  padding:10px;
+button{
+  padding:10px 16px;
   border:none;
   border-radius:10px;
-  margin:5px;
-}
-button{
   background:#ff4757;
-  color:#fff;
+  color:white;
   cursor:pointer;
 }
 
-/* Card */
 .card{
-  width:260px;
-  height:160px;
   margin:20px auto;
-  background:#000;
+  width:260px;
+  height:170px;
   border-radius:16px;
+  background:black;
   display:flex;
   flex-direction:column;
-  align-items:center;
   justify-content:center;
+  align-items:center;
+  font-size:20px;
   animation:pop .4s ease;
 }
+
 @keyframes pop{
-  from{transform:scale(.8);opacity:0}
-  to{transform:scale(1);opacity:1}
+  0%{transform:scale(.8);opacity:0}
+  60%{transform:scale(1.1)}
+  100%{transform:scale(1);opacity:1}
 }
-.card.common{color:#aaa}
+
+.card.common{color:#bbb}
 .card.uncommon{color:#2ecc71}
 .card.rare{color:#3498db}
 .card.ultra{color:#9b59b6}
@@ -99,123 +97,177 @@ button{
 
 <body>
 
-<div id="pokedexSidebar">
-  <input id="dexSearch" placeholder="Search Pokémon">
-  <div id="pokedex"></div>
+<div id="sidebar">
+  <input id="dexSearch" placeholder="Search Pokédex">
+  <div id="dex"></div>
 </div>
 
 <div id="main">
-  <h1>🎲 Pokémon RNG</h1>
+<h1>🎲 Pokémon RNG</h1>
 
-  <div id="login">
-    <input id="username" placeholder="Trainer name">
-    <br>
-    <button id="start">Start</button>
-  </div>
+<div id="login">
+  <input id="username" placeholder="Trainer name">
+  <br><br>
+  <button id="start">Start</button>
+</div>
 
-  <div id="game" style="display:none">
-    <p id="trainer"></p>
-    <button id="roll">Roll Pokémon</button>
-    <div id="card" class="card common">Roll to begin</div>
-    <p>Rolls: <span id="rolls">0</span></p>
-    <p>Best: <span id="best">None</span></p>
-  </div>
+<div id="game" style="display:none">
+  <p id="playerInfo"></p>
+  <button id="roll">Roll Pokémon</button>
+  <div id="result" class="card common">Roll to begin</div>
+  <p>Rolls: <span id="rolls">0</span></p>
+  <p>Best: <span id="best">None</span></p>
+</div>
 </div>
 
 <script>
 document.addEventListener("DOMContentLoaded",()=>{
 
-/* ===== DATA ===== */
-const dexOrder=[ "Bulbasaur","Ivysaur","Venusaur","Charmander","Charmeleon","Charizard","Squirtle","Wartortle","Blastoise","Caterpie","Metapod","Butterfree","Weedle","Kakuna","Beedrill","Pidgey","Pidgeotto","Pidgeot","Rattata","Raticate","Spearow","Fearow","Ekans","Arbok","Sandshrew","Sandslash","Nidoran-F","Nidorina","Nidoqueen","Nidoran-M","Nidorino","Nidoking","Clefairy","Clefable","Vulpix","Ninetales","Jigglypuff","Wigglytuff","Zubat","Golbat","Oddish","Gloom","Vileplume","Paras","Parasect","Venonat","Venomoth","Diglett","Dugtrio","Meowth","Persian","Psyduck","Golduck","Mankey","Primeape","Growlithe","Arcanine","Poliwag","Poliwhirl","Poliwrath","Abra","Kadabra","Alakazam","Machop","Machoke","Machamp","Bellsprout","Weepinbell","Victreebel","Tentacool","Tentacruel","Geodude","Graveler","Golem","Ponyta","Rapidash","Slowpoke","Slowbro","Magnemite","Magneton","Farfetchd","Doduo","Dodrio","Seel","Dewgong","Grimer","Muk","Shellder","Cloyster","Gastly","Haunter","Gengar","Onix","Drowzee","Hypno","Krabby","Kingler","Voltorb","Electrode","Exeggcute","Exeggutor","Cubone","Marowak","Hitmonlee","Hitmonchan","Lickitung","Koffing","Weezing","Rhyhorn","Rhydon","Chansey","Tangela","Kangaskhan","Horsea","Seadra","Goldeen","Seaking","Staryu","Starmie","MrMime","Scyther","Jynx","Electabuzz","Magmar","Pinsir","Tauros","Magikarp","Gyarados","Lapras","Ditto","Eevee","Vaporeon","Jolteon","Flareon","Porygon","Omanyte","Omastar","Kabuto","Kabutops","Aerodactyl","Snorlax","Articuno","Zapdos","Moltres","Dratini","Dragonair","Dragonite","Mewtwo","Mew" ];
+/* ---------------- DATA ---------------- */
 
-const megaSet=new Set(["Venusaur","Charizard","Blastoise","Beedrill","Pidgeot","Alakazam","Slowbro","Gengar","Kangaskhan","Pinsir","Gyarados","Aerodactyl","Mewtwo"]);
-
-const rarities=[
- {name:"Common",class:"common",chance:65,pool:dexOrder.slice(0,60)},
- {name:"Uncommon",class:"uncommon",chance:20,pool:dexOrder.slice(60,100)},
- {name:"Rare",class:"rare",chance:10,pool:dexOrder.slice(100,130)},
- {name:"Ultra",class:"ultra",chance:3,pool:["Aerodactyl","Snorlax","Dragonite"]},
- {name:"Mythical",class:"mythical",chance:2,pool:["Articuno","Zapdos","Moltres","Mewtwo","Mew"]}
+const rarityTable=[
+ {name:"Common",class:"common",chance:70,rank:1,pool:[
+  "Bulbasaur","Charmander","Squirtle","Caterpie","Weedle","Pidgey","Rattata","Spearow"
+ ]},
+ {name:"Uncommon",class:"uncommon",chance:20,rank:2,pool:[
+  "Ivysaur","Charmeleon","Wartortle","Pidgeotto","Raticate","Fearow"
+ ]},
+ {name:"Rare",class:"rare",chance:8,rank:3,pool:[
+  "Venusaur","Charizard","Blastoise","Pidgeot"
+ ]},
+ {name:"Ultra",class:"ultra",chance:1.5,rank:4,pool:[
+  "Dragonite","Snorlax"
+ ]},
+ {name:"Mythical",class:"mythical",chance:.5,rank:5,pool:[
+  "Mewtwo","Mew","Lugia","Ho-Oh","Celebi"
+ ]}
 ];
 
+const megaList=new Set([
+ "Venusaur","Charizard","Blastoise","Pidgeot","Mewtwo"
+]);
+
+const dexOrder=[
+ "Bulbasaur","Ivysaur","Venusaur",
+ "Charmander","Charmeleon","Charizard",
+ "Squirtle","Wartortle","Blastoise",
+ "Caterpie","Weedle","Pidgey","Pidgeotto","Pidgeot",
+ "Rattata","Raticate","Spearow","Fearow",
+ "Dragonite","Snorlax","Mewtwo","Mew",
+ "Lugia","Ho-Oh","Celebi"
+];
+
+/* ---------------- STATE ---------------- */
+
+let player={
+ name:"",
+ rolls:0,
+ bestRank:0,
+ best:null,
+ dex:{} // key => counts
+};
+
 const rarityMap={};
-rarities.forEach(r=>r.pool.forEach(p=>rarityMap[p]=r.class));
+rarityTable.forEach(t=>t.pool.forEach(p=>rarityMap[p]=t.class));
 
-let player={name:"",rolls:0,best:null,dex:{}};
+/* ---------------- HELPERS ---------------- */
 
-/* ===== DOM ===== */
-const pokedex=document.getElementById("pokedex");
-const search=document.getElementById("dexSearch");
-
-/* ===== FUNCTIONS ===== */
-function save(){localStorage.setItem("rngSave",JSON.stringify(player))}
+function save(){localStorage.setItem("pokeRNG",JSON.stringify(player))}
 function load(){
- const d=localStorage.getItem("rngSave");
- if(d){player=JSON.parse(d);startGame()}
+ const d=localStorage.getItem("pokeRNG");
+ if(d){
+  player=JSON.parse(d);
+  document.getElementById("login").style.display="none";
+  document.getElementById("game").style.display="block";
+  updateUI();
+ }
 }
 
 function rollRarity(){
  let r=Math.random()*100,sum=0;
- for(const t of rarities){sum+=t.chance;if(r<=sum)return t}
+ for(const t of rarityTable){
+  sum+=t.chance;
+  if(r<=sum) return t;
+ }
+ return rarityTable[0];
 }
 
-function renderDex(f=""){
- pokedex.innerHTML="";
+/* ---------------- DEX ---------------- */
+
+function renderDex(filter=""){
+ const dex=document.getElementById("dex");
+ dex.innerHTML="";
  dexOrder.forEach((p,i)=>{
-  if(f && !p.toLowerCase().includes(f.toLowerCase()))return;
-  const e=document.createElement("div");
-  e.className="dex-entry "+(rarityMap[p]||"");
-  const d=player.dex[p];
-  if(d){
-   e.classList.add("collected");
-   e.innerHTML=`${String(i+1).padStart(3,"0")} — ${p}
-    ${megaSet.has(p)?(d.mega?" <span style='color:red'>⛂</span>":" ⛀"):""}
-    ${d.shiny?" ★":" ☆"}`;
-  }else{
-   e.textContent=`${String(i+1).padStart(3,"0")} — ????`;
-  }
-  pokedex.appendChild(e);
+  if(filter && !p.toLowerCase().includes(filter)) return;
+
+  const baseKey=p;
+  const megaKey=p+"-Mega";
+
+  [baseKey, megaList.has(p)?megaKey:null].forEach((key,isMega)=>{
+   if(!key) return;
+   const div=document.createElement("div");
+   div.className="dex-entry "+(rarityMap[p]||"");
+   if(player.dex[key]) div.classList.add("collected");
+
+   div.textContent=
+    String(i+1).padStart(3,"0")+" — "+
+    p+(isMega?" ⛂":" ⛀")+
+    (player.dex[key]?.shiny?" ★":" ☆");
+
+   dex.appendChild(div);
+  });
  });
 }
 
-function startGame(){
- document.getElementById("login").style.display="none";
- document.getElementById("game").style.display="block";
- document.getElementById("trainer").textContent="Trainer: "+player.name;
+/* ---------------- UI ---------------- */
+
+function updateUI(){
+ document.getElementById("playerInfo").textContent="Trainer: "+player.name;
  document.getElementById("rolls").textContent=player.rolls;
  document.getElementById("best").textContent=player.best||"None";
- renderDex(search.value);
+ renderDex(document.getElementById("dexSearch").value.toLowerCase());
 }
 
-/* ===== EVENTS ===== */
-document.getElementById("start").onclick=()=>{
- const n=document.getElementById("username").value.trim();
- if(!n)return alert("Enter name");
- player={name:n,rolls:0,best:null,dex:{}};
- save();startGame();
-};
+/* ---------------- ROLL ---------------- */
 
 document.getElementById("roll").onclick=()=>{
- const r=rollRarity();
- const p=r.pool[Math.floor(Math.random()*r.pool.length)];
+ const tier=rollRarity();
+ const p=tier.pool[Math.floor(Math.random()*tier.pool.length)];
+
  const shiny=Math.random()<0.01;
- const mega=megaSet.has(p)&&Math.random()<0.005;
+ const mega=megaList.has(p)&&Math.random()<0.005;
 
+ const key=p+(mega?"-Mega":"");
  player.rolls++;
- if(!player.dex[p])player.dex[p]={shiny:false,mega:false};
- if(shiny)player.dex[p].shiny=true;
- if(mega)player.dex[p].mega=true;
 
- player.best=`${p}${mega?" ⛂":""}${shiny?" ★":""} (${r.name})`;
+ if(!player.dex[key]) player.dex[key]={count:0,shiny:false};
+ player.dex[key].count++;
+ if(shiny) player.dex[key].shiny=true;
 
- const card=document.getElementById("card");
- card.className="card "+r.class;
- card.innerHTML=`<div>${p}${mega?" <span style='color:red'>⛂</span>":""}${shiny?" ★":""}</div><small>${r.name}</small>`;
+ if(tier.rank>player.bestRank){
+  player.bestRank=tier.rank;
+  player.best=p+(mega?" ⛂":"")+(shiny?" ★":"")+" ("+tier.name+")";
+ }
 
- save();startGame();
+ const card=document.getElementById("result");
+ card.className="card "+tier.class;
+ card.innerHTML=`<div>${p}${mega?" <span style='color:red'>⛂</span>":" ⛀"}${shiny?" ★":""}</div><small>${tier.name}</small>`;
+
+ save(); updateUI();
 };
 
-search.oninput=e=>renderDex(e.target.value);
+/* ---------------- START ---------------- */
+
+document.getElementById("start").onclick=()=>{
+ const name=document.getElementById("username").value.trim();
+ if(!name) return alert("Enter name");
+ player={name,rolls:0,bestRank:0,best:null,dex:{}};
+ document.getElementById("login").style.display="none";
+ document.getElementById("game").style.display="block";
+ save(); updateUI();
+};
+
+document.getElementById("dexSearch").oninput=e=>renderDex(e.target.value.toLowerCase());
 
 load();
 });
