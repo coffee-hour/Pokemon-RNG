@@ -282,15 +282,15 @@ function renderDex(filter = ""){
 
       // Shiny indicator
       const shinyIcon = document.createElement("span");
-      shinyIcon.textContent = entry.shiny > 0 ? " ★" : " ◇";
-      shinyIcon.style.color = entry.shiny > 0 ? "gold" : "#666";
+      shinyIcon.textContent = entry.shiny > 0 ? " ★" : " ☆";
+      shinyIcon.style.color = entry.shiny > 0 ? "red" : "#666";
       div.appendChild(shinyIcon);
 
       // Mega indicator
       const hasMega = entry.mega && Object.keys(entry.mega).length > 0;
       const megaIcon = document.createElement("span");
-      megaIcon.textContent = hasMega ? " ⚡" : " ◇";
-      megaIcon.style.color = hasMega ? "gold" : "#666";
+      megaIcon.textContent = hasMega ? " ⛂" : " ⛀";
+      megaIcon.style.color = hasMega ? "red" : "#666";
       div.appendChild(megaIcon);
 
     } else {
