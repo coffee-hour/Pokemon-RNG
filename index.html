@@ -264,36 +264,47 @@ function load(){
 }
 
 // Render Dex
-function renderDex(filter=""){
-  pokedexDropdown.innerHTML="";
+function renderDex(filter = ""){
+  pokedexDropdown.innerHTML = "";
 
-  genAllOrder.forEach((p,index)=>{
+  genAllOrder.forEach((p, index) => {
     if(filter && !p.toLowerCase().includes(filter.toLowerCase())) return;
 
     const div = document.createElement("div");
     const rarityClass = rarityMap[p] || "common";
     div.className = "dex-entry " + rarityClass;
 
+    const entry = player.pokedex[p];
     div.textContent = `${String(index+1).padStart(3,"0")} — ${p}`;
 
-    if(player.pokedex[p]){
+    if(entry){
       div.classList.add("collected");
 
-      if(player.pokedex[p].shiny > 0){
-        div.appendChild(document.createTextNode(" ★"));
-      }
+      // Shiny indicator
+      const shinyIcon = document.createElement("span");
+      shinyIcon.textContent = entry.shiny > 0 ? " ★" : " ◇";
+      shinyIcon.style.color = entry.shiny > 0 ? "gold" : "#666";
+      div.appendChild(shinyIcon);
 
-      if(player.pokedex[p].mega && Object.keys(player.pokedex[p].mega).length){
-        const megaIcon = document.createElement("span");
-        megaIcon.textContent = " ⚡";
-        megaIcon.style.color = "gold";
-        div.appendChild(megaIcon);
-      }
+      // Mega indicator
+      const hasMega = entry.mega && Object.keys(entry.mega).length > 0;
+      const megaIcon = document.createElement("span");
+      megaIcon.textContent = hasMega ? " ⚡" : " ◇";
+      megaIcon.style.color = hasMega ? "gold" : "#666";
+      div.appendChild(megaIcon);
+
+    } else {
+      // Not owned at all
+      const missing = document.createElement("span");
+      missing.textContent = " ◇ ◇";
+      missing.style.color = "#444";
+      div.appendChild(missing);
     }
 
     pokedexDropdown.appendChild(div);
   });
 }
+
 // Update UI
 function updateUI(){
   document.getElementById("playerInfo").textContent = "Trainer: "+player.username;
