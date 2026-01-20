@@ -242,6 +242,8 @@ const megaMap = {
   "Mega Houndoom": "Houndoom",
   "Mega Tyranitar": "Tyranitar"
 };
+const megaEligible = new Set(Object.values(megaMap));
+
 // Map rarity by Pokémon
 const rarityMap = {};
 rarityTable.forEach(tier => tier.pool.forEach(p => rarityMap[p] = tier.class));
@@ -283,20 +285,22 @@ function renderDex(filter = ""){
       // Shiny indicator
       const shinyIcon = document.createElement("span");
       shinyIcon.textContent = entry.shiny > 0 ? " ★" : " ☆";
-      shinyIcon.style.color = entry.shiny > 0 ? "red" : "#666";
+      shinyIcon.style.color = entry.shiny > 0 ? "gold" : "#666";
       div.appendChild(shinyIcon);
 
-      // Mega indicator
-      const hasMega = entry.mega && Object.keys(entry.mega).length > 0;
-      const megaIcon = document.createElement("span");
-      megaIcon.textContent = hasMega ? " ⛂" : " ⛀";
-      megaIcon.style.color = hasMega ? "red" : "#666";
-      div.appendChild(megaIcon);
+      // Mega indicator (ONLY if eligible)
+      if(megaEligible.has(p)){
+        const hasMega = Object.keys(entry.mega || {}).length > 0;
+        const megaIcon = document.createElement("span");
+        megaIcon.textContent = hasMega ? " ⚡" : " ◇";
+        megaIcon.style.color = hasMega ? "gold" : "#666";
+        div.appendChild(megaIcon);
+      }
 
     } else {
       // Not owned at all
       const missing = document.createElement("span");
-      missing.textContent = " ◇ ◇";
+      missing.textContent = megaEligible.has(p) ? " ☆ ◇" : " ☆";
       missing.style.color = "#444";
       div.appendChild(missing);
     }
