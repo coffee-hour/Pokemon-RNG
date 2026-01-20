@@ -219,14 +219,29 @@ const genAllOrder = [
   "Piloswine","Corsola","Remoraid","Octillery","Delibird","Mantine","Skarmory","Houndour","Houndoom",
   "Kingdra","Phanpy","Donphan","Porygon2","Stantler","Smeargle","Tyrogue","Hitmontop","Smoochum","Elekid",
   "Magby","Miltank","Blissey","Raikou","Entei","Suicune","Larvitar","Pupitar","Tyranitar","Lugia","Ho-Oh","Celebi",
-  "Mega Venusaur","Mega Charizard X","Mega Charizard Y","Mega Blastoise",
-  "Mega Beedrill","Mega Pidgeot","Mega Alakazam","Mega Slowbro",
-  "Mega Gengar","Mega Kangaskhan","Mega Pinsir","Mega Gyarados",
-  "Mega Aerodactyl","Mega Mewtwo X","Mega Mewtwo Y",
-  "Mega Ampharos","Mega Scizor","Mega Heracross",
-  "Mega Houndoom","Mega Tyranitar"
-];
-
+  ];
+const megaMap = {
+  "Mega Venusaur": "Venusaur",
+  "Mega Charizard X": "Charizard",
+  "Mega Charizard Y": "Charizard",
+  "Mega Blastoise": "Blastoise",
+  "Mega Beedrill": "Beedrill",
+  "Mega Pidgeot": "Pidgeot",
+  "Mega Alakazam": "Alakazam",
+  "Mega Slowbro": "Slowbro",
+  "Mega Gengar": "Gengar",
+  "Mega Kangaskhan": "Kangaskhan",
+  "Mega Pinsir": "Pinsir",
+  "Mega Gyarados": "Gyarados",
+  "Mega Aerodactyl": "Aerodactyl",
+  "Mega Mewtwo X": "Mewtwo",
+  "Mega Mewtwo Y": "Mewtwo",
+  "Mega Ampharos": "Ampharos",
+  "Mega Scizor": "Scizor",
+  "Mega Heracross": "Heracross",
+  "Mega Houndoom": "Houndoom",
+  "Mega Tyranitar": "Tyranitar"
+};
 // Map rarity by Pokémon
 const rarityMap = {};
 rarityTable.forEach(tier => tier.pool.forEach(p => rarityMap[p] = tier.class));
@@ -251,27 +266,34 @@ function load(){
 // Render Dex
 function renderDex(filter=""){
   pokedexDropdown.innerHTML="";
+
   genAllOrder.forEach((p,index)=>{
     if(filter && !p.toLowerCase().includes(filter.toLowerCase())) return;
+
     const div = document.createElement("div");
-   const rarityClass = rarityMap[p] || "common";
-div.className = "dex-entry " + rarityClass;
+    const rarityClass = rarityMap[p] || "common";
+    div.className = "dex-entry " + rarityClass;
+
+    div.textContent = `${String(index+1).padStart(3,"0")} — ${p}`;
+
     if(player.pokedex[p]){
       div.classList.add("collected");
-      div.textContent = `${String(index+1).padStart(3,"0")} — ${p}`;
-      if(player.pokedex[p].shiny>0){
-        const star = document.createElement("span");
-        star.textContent=" ★";
-        star.style.color="red";
-        div.appendChild(star);
-      } else {
-        div.textContent += " ☆";
+
+      if(player.pokedex[p].shiny > 0){
+        div.appendChild(document.createTextNode(" ★"));
       }
-    } else div.textContent = `${String(index+1).padStart(3,"0")} — ????`;
+
+      if(player.pokedex[p].mega && Object.keys(player.pokedex[p].mega).length){
+        const megaIcon = document.createElement("span");
+        megaIcon.textContent = " ⚡";
+        megaIcon.style.color = "gold";
+        div.appendChild(megaIcon);
+      }
+    }
+
     pokedexDropdown.appendChild(div);
   });
 }
-
 // Update UI
 function updateUI(){
   document.getElementById("playerInfo").textContent = "Trainer: "+player.username;
@@ -292,8 +314,19 @@ rollBtn.onclick=()=>{
   const p=r.pool[Math.floor(Math.random()*r.pool.length)];
   const isShiny = Math.random() < 0.001;
   player.totalRolls++;
-  if(!player.pokedex[p]) player.pokedex[p]={normal:0, shiny:0};
-  if(isShiny) player.pokedex[p].shiny++; else player.pokedex[p].normal++;
+ const base = megaMap[p] || p;
+
+if(!player.pokedex[base]){
+  player.pokedex[base] = { normal:0, shiny:0, mega:{} };
+}
+
+if(megaMap[p]){
+  player.pokedex[base].mega[p] = true;
+} else {
+  if(isShiny) player.pokedex[base].shiny++;
+  else player.pokedex[base].normal++;
+}
+
   if(r.rank>player.bestRank){ player.bestRank=r.rank; player.bestPull = p+(isShiny?" (Shiny)":"")+" ("+r.name+")"; }
 
   const card = document.getElementById("result");
