@@ -517,33 +517,43 @@ const megaEligible = new Set(Object.values(megaMap));
 const rarityMap = {};
 rarityTable.forEach(tier => tier.pool.forEach(p => rarityMap[p] = tier.class));
 
-  function renderShop(){
+ function renderShop() {
   const shopDiv = document.getElementById("shopItems");
   shopDiv.innerHTML = "";
-  shopItems.forEach(item=>{
+
+  shopItems.forEach(item => {
     const div = document.createElement("div");
     div.className = "shop-item";
-    div.style.border="1px solid #666";
-    div.style.borderRadius="8px";
-    div.style.padding="6px";
-    div.style.margin="4px 0";
+    div.style.border = "1px solid #666";
+    div.style.borderRadius = "8px";
+    div.style.padding = "6px";
+    div.style.margin = "4px 0";
     div.innerHTML = `<b>${item.name}</b> - ${item.cost} coins<br><small>${item.description}</small>`;
-    
+
     const btn = document.createElement("button");
     btn.textContent = player.upgrades[item.id] ? "Purchased" : "Buy";
     btn.disabled = !!player.upgrades[item.id];
-    btn.onclick = ()=>{
-      if(player.coins >= item.cost && !player.upgrades[item.id]){
+
+    btn.onclick = () => {
+      if (!player.upgrades[item.id] && player.coins >= item.cost) {
+        // Deduct coins and apply upgrade
         player.coins -= item.cost;
-        player.upgrades[item.id]=true;
+        player.upgrades[item.id] = true;
         item.effect(player);
 
-const coinDisplay = document.getElementById("coinCount");
-coinDisplay.textContent = player.coins;
-        
+        // Update coin display
+        const coinDisplay = document.getElementById("coinCount");
+        if (coinDisplay) coinDisplay.textContent = player.coins;
+
+        // Save and update UI
         save();
         updateUI();
-        renderShop();
+        renderShop(); // re-render to update button states
+      }
+    };
+
+    div.appendChild(btn);
+    shopDiv.appendChild(div);
   });
 }
 
@@ -662,9 +672,8 @@ rollBtn.onclick=()=>{
     player.coins += r.rank * 5;
   }
 
-  save();
-  updateUI();
-  document.getElementById("coinCount").textContent = player.coins;
+save();
+updateUI();
 renderShop();
 };
 
