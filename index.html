@@ -285,7 +285,7 @@ function renderDex(filter = ""){
       // Shiny indicator
       const shinyIcon = document.createElement("span");
       shinyIcon.textContent = entry.shiny > 0 ? " ★" : " ☆";
-      shinyIcon.style.color = entry.shiny > 0 ? "gold" : "#666";
+      shinyIcon.style.color = entry.shiny > 0 ? "red" : "#666";
       div.appendChild(shinyIcon);
 
       // Mega indicator (ONLY if eligible)
