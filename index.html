@@ -91,6 +91,18 @@ button { background: #ff4757; color: white; cursor: pointer; }
   transition: transform 0.5s ease, color 0.5s ease;
   animation: POP 0.5s ease;
 }
+<img id="rollSprite" width="128">
+
+  .dex-sprite {
+  width: 40px;
+  height: 40px;
+  image-rendering: pixelated;
+  margin-right: 6px;
+}
+
+.dex-sprite.locked {
+  filter: grayscale(100%) brightness(55%);
+}
 
 /* Card animation */
 @keyframes POP {
@@ -511,6 +523,41 @@ const megaEligible = new Set(Object.values(megaMap));
 const rarityMap = {};
 rarityTable.forEach(tier => tier.pool.forEach(p => rarityMap[p] = tier.class));
 
+function normalizeSpriteName(name) {
+  return name
+    .toLowerCase()
+    .replace(/♀/g, "-f")
+    .replace(/♂/g, "-m")
+    .replace(/é/g, "e")
+    .replace(/:/g, "")
+    .replace(/\./g, "")
+    .replace(/'/g, "")
+    .replace(/ /g, "-");
+}
+
+function getMegaSuffix(pokemon) {
+  if (!megaMap[pokemon]) return null;
+
+  const lower = megaMap[pokemon].toLowerCase();
+  if (lower.includes("x")) return "x";
+  if (lower.includes("y")) return "y";
+  return "";
+}
+
+function getSpriteURL(pokemon, { shiny = false, mega = false } = {}) {
+  const baseURL = shiny
+    ? "https://play.pokemonshowdown.com/sprites/home-shiny/"
+    : "https://play.pokemonshowdown.com/sprites/home/";
+
+  let filename = normalizeSpriteName(pokemon);
+
+  if (mega) {
+    const suffix = getMegaSuffix(pokemon);
+    filename += "-mega" + suffix;
+  }
+
+  return baseURL + filename + ".png";
+}
 
 // Player & DOM
 let player = {username:"", totalRolls:0, bestRank:0, bestPull:null, pokedex:{}};
@@ -540,6 +587,18 @@ function renderDex(filter = ""){
     div.className = "dex-entry " + rarityClass;
 
     const entry = player.pokedex[p];
+    const img = document.createElement("img");
+img.className = "dex-sprite";
+
+if (player.pokedex[p]) {
+  img.src = getSpriteURL(p);
+} else {
+  img.src = getSpriteURL(p);
+  img.classList.add("locked");
+}
+
+div.appendChild(img);
+
     div.textContent = `${String(index+1).padStart(3,"0")} — ${p}`;
 
     if(entry){
@@ -611,6 +670,12 @@ if(megaMap[p]){
   card.className = "card "+r.class;
   card.style.animation="POP 0.5s ease";
   card.innerHTML=`<div>${p}${isShiny?" ★":""}</div><small>${r.name}</small>`;
+ 
+  const rollSprite = document.getElementById("rollSprite");
+rollSprite.src = getSpriteURL(base, {
+  shiny: isShiny,
+  mega: !!megaMap[p]
+});
   save(); updateUI();
 };
 
