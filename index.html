@@ -565,6 +565,10 @@ function renderDex(filter = ""){
       const missing = document.createElement("span");
       missing.textContent = megaEligible.has(p) ? " ☆ ◇" : " ☆";
       missing.style.color = "#444";
+      div.innerHTML = `${String(index+1).padStart(3,"0")} — ` +
+  (entry
+     ? `${pokemonData[p].sprite} ${pokemonData[p].name}`
+     : "??????????");       
       div.appendChild(missing);
     }
 
