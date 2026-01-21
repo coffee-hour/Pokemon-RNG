@@ -91,18 +91,6 @@ button { background: #ff4757; color: white; cursor: pointer; }
   transition: transform 0.5s ease, color 0.5s ease;
   animation: POP 0.5s ease;
 }
-<img id="rollSprite" width="128">
-
-  .dex-sprite {
-  width: 40px;
-  height: 40px;
-  image-rendering: pixelated;
-  margin-right: 6px;
-}
-
-.dex-sprite.locked {
-  filter: grayscale(100%) brightness(55%);
-}
 
 /* Card animation */
 @keyframes POP {
@@ -118,6 +106,41 @@ button { background: #ff4757; color: white; cursor: pointer; }
 .card.ultra { color: #9b59b6; }
 .card.mythical { color: gold; }
 .card.mega { color: red; text-shadow: 0 0 8px crimson; }
+
+.aura {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 12px rgba(0,0,0,0.6);
+  position: relative;
+}
+
+.aura::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+}
+
+/* Shiny effect */
+.aura.shiny {
+  animation: shimmer 2s infinite linear;
+  box-shadow: 0 0 12px gold;
+}
+
+@keyframes shimmer {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+/* Mega effect */
+.aura.mega {
+  box-shadow:
+    0 0 18px crimson,
+    0 0 30px rgba(255,0,0,0.5);
+}
+
 </style>
 </head>
 
@@ -523,41 +546,70 @@ const megaEligible = new Set(Object.values(megaMap));
 const rarityMap = {};
 rarityTable.forEach(tier => tier.pool.forEach(p => rarityMap[p] = tier.class));
 
-function normalizeSpriteName(name) {
-  return name
-    .toLowerCase()
-    .replace(/♀/g, "-f")
-    .replace(/♂/g, "-m")
-    .replace(/é/g, "e")
-    .replace(/:/g, "")
-    .replace(/\./g, "")
-    .replace(/'/g, "")
-    .replace(/ /g, "-");
+const POKEMON_TYPES = {
+  Charizard: ["fire", "flying"],
+  Blastoise: ["water"],
+  Venusaur: ["grass", "poison"],
+  Pikachu: ["electric"],
+};
+
+const TYPE_COLORS = {
+  normal: ["#A8A77A"],
+  fire: ["#EE8130", "#F08030"],
+  water: ["#6390F0", "#4FC3F7"],
+  electric: ["#F7D02C", "#FFD54F"],
+  grass: ["#7AC74C", "#66BB6A"],
+  ice: ["#96D9D6", "#80DEEA"],
+  fighting: ["#C22E28"],
+  poison: ["#A33EA1"],
+  ground: ["#E2BF65"],
+  flying: ["#A98FF3"],
+  psychic: ["#F95587"],
+  bug: ["#A6B91A"],
+  rock: ["#B6A136"],
+  ghost: ["#735797"],
+  dragon: ["#6F35FC"],
+  dark: ["#705746"],
+  steel: ["#B7B7CE"],
+  fairy: ["#D685AD"]
+};
+
+  function hashSeed(str) {
+  return [...str].reduce((a, c) => a + c.charCodeAt(0), 0);
 }
 
-function getMegaSuffix(pokemon) {
-  if (!megaMap[pokemon]) return null;
+  function createAura(pokemon, { shiny=false, mega=false } = {}) {
+  const seed = hashSeed(pokemon);
+  const types = POKEMON_TYPES[pokemon] || ["normal"];
+  const colors = types.flatMap(t => TYPE_COLORS[t]);
 
-  const lower = megaMap[pokemon].toLowerCase();
-  if (lower.includes("x")) return "x";
-  if (lower.includes("y")) return "y";
-  return "";
+  const c1 = colors[seed % colors.length];
+  const c2 = colors[(seed + 1) % colors.length];
+
+  const div = document.createElement("div");
+  div.className = "aura";
+  div.style.background = `
+    radial-gradient(
+      circle at ${seed % 100}% ${(seed * 7) % 100}%,
+      ${c1},
+      ${c2}
+    )
+  `;
+
+  if (shiny) div.classList.add("shiny");
+  if (mega) div.classList.add("mega");
+
+  return div;
 }
 
-function getSpriteURL(pokemon, { shiny = false, mega = false } = {}) {
-  const baseURL = shiny
-    ? "https://play.pokemonshowdown.com/sprites/home-shiny/"
-    : "https://play.pokemonshowdown.com/sprites/home/";
+const aura = createAura(p, {
+  shiny: entry?.shiny > 0,
+  mega: megaEligible.has(p) && Object.keys(entry?.mega || {}).length > 0
+});
 
-  let filename = normalizeSpriteName(pokemon);
+if (!entry) aura.style.filter = "brightness(0.3) grayscale(1)";
 
-  if (mega) {
-    const suffix = getMegaSuffix(pokemon);
-    filename += "-mega" + suffix;
-  }
-
-  return baseURL + filename + ".png";
-}
+div.appendChild(aura);
 
 // Player & DOM
 let player = {username:"", totalRolls:0, bestRank:0, bestPull:null, pokedex:{}};
@@ -587,18 +639,6 @@ function renderDex(filter = ""){
     div.className = "dex-entry " + rarityClass;
 
     const entry = player.pokedex[p];
-    const img = document.createElement("img");
-img.className = "dex-sprite";
-
-if (player.pokedex[p]) {
-  img.src = getSpriteURL(p);
-} else {
-  img.src = getSpriteURL(p);
-  img.classList.add("locked");
-}
-
-div.appendChild(img);
-
     div.textContent = `${String(index+1).padStart(3,"0")} — ${p}`;
 
     if(entry){
@@ -669,13 +709,18 @@ if(megaMap[p]){
   const card = document.getElementById("result");
   card.className = "card "+r.class;
   card.style.animation="POP 0.5s ease";
-  card.innerHTML=`<div>${p}${isShiny?" ★":""}</div><small>${r.name}</small>`;
- 
-  const rollSprite = document.getElementById("rollSprite");
-rollSprite.src = getSpriteURL(base, {
-  shiny: isShiny,
-  mega: !!megaMap[p]
-});
+  card.innerHTML = "";
+card.appendChild(
+  createAura(base, {
+    shiny: isShiny,
+    mega: !!megaMap[p]
+  })
+);
+
+const label = document.createElement("div");
+label.innerHTML = `<b>${p}</b>${isShiny ? " ★" : ""}<br><small>${r.name}</small>`;
+card.appendChild(label);
+
   save(); updateUI();
 };
 
