@@ -108,6 +108,25 @@ button { background: #ff4757; color: white; cursor: pointer; }
 .card.mega { color: red; text-shadow: 0 0 8px crimson; }
 </style>
 </head>
+  
+<button id="settingsBtn">≡ Settings</button>
+
+<div id="settingsMenu" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%);
+                             background:#222; color:#fff; padding:20px; border-radius:12px; box-shadow:0 0 10px #000; z-index:1000;">
+  <h3>Settings</h3>
+
+  <label>
+    <input type="checkbox" id="toggleSprites" checked>
+    Show Pokémon Sprites
+  </label>
+  <br>
+  <label>
+    <input type="checkbox" id="toggleShiny" checked>
+    Show Shiny Stars
+  </label>
+  <br><br>
+  <button id="closeSettings">Close</button>
+</div>
 
 <body>
 
@@ -575,6 +594,40 @@ function renderDex(filter = ""){
     pokedexDropdown.appendChild(div);
   });
 }
+
+  const settingsBtn = document.getElementById("settingsBtn");
+const settingsMenu = document.getElementById("settingsMenu");
+const closeSettings = document.getElementById("closeSettings");
+
+settingsBtn.onclick = () => settingsMenu.style.display = "block";
+closeSettings.onclick = () => settingsMenu.style.display = "none";
+
+const showSprites = document.getElementById("toggleSprites").checked;
+const showShiny = document.getElementById("toggleShiny").checked;
+
+div.innerHTML = entry
+  ? (showSprites ? `${pokemonData[p].sprite} ` : "") + 
+    (showShiny && entry.shiny ? "★ " : "") +
+    pokemonData[p].name
+  : "??????????";
+
+  function saveSettings() {
+  localStorage.setItem("settings", JSON.stringify({
+    showSprites: document.getElementById("toggleSprites").checked,
+    showShiny: document.getElementById("toggleShiny").checked
+  }));
+}
+
+function loadSettings() {
+  const s = JSON.parse(localStorage.getItem("settings") || "{}");
+  if(s.showSprites !== undefined) document.getElementById("toggleSprites").checked = s.showSprites;
+  if(s.showShiny !== undefined) document.getElementById("toggleShiny").checked = s.showShiny;
+}
+
+document.getElementById("toggleSprites").onchange = saveSettings;
+document.getElementById("toggleShiny").onchange = saveSettings;
+
+loadSettings();
 
 // Update UI
 function updateUI(){
