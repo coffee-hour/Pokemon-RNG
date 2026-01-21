@@ -115,12 +115,6 @@ button { background: #ff4757; color: white; cursor: pointer; }
   <input id="dexSearch" placeholder="Search Pokémon...">
   <div id="pokedexDropdown" class="dex-grid"></div>
 </div>
-  
-<div id="shop" style="margin-top:20px;">
-  <h2>🛒 Shop</h2>
-  <p>Coins: <span id="coinCount">0</span></p>
-  <div id="shopItems"></div>
-</div>
 
 <div id="mainContent">
 <h1>🎲 Pokemon RNG</h1>
@@ -517,57 +511,9 @@ const megaEligible = new Set(Object.values(megaMap));
 const rarityMap = {};
 rarityTable.forEach(tier => tier.pool.forEach(p => rarityMap[p] = tier.class));
 
- function renderShop() {
-  const shopDiv = document.getElementById("shopItems");
-  shopDiv.innerHTML = "";
-
-  shopItems.forEach(item => {
-    const div = document.createElement("div");
-    div.className = "shop-item";
-    div.style.border = "1px solid #666";
-    div.style.borderRadius = "8px";
-    div.style.padding = "6px";
-    div.style.margin = "4px 0";
-    div.innerHTML = `<b>${item.name}</b> - ${item.cost} coins<br><small>${item.description}</small>`;
-
-    const btn = document.createElement("button");
-    btn.textContent = player.upgrades[item.id] ? "Purchased" : "Buy";
-    btn.disabled = !!player.upgrades[item.id];
-
-    btn.onclick = () => {
-      if (!player.upgrades[item.id] && player.coins >= item.cost) {
-        // Deduct coins and apply upgrade
-        player.coins -= item.cost;
-        player.upgrades[item.id] = true;
-        item.effect(player);
-
-        // Update coin display
-        const coinDisplay = document.getElementById("coinCount");
-        if (coinDisplay) coinDisplay.textContent = player.coins;
-
-        // Save and update UI
-        save();
-        updateUI();
-        renderShop(); // re-render to update button states
-      }
-    };
-
-    div.appendChild(btn);
-    shopDiv.appendChild(div);
-  });
-}
-
-const shopItems = [
-  { id:"luckyCharm", name:"Lucky Charm", cost:100, description:"+5% Rare+ chance", effect:(player)=>player.luckyCharm=true },
-  { id:"shinyLens", name:"Shiny Lens", cost:200, description:"+0.5% shiny chance", effect:(player)=>player.shinyLens=true },
-  { id:"megaBooster", name:"Mega Booster", cost:300, description:"+1% Mega chance", effect:(player)=>player.megaBooster=true },
-  { id:"rollMultiplier", name:"Roll Multiplier", cost:500, description:"Roll 2 Pokémon at once", effect:(player)=>player.rollMultiplier=2 },
-  { id:"autoCollector", name:"Auto Collector", cost:1000, description:"Collects a Pokémon every 10 rolls", effect:(player)=>player.autoCollector=true }
-];
-
 
 // Player & DOM
-let player = {username:"", totalRolls:0, bestRank:0, bestPull:null, pokedex:{}, coins:0, upgrades:{}};
+let player = {username:"", totalRolls:0, bestRank:0, bestPull:null, pokedex:{}};
 const login = document.getElementById("login");
 const game = document.getElementById("game");
 const rollBtn = document.getElementById("rollBtn");
@@ -642,39 +588,30 @@ function rollRarity(){
 }
 
 rollBtn.onclick=()=>{
-  let rolls = player.rollMultiplier || 1;
-  for(let i=0;i<rolls;i++){
-    const r=rollRarity();
-    const p=r.pool[Math.floor(Math.random()*r.pool.length)];
-    
-    // Apply Lucky Charm (+5% Rare+)
-    let adjustedRarity = r;
-    if(player.luckyCharm && r.rank >= 3 && Math.random() < 0.05){
-      adjustedRarity = rarityTable.find(x=>x.rank===r.rank+1) || r;
-    }
+  const r=rollRarity();
+  const p=r.pool[Math.floor(Math.random()*r.pool.length)];
+  const isShiny = Math.random() < 0.001;
+  player.totalRolls++;
+ const base = megaMap[p] || p;
 
-    // Shiny Lens (+0.5% shiny chance)
-    const isShiny = Math.random() < (0.001 + (player.shinyLens?0.005:0));
+if(!player.pokedex[base]){
+  player.pokedex[base] = { normal:0, shiny:0, mega:{} };
+}
 
-    player.totalRolls++;
-    const base = megaMap[p] || p;
-    if(!player.pokedex[base]) player.pokedex[base] = { normal:0, shiny:0, mega:{} };
-    if(megaMap[p]) player.pokedex[base].mega[p] = true;
-    else if(isShiny) player.pokedex[base].shiny++;
-    else player.pokedex[base].normal++;
+if(megaMap[p]){
+  player.pokedex[base].mega[p] = true;
+} else {
+  if(isShiny) player.pokedex[base].shiny++;
+  else player.pokedex[base].normal++;
+}
 
-    if(adjustedRarity.rank > player.bestRank){
-      player.bestRank = adjustedRarity.rank;
-      player.bestPull = p+(isShiny?" (Shiny)":"")+" ("+adjustedRarity.name+")";
-    }
+  if(r.rank>player.bestRank){ player.bestRank=r.rank; player.bestPull = p+(isShiny?" (Shiny)":"")+" ("+r.name+")"; }
 
-  
-    player.coins += r.rank * 5;
-  }
-
-save();
-updateUI();
-renderShop();
+  const card = document.getElementById("result");
+  card.className = "card "+r.class;
+  card.style.animation="POP 0.5s ease";
+  card.innerHTML=`<div>${p}${isShiny?" ★":""}</div><small>${r.name}</small>`;
+  save(); updateUI();
 };
 
 // Start
