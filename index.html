@@ -512,7 +512,17 @@ rarityTable.forEach(tier => tier.pool.forEach(p => rarityMap[p] = tier.class));
 
 
 // Player & DOM
-let player = {username:"", totalRolls:0, bestRank:0, bestPull:null, pokedex:{}};
+let player = {
+  username: "",
+  totalRolls: 0,
+  bestRank: 0,
+  bestPull: null,
+  pokedex: {},
+  coins: 0,
+  rollMultiplier: 1,
+  autoCollector: 0,
+  rewards: {}
+};
 const login = document.getElementById("login");
 const game = document.getElementById("game");
 const rollBtn = document.getElementById("rollBtn");
@@ -524,7 +534,11 @@ const dexSearch = document.getElementById("dexSearch");
 function save(){ localStorage.setItem("pokemonRNG", JSON.stringify(player)); }
 function load(){ 
   const data = localStorage.getItem("pokemonRNG"); 
-  if(data){ player=JSON.parse(data); login.style.display="none"; game.style.display="block"; updateUI(); }
+  if(data){ player=JSON.parse(data); login.style.display="none"; game.style.display="block"; 
+  if (!player.rollMultiplier) player.rollMultiplier += 1;
+  if (!player.rewards) player.rewards = {};
+  if (!player.autoCollector) player.autoCollector = 0;
+updateUI(); }
 }
 
 // Render Dex
@@ -582,11 +596,24 @@ function checkRewards() {
 
   // Milestone rewards based on total rolls
   const rollMilestones = [
-    { clicks: 1000, action: () => { player.rollMultiplier = Math.max(player.rollMultiplier || 1, 2); return "You unlocked a second roll per click!"; } },
-    { clicks: 5000, action: () => { player.autoCollector = 1; return "You unlocked an Auto Collector!"; } },
-    { clicks: 100000, action: () => { player.rollMultiplier = Math.max(player.rollMultiplier || 2, 3); return "You unlocked a third roll per click!"; } },
-    { clicks: 500000, action: () => { player.autoCollector = 2; return "Your Auto Collector is now twice as fast!"; } },
-    { clicks: 1000000, action: () => { player.rollMultiplier = Math.max(player.rollMultiplier || 3, 4); return "You unlocked a fourth roll per click!"; } }
+   if (player.totalRolls >= 1000 && !player.rewards.r2) {
+  player.rollMultiplier += 1;
+  player.rewards.r2 = true;
+  notify("Unlocked +1 roll per click!");
+}
+
+if (player.totalRolls >= 100000 && !player.rewards.r3) {
+  player.rollMultiplier += 1;
+  player.rewards.r3 = true;
+  notify("Unlocked +1 roll per click!");
+}
+
+if (player.totalRolls >= 1000000 && !player.rewards.r4) {
+  player.rollMultiplier += 1;
+  player.rewards.r4 = true;
+  notify("Unlocked +1 roll per click!");
+}
+
   ];
 
   rollMilestones.forEach(m => {
@@ -664,8 +691,45 @@ if(megaMap[p]){
   card.className = "card "+r.class;
   card.style.animation="POP 0.5s ease";
   card.innerHTML=`<div>${p}${isShiny?" ★":""}</div><small>${r.name}</small>`;
-  save(); updateUI(); checkRewards();
+
+  const rollsThisClick = player.rollMultiplier;
+
+  for (let i = 0; i < rollsThisClick; i++) {
+    doSingleRoll();
+  }
+
+  save();
+  updateUI();
+  checkRewards();
 };
+
+function doSingleRoll() {
+  const r = rollRarity();
+  const p = r.pool[Math.floor(Math.random() * r.pool.length)];
+
+  const isShiny = Math.random() < 0.001;
+
+  player.totalRolls++;
+
+  const base = megaMap[p] || p;
+  if (!player.pokedex[base]) {
+    player.pokedex[base] = { normal: 0, shiny: 0, mega: {} };
+  }
+
+  if (megaMap[p]) {
+    player.pokedex[base].mega[p] = true;
+  } else if (isShiny) {
+    player.pokedex[base].shiny++;
+  } else {
+    player.pokedex[base].normal++;
+  }
+
+  if (r.rank > player.bestRank) {
+    player.bestRank = r.rank;
+    player.bestPull = `${p}${isShiny ? " ★" : ""} (${r.name})`;
+  }
+
+
 
 // Start
 startBtn.onclick=()=>{
