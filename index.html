@@ -574,6 +574,57 @@ function renderDex(filter = ""){
     pokedexDropdown.appendChild(div);
   });
 }
+
+function checkRewards() {
+  if (!player.rewards) player.rewards = {};
+
+  const notifications = [];
+
+  // Milestone rewards based on total rolls
+  const rollMilestones = [
+    { clicks: 1000, action: () => { player.rollMultiplier = Math.max(player.rollMultiplier || 1, 2); return "You unlocked a second roll per click!"; } },
+    { clicks: 5000, action: () => { player.autoCollector = 1; return "You unlocked an Auto Collector!"; } },
+    { clicks: 100000, action: () => { player.rollMultiplier = Math.max(player.rollMultiplier || 2, 3); return "You unlocked a third roll per click!"; } },
+    { clicks: 500000, action: () => { player.autoCollector = 2; return "Your Auto Collector is now twice as fast!"; } },
+    { clicks: 1000000, action: () => { player.rollMultiplier = Math.max(player.rollMultiplier || 3, 4); return "You unlocked a fourth roll per click!"; } }
+  ];
+
+  rollMilestones.forEach(m => {
+    if (player.totalRolls >= m.clicks && !player.rewards[m.clicks]) {
+      notifications.push(m.action());
+      player.rewards[m.clicks] = true;
+    }
+  });
+
+  // Milestone rewards based on Pokédex completion
+  const dexMilestones = [
+    { check: () => Object.keys(player.pokedex).length >= genAllOrder.length, key: "baseDex", action: () => { player.rollMultiplier += 1; return "Completed Base Dex! You get an extra roll!"; } },
+    { check: () => Object.values(player.pokedex).filter(p => p.shiny > 0).length >= genAllOrder.length, key: "shinyDex", action: () => { player.rollMultiplier += 1; return "Completed Shiny Dex! You get an extra roll!"; } },
+    { check: () => Object.values(player.pokedex).filter(p => Object.keys(p.mega || {}).length > 0).length >= megaEligible.size, key: "megaDex", action: () => { player.rollMultiplier += 1; return "Completed Mega Dex! You get an extra roll!"; } }
+  ];
+
+  dexMilestones.forEach(m => {
+    if (m.check() && !player.rewards[m.key]) {
+      notifications.push(m.action());
+      player.rewards[m.key] = true;
+    }
+  });
+
+  // Show notifications
+  notifications.forEach(msg => {
+    const notif = document.createElement("div");
+    notif.className = "reward-notification";
+    notif.textContent = msg;
+    document.body.appendChild(notif);
+
+    // Fade out after 3 seconds
+    setTimeout(() => notif.remove(), 3000);
+  });
+
+  // Update UI
+  save();
+}
+
 // Update UI
 function updateUI(){
   document.getElementById("playerInfo").textContent = "Trainer: "+player.username;
@@ -613,7 +664,7 @@ if(megaMap[p]){
   card.className = "card "+r.class;
   card.style.animation="POP 0.5s ease";
   card.innerHTML=`<div>${p}${isShiny?" ★":""}</div><small>${r.name}</small>`;
-  save(); updateUI();
+  save(); updateUI(); checkRewards();
 };
 
 // Start
