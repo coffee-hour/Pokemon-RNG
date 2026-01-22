@@ -108,26 +108,6 @@ button { background: #ff4757; color: white; cursor: pointer; }
 .card.mega { color: red; text-shadow: 0 0 8px crimson; }
 </style>
 </head>
-  
-<button id="settingsBtn">≡ Settings</button>
-
-<div id="settingsMenu" style="display:none; position:fixed; top:20%; right:50%; transform:translateX(-50%);
-                             background:#222; color:#fff; padding:20px; border-radius:12px; box-shadow:0 0 10px #000; z-index:1000;">
-  <h3>Settings</h3>
-
-  <label>
-    <input type="checkbox" id="toggleSprites" checked>
-    Show Pokémon Sprites
-  </label>
-  <br>
-  <label>
-    <input type="checkbox" id="toggleShiny" checked>
-    Show Shiny Stars
-  </label>
-  <br><br>
-  <button id="closeSettings">Close</button>
-</div>
-
 <body>
 
 <div id="pokedexSidebar">
@@ -594,82 +574,6 @@ function renderDex(filter = ""){
     pokedexDropdown.appendChild(div);
   });
 }
-
-
-function renderSettings() {
-
-  const existing = document.getElementById("settingsMenu");
-  if(existing) existing.remove();
-
-  
-  let settingsBtn = document.getElementById("settingsBtn");
-  if(!settingsBtn){
-    settingsBtn = document.createElement("button");
-    settingsBtn.id = "settingsBtn";
-    settingsBtn.textContent = "⚙️ Settings";
-    settingsBtn.style.position = "fixed";
-    settingsBtn.style.top = "10px";
-    settingsBtn.style.right = "10px";
-    settingsBtn.style.zIndex = 1000;
-    document.body.appendChild(settingsBtn);
-  }
-
-
-  const settingsMenu = document.createElement("div");
-  settingsMenu.id = "settingsMenu";
-  settingsMenu.style.display = "none";
-  settingsMenu.style.position = "fixed";
-  settingsMenu.style.top = "20%";
-  settingsMenu.style.left = "50%";
-  settingsMenu.style.transform = "translateX(-50%)";
-  settingsMenu.style.background = "#222";
-  settingsMenu.style.color = "#fff";
-  settingsMenu.style.padding = "20px";
-  settingsMenu.style.borderRadius = "12px";
-  settingsMenu.style.boxShadow = "0 0 10px #000";
-  settingsMenu.style.zIndex = 1000;
-
-  settingsMenu.innerHTML = `
-    <h3>Settings</h3>
-    <label>
-      <input type="checkbox" id="toggleSprites" checked>
-      Show Pokémon Sprites
-    </label>
-    <br>
-    <label>
-      <input type="checkbox" id="toggleShiny" checked>
-      Show Shiny Stars
-    </label>
-    <br><br>
-    <button id="closeSettings">Close</button>
-  `;
-
-  document.body.appendChild(settingsMenu);
-
-
-  const saved = JSON.parse(localStorage.getItem("settings") || "{}");
-  if(saved.showShiny !== undefined) document.getElementById("toggleShiny").checked = saved.showShiny;
-
-  const closeSettings = document.getElementById("closeSettings");
-  const toggleShiny = document.getElementById("toggleShiny");
-
-  // Open/close menu
-  settingsBtn.onclick = () => settingsMenu.style.display = "block";
-  closeSettings.onclick = () => settingsMenu.style.display = "none";
-
-  // Save settings when changed
-  function saveSettings() {
-    localStorage.setItem("settings", JSON.stringify({
-      showShiny: toggleShiny.checked
-    }));
-    // Optionally, refresh UI after changing settings
-    if(typeof updateUI === "function") updateUI();
-  }
-
-  toggleShiny.onchange = saveSettings;
-}
-
-
 // Update UI
 function updateUI(){
   document.getElementById("playerInfo").textContent = "Trainer: "+player.username;
