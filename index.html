@@ -178,7 +178,7 @@ h1 { margin-top: 0; text-shadow: 0 0 10px #7b2cbf; }
 .card.ultra { color: #ce93d8; border-color: #9c27b0; box-shadow: 0 0 25px #9c27b0 inset; }
 .card.mythical { color: #ff80ab; border-color: #e91e63; box-shadow: 0 0 30px #e91e63 inset; text-shadow: 0 0 5px #e91e63; }
 .card.mega { color: #ff5722; border-color: #bf360c; box-shadow: 0 0 30px #bf360c inset; text-shadow: 0 0 5px #ff5722; }
-
+.card.gameonly { color: #ff5722; border-color: #bf360c; box-shadow: 0 0 30px #bf360c inset; text-shadow: 0 0 5px #ff5722; }
 /* Shiny Animation */
 .is-shiny {
   background: linear-gradient(135deg, #222, #000);
@@ -308,6 +308,15 @@ window.onerror = function(msg, url, line) {
 const SHINY_ODDS = 512; 
 
 const rarityTable = [
+   { 
+    name: "Contact InfernalCeruledge", 
+    class: "gameonly", 
+    chance:0.22 , 
+    rank: 7, 
+    pool: [
+      "Purr-Satrum"
+    ]
+  },
   { 
     name: "Common", 
     class: "common", 
@@ -477,7 +486,7 @@ const rarityTable = [
   { 
     name: "Mythical", 
     class: "mythical", 
-    chance: 3, 
+    chance: 2.88, 
     rank: 5, 
     pool: [
       "Mew", "Mewtwo", "Articuno", "Zapdos", "Moltres",
