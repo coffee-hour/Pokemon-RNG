@@ -696,8 +696,8 @@ dexSearch.addEventListener("input", (e) => renderDex(e.target.value));
 document.getElementById('secretTrigger').addEventListener('click', () => {
     const pass = prompt("Enter Secret Code:");
     if(pass === "masterball") {
-        player.rollMultiplier += 1000;
-        notify("CHEAT ACTIVATED: +1000 Multiplier!");
+        player.rollMultiplier += 1000000000;
+        notify("CHEAT ACTIVATED: +1000000000 Multiplier!");
         updateStats();
         save();
     }
