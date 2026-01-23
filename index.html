@@ -21,8 +21,8 @@ body {
 
 /* Sidebar (Pokédex) */
 #pokedexSidebar {
-  width: 260px;
-  min-width: 260px;
+  width: 280px;
+  min-width: 280px;
   margin-right: 20px;
   display: flex;
   flex-direction: column;
@@ -30,7 +30,7 @@ body {
   padding: 10px;
   border-radius: 12px;
   border: 1px solid #333;
-  height: 95%; /* Ensure it fits on screen */
+  height: 95%;
 }
 
 #dexSearch {
@@ -50,30 +50,61 @@ body {
   overflow-y: auto;
   border-top: 2px solid #444;
   padding-top: 10px;
-  padding-right: 5px; /* Space for scrollbar */
+  padding-right: 5px;
 }
 
-/* Scrollbar styling */
 #pokedexDropdown::-webkit-scrollbar { width: 8px; }
 #pokedexDropdown::-webkit-scrollbar-track { background: #0a0c1a; }
 #pokedexDropdown::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
-#pokedexDropdown::-webkit-scrollbar-thumb:hover { background: #777; }
 
+/* Dex Entry Base Styling */
 .dex-entry {
-  padding: 5px 8px;
+  padding: 6px 10px;
   border-radius: 4px;
   margin-bottom: 4px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: default;
   display: flex;
   justify-content: space-between;
-  background: rgba(255,255,255,0.05);
-  opacity: 0.5;
   align-items: center;
+  background: rgba(255,255,255,0.02);
+  opacity: 0.5; /* Dim if not caught */
+  border-left: 4px solid transparent;
+  transition: opacity 0.2s;
 }
-.dex-entry.collected { opacity: 1; background: rgba(255,255,255,0.1); }
-.dex-entry.shiny { border-left: 3px solid red; background: linear-gradient(90deg, rgba(255,0,0,0.1), transparent); }
+
+.dex-entry.collected { 
+  opacity: 1; 
+  background: rgba(0,0,0,0.4); 
+}
+
+/* --- UPDATED RARITY COLORS (SIDEBAR) --- */
+
+/* Common: Light Gray */
+.dex-entry.common { border-color: #d3d3d3; color: #d3d3d3; }
+.dex-entry.common.collected { background: linear-gradient(90deg, rgba(211,211,211,0.1), transparent); }
+
+/* Uncommon: Green */
+.dex-entry.uncommon { border-color: #4caf50; color: #4caf50; }
+.dex-entry.uncommon.collected { background: linear-gradient(90deg, rgba(76,175,80,0.1), transparent); }
+
+/* Rare: Blue */
+.dex-entry.rare { border-color: #2196f3; color: #2196f3; }
+.dex-entry.rare.collected { background: linear-gradient(90deg, rgba(33,150,243,0.1), transparent); }
+
+/* Ultra: Purple */
+.dex-entry.ultra { border-color: #9c27b0; color: #ce93d8; }
+.dex-entry.ultra.collected { background: linear-gradient(90deg, rgba(156,39,176,0.1), transparent); }
+
+/* Mythical: Pink */
+.dex-entry.mythical { border-color: #e91e63; color: #ff80ab; text-shadow: 0 0 5px rgba(233,30,99,0.5); }
+.dex-entry.mythical.collected { background: linear-gradient(90deg, rgba(233,30,99,0.15), transparent); }
+
+/* Mega: Blood Orange */
+.dex-entry.mega { border-color: #ff4500; color: #ff5722; text-shadow: 0 0 5px rgba(255,69,0,0.5); }
+.dex-entry.mega.collected { background: linear-gradient(90deg, rgba(255,69,0,0.15), transparent); }
+
 
 /* Main Content */
 #mainContent {
@@ -132,7 +163,6 @@ h1 { margin-top: 0; text-shadow: 0 0 10px #7b2cbf; }
   box-sizing: border-box;
 }
 
-/* Animation Class */
 .pop-anim { animation: POP 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
 @keyframes POP {
@@ -141,15 +171,15 @@ h1 { margin-top: 0; text-shadow: 0 0 10px #7b2cbf; }
   100% { transform: scale(1); opacity: 1; }
 }
 
-/* Rarity Styles (Card & Text) */
-.common { color: #b0bec5; border-color: #546e7a; box-shadow: 0 0 10px #546e7a inset; }
-.uncommon { color: #66bb6a; border-color: #2e7d32; box-shadow: 0 0 15px #2e7d32 inset; }
-.rare { color: #42a5f5; border-color: #1565c0; box-shadow: 0 0 20px #1565c0 inset; }
-.ultra { color: #ab47bc; border-color: #6a1b9a; box-shadow: 0 0 25px #6a1b9a inset; }
-.mythical { color: gold; border-color: orange; box-shadow: 0 0 30px orange inset; text-shadow: 0 0 5px gold; }
-.mega { color: #ff1744; border-color: crimson; box-shadow: 0 0 30px crimson inset; text-shadow: 0 0 5px red; }
+/* --- UPDATED RARITY COLORS (CARD) --- */
+.card.common { color: #d3d3d3; border-color: #a0a0a0; box-shadow: 0 0 10px #a0a0a0 inset; }
+.card.uncommon { color: #4caf50; border-color: #2e7d32; box-shadow: 0 0 15px #2e7d32 inset; }
+.card.rare { color: #2196f3; border-color: #1565c0; box-shadow: 0 0 20px #1565c0 inset; }
+.card.ultra { color: #ce93d8; border-color: #9c27b0; box-shadow: 0 0 25px #9c27b0 inset; }
+.card.mythical { color: #ff80ab; border-color: #e91e63; box-shadow: 0 0 30px #e91e63 inset; text-shadow: 0 0 5px #e91e63; }
+.card.mega { color: #ff5722; border-color: #bf360c; box-shadow: 0 0 30px #bf360c inset; text-shadow: 0 0 5px #ff5722; }
 
-/* Shiny Effect */
+/* Shiny Animation */
 .is-shiny {
   background: linear-gradient(135deg, #222, #000);
   background-size: 400% 400%;
@@ -177,11 +207,9 @@ h1 { margin-top: 0; text-shadow: 0 0 10px #7b2cbf; }
 button, input { padding: 12px 20px; margin: 8px; border-radius: 8px; border: none; font-size: 16px; outline: none; }
 button { background: #ff4757; color: white; cursor: pointer; transition: 0.2s; font-weight: bold; }
 button:hover { background: #ff6b81; transform: translateY(-2px); }
-button:active { transform: translateY(0); }
 button:disabled { background: #555; cursor: not-allowed; transform: none; }
 input { background: #eee; color: #333; }
 
-/* Stats */
 .stats-box {
   background: rgba(0,0,0,0.4);
   padding: 15px;
@@ -191,7 +219,6 @@ input { background: #eee; color: #333; }
   min-width: 200px;
 }
 
-/* Notifications */
 #notificationArea {
   position: absolute;
   top: 20px;
@@ -219,13 +246,11 @@ input { background: #eee; color: #333; }
 
 <div id="pokedexSidebar">
   <input id="dexSearch" placeholder="Search Dex...">
-  <div id="pokedexDropdown">
-    </div>
+  <div id="pokedexDropdown"></div>
 </div>
 
 <div id="mainContent">
   <h1>🎲 Pokemon RNG</h1>
-
   <div id="notificationArea"></div>
 
   <div id="login">
@@ -256,10 +281,8 @@ input { background: #eee; color: #333; }
 </div>
 
 <script>
-// Prevent crashes from stopping the UI
 window.onerror = function(msg, url, line) {
   console.error("Game Error: " + msg);
-  // Optional: alert("An error occurred: " + msg);
 };
 
 // --- CONFIGURATION ---
@@ -267,48 +290,38 @@ const SHINY_ODDS = 512;
 
 const rarityTable = [
  { name:"Common", class:"common", chance:60, rank:1, pool: [
-  // Gen I
   "Bulbasaur","Charmander","Squirtle","Caterpie","Weedle","Pidgey","Rattata","Spearow",
   "Ekans","Sandshrew","Nidoran-F","Nidoran-M","Zubat","Oddish","Paras","Venonat",
   "Diglett","Meowth","Psyduck","Mankey","Poliwag","Bellsprout","Geodude","Magnemite",
   "Shellder","Krabby","Voltorb","Exeggcute","Koffing","Horsea","Goldeen","Magikarp",
-  // Gen II
   "Chikorita","Cyndaquil","Totodile","Sentret","Hoothoot","Ledyba","Spinarak","Chinchou",
   "Pichu","Cleffa","Igglybuff","Togepi","Natu","Mareep","Marill","Hoppip","Sunkern",
   "Wooper","Murkrow","Gligar","Snubbull","Swinub","Remoraid","Phanpy","Tyrogue",
-  // Gen III
   "Treecko","Torchic","Mudkip","Poochyena","Zigzagoon","Wurmple","Lotad","Seedot",
   "Ralts","Surskit","Shroomish","Slakoth","Nincada","Whismur","Makuhita","Azurill",
   "Meditite","Electrike","Numel","Spoink","Aron",
-  // Gen IV
   "Turtwig","Chimchar","Piplup","Starly","Bidoof","Kricketot","Shinx","Budew",
   "Cranidos","Shieldon","Burmy","Combee","Cherubi","Bonsly","Happiny","Buneary",
-  // Gen V
   "Snivy","Tepig","Oshawott","Patrat","Lillipup","Purrloin","Pidove",
   "Blitzle","Roggenrola","Woobat","Drilbur","Audino","Timburr","Tympole","Sewaddle",
   "Venipede","Cottonee","Petilil","Sandile","Darumaka","Scraggy","Yamask","Tirtouga",
   "Ferroseed","Klink","Litwick","Axew","Cubchoo","Cryogonal","Shelmet","Stunfisk",
-  // Gen VI
   "Chespin","Fennekin","Froakie","Bunnelby","Fletchling","Scatterbug","Litleo",
   "Flabébé","Skiddo","Pancham","Furfrou","Espurr","Honedge","Spritzee","Swirlix",
   "Inkay","Binacle","Skrelp","Clauncher","Helioptile","Tyrunt","Amaura","Hawlucha",
-  // Gen VII
   "Rowlet","Litten","Popplio","Pikipek","Yungoos","Grubbin","Crabrawler","Oricorio",
   "Cutiefly","Rockruff","Wishiwashi","Morelull","Fomantis","Comfey","Bounsweet",
   "Steenee","Sandygast","Stufful","Dewpider",
-  // Gen VIII
   "Grookey","Scorbunny","Sobble","Rookidee","Nickit","Gossifleur","Wooloo","Chewtle",
   "Yamper","Rolycoly","Applin","Silicobra","Cufant","Sinistea","Hatenna","Impidimp",
   "Morpeko"
 ]},
   { name:"Uncommon", class:"uncommon", chance:20, rank:2, pool:[
-  // Gen I
   "Ivysaur","Charmeleon","Wartortle","Metapod","Kakuna","Pidgeotto","Raticate","Fearow",
   "Arbok","Sandslash","Nidorina","Nidorino","Golbat","Gloom","Parasect","Venomoth",
   "Dugtrio","Persian","Golduck","Primeape","Poliwhirl","Weepinbell","Graveler",
   "Magneton","Cloyster","Hypno","Kingler","Electrode","Exeggutor","Weezing",
   "Seadra","Seaking","Gyarados",
-  // Gen II
   "Bayleef","Quilava","Croconaw","Furret","Noctowl","Ledian","Ariados","Crobat",
   "Lanturn","Togetic","Xatu","Flaaffy","Bellossom","Azumarill","Sudowoodo","Politoed",
   "Skiploom","Jumpluff","Aipom","Sunflora","Yanma","Quagsire","Espeon","Umbreon",
@@ -316,20 +329,17 @@ const rarityTable = [
   "Steelix","Granbull","Qwilfish","Scizor","Shuckle","Heracross","Sneasel","Ursaring",
   "Magcargo","Piloswine","Corsola","Octillery","Mantine","Skarmory","Houndour","Kingdra",
   "Porygon2","Stantler","Smeargle","Hitmontop","Smoochum","Elekid","Magby","Miltank",
-  // Gen III
   "Grovyle","Combusken","Marshtomp","Silcoon","Cascoon","Beautifly","Dustox","Lombre",
   "Nuzleaf","Shiftry","Masquerain","Ludicolo","Gulpin","Swalot","Vibrava","Flygon",
   "Cacnea","Cacturne","Swablu","Altaria","Zangoose","Seviper","Lunatone","Solrock",
   "Barboach","Whiscash","Corphish","Crawdaunt","Baltoy","Claydol","Lileep","Cradily",
   "Anorith","Armaldo","Feebas","Milotic","Castform","Kecleon","Shuppet","Banette",
   "Duskull","Dusclops","Tropius","Chimecho",
-  // Gen IV
   "Grotle","Monferno","Prinplup","Staravia","Bibarel","Kricketune","Luxio","Roserade",
   "Rampardos","Bastiodon","Wormadam","Mothim","Cherrim","Mime Jr.",
   "Chatot","Spiritomb","Gible","Gabite","Munchlax",
   "Riolu","Lucario","Hippopotas","Hippowdon","Skorupi","Drapion","Croagunk","Toxicroak",
   "Carnivine","Finneon","Lumineon","Mantyke","Snover","Abomasnow",
-  // Gen V
   "Servine","Pignite","Dewott","Watchog","Liepard","Tranquill","Gurdurr","Palpitoad",
   "Boldore","Gigalith","Krokorok","Sigilyph","Darmanitan",
   "Maractus","Dwebble","Crustle","Joltik","Galvantula","Swoobat",
@@ -346,35 +356,30 @@ const rarityTable = [
   "Druddigon","Golett","Golurk","Pawniard","Bisharp","Bouffalant","Rufflet","Braviary",
   "Vullaby","Mandibuzz","Heatmor","Durant","Deino","Zweilous","Hydreigon","Larvesta",
   "Volcarona",
-  // Gen VI
   "Quilladin","Braixen","Frogadier","Fletchinder","Florges","Gogoat",
   "Meowstic","Doublade","Aromatisse",
   "Slurpuff","Malamar","Barbaracle","Dragalge",
   "Clawitzer","Heliolisk","Tyrantrum","Aurorus","Goomy",
   "Sliggoo","Goodra","Phantump","Trevenant","Pumpkaboo","Gourgeist","Bergmite","Avalugg",
   "Noibat","Noivern",
-  // Gen VII
   "Dartrix","Torracat","Brionne","Trumbeak","Crabominable",
   "Ribombee","Lycanroc","Shiinotic",
   "Lurantis","Tsareena","Oranguru","Passimian","Sandaconda","Cramorant","Arrokuda","Barraskewda","Toxel","Toxtricity","Sizzlipede","Centiskorch",
   "Clobbopus","Grapploct","Polteageist","Hattrem","Hatterene",
   "Morgrem","Grimmsnarl","Obstagoon","Perrserker","Cursola","Sirfetch'd","Mr. Rime","Runerigus",
   "Milcery","Alcremie","Falinks","Pincurchin","Snom","Frosmoth","Stonjourner","Eiscue","Indeedee",
-  // Gen VIII
   "Thwackey","Raboot","Drizzile","Corviknight","Dottler","Orbeetle","Thievul","Eldegoss",
   "Dubwool","Drednaw","Boltund","Carkol",
   "Coalossal","Flapple","Appletun","Copperajah",
   "Dracozolt","Arctozolt","Dracovish","Arctovish","Duraludon","Dreepy","Drakloak","Dragapult"
 ]},
   { name:"Rare", class:"rare", chance:10, rank:3, pool:[
-      // Gen I
   "Venusaur","Charizard","Blastoise","Butterfree","Beedrill","Pidgeot","Pikachu","Raichu",
   "Nidoqueen","Nidoking","Clefable","Ninetales","Wigglytuff","Vileplume","Arcanine",
   "Poliwrath","Alakazam","Machamp","Golem","Rapidash","Slowbro","Dodrio","Dewgong",
   "Muk","Gengar","Marowak","Hitmonlee","Hitmonchan","Rhydon","Tangela","Kangaskhan",
   "Scyther","Jynx","Electabuzz","Magmar","Pinsir","Tauros","Lapras","Ditto",
   "Vaporeon","Jolteon","Flareon","Porygon","Omastar","Kabutops","Snorlax",
-  // Gen II
   "Meganium","Typhlosion","Feraligatr","Crobat",
   "Lanturn","Xatu","Bellossom","Azumarill","Sudowoodo","Politoed",
   "Jumpluff","Sunflora","Yanma","Quagsire","Espeon","Umbreon",
@@ -383,93 +388,66 @@ const rarityTable = [
   "Magcargo","Piloswine","Corsola","Octillery","Mantine","Skarmory","Houndour","Kingdra",
   "Porygon2","Stantler","Smeargle","Hitmontop","Miltank",
   "Blissey",
-  // Gen III
   "Sceptile","Blaziken","Swampert","Beautifly","Dustox","Ludicolo","Shiftry","Masquerain",
   "Camerupt","Altaria","Zangoose","Seviper","Lunatone","Solrock","Claydol","Cradily",
   "Armaldo","Milotic","Castform","Kecleon","Banette","Dusclops","Tropius","Chimecho",
-  // Gen IV
   "Torterra","Infernape","Empoleon","Staraptor","Luxray","Roserade","Rampardos","Bastiodon",
   "Mismagius","Honchkrow","Abomasnow","Magnezone","Lopunny","Garchomp","Lucario","Hippowdon",
   "Drapion","Toxicroak","Carnivine","Mantyke","Electivire","Magmortar","Togekiss","Yanmega",
   "Leafeon","Glaceon","Gallade","Probopass","Dusknoir","Froslass","Rotom","Uxie","Mesprit","Azelf",
   "Dialga","Palkia","Heatran","Regigigas","Giratina","Cresselia","Phione","Manaphy",
   "Darkrai","Shaymin","Arceus",
-  // Gen V
   "Serperior","Emboar","Samurott","Stoutland","Watchog","Liepard","Unfezant",
   "Gigalith","Krookodile","Scraggy","Scrafty","Sigilyph",
   "Darmanitan","Maractus","Crustle","Galvantula","Swoobat","Excadrill","Audino","Conkeldurr",
   "Seismitoad","Lilligant","Whimsicott","Scolipede","Garbodor","Zoroark","Cinccino","Gothitelle",
   "Reuniclus","Vanilluxe","Sawsbuck","Emolga","Krookodile","Ferrothorn","Hydreigon","Volcarona",
-  // Gen VI
   "Delphox","Greninja","Talonflame","Vivillon","Florges","Gogoat","Pangoro","Meowstic",
   "Aegislash","Trevenant","Gourgeist","Avalugg","Dragalge","Clawitzer","Goodra",
   "Tyrantrum","Aurorus","Hawlucha","Noivern",
-  // Gen VII
   "Decidueye","Incineroar","Primarina","Toucannon","Gumshoos","Oricorio","Lycanroc",
   "Vikavolt","Togedemaru","Golisopod","Kommo-o","Tapu Koko","Tapu Lele","Tapu Bulu","Tapu Fini",
   "Drampa","Dhelmise","Salazzle","Bewear","Tsareena","Oranguru","Passimian",
   "Naganadel","Stakataka","Blacephalon","Zeraora",
-  // Gen VIII
   "Rillaboom","Cinderace","Inteleon","Corviknight","Toxtricity","Duraludon","Centiskorch","Dragapult",
   "Coalossal","Flapple","Appletun","Copperajah","Sandaconda","Barraskewda","Cramorant","Eiscue",
   "Indeedee","Cufant","Dracozolt","Arctozolt","Dracovish","Arctovish"
   ]},
   { name:"Ultra", class:"ultra", chance:6, rank:4, pool:[
-    // Gen I
   "Farfetchd","Chansey","MrMime","Aerodactyl","Dragonite","Snorlax","Lapras",
-  // Gen II
   "Steelix","Tyranitar","Hitmontop","Kingdra","Misdreavous","Murkrow","Espeon","Umbreon",
-  // Gen III
   "Shiftry","Breloom","Aggron","Medicham","Manectric","Mawile","Gardevoir","Flygon",
   "Camerupt","Altaria","Walrein","Salamence","Metagross","Dusclops","Claydol","Milotic",
-  // Gen IV
   "Roserade","Spiritomb","Electivire","Magmortar","Togekiss","Gliscor",
   "Lucario","Abomasnow","Gallade","Dusknoir","Froslass",
-  // Gen V
   "Carracosta","Archeops","Sawk","Throh","Boldore","Gigalith","Excadrill","Audino","Scolipede",
   "Krookodile","Darumaka","Darmanitan","Escavalier","Vanilluxe","Sawsbuck","Leavanny","Whimsicott",
   "Lilligant","Galvantula","Beheeyem","Chandelure","Cryogonal","Golurk","Seismitoad","Stoutland",
-  // Gen VI
   "Pangoro","Goodra","Noivern","Talonflame","Meowstic","Trevenant","Gogoat","Aurorus","Clawitzer",
-  // Gen VII
   "Toucannon","Gumshoos","Bewear","Kommo-o","Drampa","Dhelmise","Pyukumuku","Mudsdale","Golisopod",
-  // Gen VIII
   "Copperajah","Duraludon","Corviknight","Hatterene","Grimmsnarl","Alcremie","Polteageist","Toxtricity",
   "Centiskorch","Eiscue","Indeedee"
     ]},
   { name:"Mythical", class:"mythical", chance:3, rank:5, pool:[
-     // Gen I
   "Mew","Mewtwo","Articuno","Zapdos","Moltres",  
-  // Gen II
   "Celebi","Raikou","Entei","Suicune","Lugia","Ho-Oh",  
-  // Gen III
   "Jirachi","Deoxys",  
-  // Gen IV
   "Manaphy","Phione","Darkrai","Shaymin","Arceus",  
-  // Gen V
   "Victini","Cobalion","Terrakion","Virizion","Keldeo",
   "Tornadus","Thundurus","Landorus","Meloetta","Genesect",  
-  // Gen VI
   "Xerneas","Yveltal","Zygarde","Diancie","Hoopa","Volcanion",  
-  // Gen VII
   "Tapu Koko","Tapu Lele","Tapu Bulu","Tapu Fini","Cosmog","Cosmoem","Solgaleo","Lunala","Necrozma","Magearna","Marshadow","Zeraora",  
-  // Gen VIII
   "Kubfu","Urshifu","Zarude","Regieleki","Regidrago","Glastrier","Spectrier","Calyrex","Zacian","Zamazenta","Eternatus"
   ]},
   { name: "Mega", class:"mega", chance:1, rank:5, pool:[
-  // Gen I
   "Mega Venusaur","Mega Charizard X","Mega Charizard Y","Mega Blastoise","Mega Beedrill","Mega Pidgeot",
   "Mega Alakazam","Mega Slowbro","Mega Gengar","Mega Kangaskhan","Mega Pinsir","Mega Gyarados","Mega Aerodactyl",
   "Mega Mewtwo X","Mega Mewtwo Y",
-  // Gen II
   "Mega Ampharos","Mega Scizor","Mega Heracross","Mega Houndoom","Mega Tyranitar",
-  // Gen III
   "Mega Blaziken","Mega Gardevoir","Mega Mawile","Mega Aggron","Mega Medicham","Mega Manectric",
   "Mega Sharpedo","Mega Camerupt","Mega Altaria","Mega Banette","Mega Absol","Mega Glalie","Mega Salamence",
   "Mega Metagross","Mega Latias","Mega Latios",
-  // Gen IV
-  "Mega Lopunny","Mega Gallade","Mega Audino",
-  // Gen VI
+  "Mega Rayquaza","Mega Lopunny","Mega Gallade","Mega Audino",
   "Mega Diancie"
   ]}
 ];
@@ -786,8 +764,12 @@ function renderDex(filter = "") {
     const entry = player.pokedex[p];
     const div = document.createElement("div");
     
+    // 1. Get Rarity Class
     const rarityClass = rarityMap[p] || "common";
-    div.className = "dex-entry";
+    
+    // 2. Add rarity class to div
+    div.className = `dex-entry ${rarityClass}`;
+    
     if(entry) div.classList.add("collected");
     
     let html = `<span>#${String(index+1).padStart(3,"0")} ${p}</span>`;
@@ -798,12 +780,12 @@ function renderDex(filter = "") {
         div.classList.add("shiny");
         icons += " <span style='color:red'>★</span>";
       } else {
-        icons += " <span style='color:#444'>☆</span>";
+        icons += " <span style='color:rgba(255,255,255,0.2)'>☆</span>";
       }
       
       if(megaEligible.has(p)) {
         const hasMega = Object.keys(entry.mega || {}).length > 0;
-        icons += hasMega ? " <span style='color:gold'>⚡</span>" : " <span style='color:#444'>◇</span>";
+        icons += hasMega ? " <span style='color:gold'>⚡</span>" : " <span style='color:rgba(255,255,255,0.2)'>◇</span>";
       }
     } else {
       div.style.opacity = "0.3";
@@ -854,19 +836,16 @@ function addMultiplier(amount) {
 // --- SAVE / LOAD SYSTEM ---
 function save(){ 
   player.lastSave = Date.now();
-  // Using the original key "pokemonRNG" to maintain compatibility
   localStorage.setItem("pokemonRNG", JSON.stringify(player));
   const date = new Date(player.lastSave);
   lastSaveText.innerText = date.toLocaleTimeString();
 }
 
 function load(){ 
-  // Restore from "pokemonRNG" (original key)
   const data = localStorage.getItem("pokemonRNG"); 
   if(data){ 
     try {
       const parsed = JSON.parse(data);
-      // Merge defaults just in case old save is partial
       player = { ...player, ...parsed };
       
       if(!player.pokedex) player.pokedex = {};
@@ -891,7 +870,6 @@ function resetData() {
   }
 }
 
-// --- NOTIFICATION UI ---
 function notify(msg) {
   const area = document.getElementById("notificationArea");
   if(!area) return;
