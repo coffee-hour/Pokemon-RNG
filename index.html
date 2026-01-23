@@ -342,7 +342,7 @@ const rarityTable = [
       "Fomantis", "Comfey", "Bounsweet", "Steenee", "Sandygast", "Stufful", "Dewpider",
       "Mareanie", "Mudbray", "Salandit", "Wimpod", "Jangmo-o", "Grookey", "Scorbunny", "Sobble", 
       "Rookidee", "Nickit", "Gossifleur", "Wooloo", "Chewtle", "Yamper", "Rolycoly", "Applin", 
-      "Silicobra", "Cufant", "Sinistea", "Hatenna", "Impidimp", "Morpeko", "Skwovet", "Blipbug"
+      "Silicobra", "Cufant", "Sinistea", "Hatenna", "Impidimp", "Morpeko", "Skwovet", "Blipbug", "Wynaut", "Basculin",
     ]
   },
   { 
@@ -352,10 +352,10 @@ const rarityTable = [
     rank: 2, 
     pool: [
       "Ivysaur", "Charmeleon", "Wartortle", "Metapod", "Kakuna", "Pidgeotto", "Raticate", "Fearow",
-      "Arbok", "Sandslash", "Nidorina", "Nidorino", "Golbat", "Gloom", "Parasect", "Venomoth",
-      "Dugtrio", "Persian", "Golduck", "Primeape", "Poliwhirl", "Weepinbell", "Graveler",
-      "Magneton", "Cloyster", "Hypno", "Kingler", "Electrode", "Exeggutor", "Weezing",
-      "Seadra", "Seaking", "Gyarados", "Kadabra", "Machoke", "Tentacruel", "Haunter", "Dragonair",
+      "Arbok", "Sandslash", "Nidorina", "Nidorino", "Clefairy", "Vulpix", "Jigglypuff", "Golbat", "Gloom", "Parasect", "Venomoth",
+      "Dugtrio", "Persian", "Golduck", "Primeape", "Growlithe", "Poliwhirl", "Weepinbell", "Graveler",
+      "Magneton", "Cloyster", "Hypno", "Kingler", "Electrode", "Exeggutor", "Lickitung", "Weezing",
+      "Seadra", "Seaking", "Gyarados", "Kadabra", "Machoke", "Tentacruel", "Haunter", "Onix", "Dragonair",
       "Bayleef", "Quilava", "Croconaw", "Furret", "Noctowl", "Ledian", "Ariados", "Crobat",
       "Lanturn", "Togetic", "Xatu", "Flaaffy", "Bellossom", "Azumarill", "Sudowoodo", "Politoed",
       "Skiploom", "Jumpluff", "Aipom", "Sunflora", "Yanma", "Quagsire", "Espeon", "Umbreon",
@@ -401,7 +401,7 @@ const rarityTable = [
       "Corviknight", "Dottler", "Orbeetle", "Thievul", "Eldegoss", "Dubwool", "Drednaw", "Boltund", 
       "Carkol", "Coalossal", "Flapple", "Appletun", "Copperajah", "Dracozolt", "Arctozolt", 
       "Dracovish", "Arctovish", "Duraludon", "Dreepy", "Drakloak", "Dragapult", "Charjabug", 
-      "Araquanid", "Hakamo-o", "Corvisquire"
+      "Araquanid", "Hakamo-o", "Corvisquire", "Roselia", "Grumpig", "Sealeo",
     ]
   },
   { 
@@ -422,11 +422,11 @@ const rarityTable = [
       "Steelix", "Granbull", "Qwilfish", "Scizor", "Shuckle", "Heracross", "Sneasel", "Ursaring",
       "Magcargo", "Piloswine", "Corsola", "Octillery", "Mantine", "Skarmory", "Houndour", "Kingdra",
       "Porygon2", "Stantler", "Smeargle", "Hitmontop", "Miltank", "Blissey", "Delibird",
-      "Sceptile", "Blaziken", "Swampert", "Beautifly", "Dustox", "Ludicolo", "Shiftry", "Masquerain",
+      "Sceptile", "Blaziken", "Swampert", "Beautifly", "Dustox", "Ludicolo", "Shiftry", "Masquerain", "Slaking", 
       "Camerupt", "Altaria", "Zangoose", "Seviper", "Lunatone", "Solrock", "Claydol", "Cradily",
       "Armaldo", "Milotic", "Castform", "Kecleon", "Banette", "Dusclops", "Tropius", "Chimecho",
       "Shedinja", "Exploud", "Hariyama", "Delcatty", "Sableye", "Torkoal", "Spinda", "Glalie", 
-      "Huntail", "Gorebyss", "Relicanth", "Luvdisc",
+      "Huntail", "Gorebyss", "Relicanth", "Luvdisc", "Plusle", "Minun", "Volbeat", "Illumise", 
       "Torterra", "Infernape", "Empoleon", "Staraptor", "Luxray", "Roserade", "Rampardos", "Bastiodon",
       "Mismagius", "Honchkrow", "Abomasnow", "Magnezone", "Lopunny", "Garchomp", "Lucario", "Hippowdon",
       "Drapion", "Toxicroak", "Carnivine", "Mantyke", "Electivire", "Magmortar", "Togekiss", "Yanmega",
@@ -450,7 +450,7 @@ const rarityTable = [
       "Komala", "Turtonator", "Mimikyu", "Bruxish", "Poipole",
       "Rillaboom", "Cinderace", "Inteleon", "Corviknight", "Toxtricity", "Duraludon", "Centiskorch", "Dragapult",
       "Coalossal", "Flapple", "Appletun", "Copperajah", "Sandaconda", "Barraskewda", "Cramorant", "Eiscue",
-      "Indeedee", "Cufant", "Dracozolt", "Arctozolt", "Dracovish", "Arctovish", "Greedent"
+      "Indeedee", "Cufant", "Dracozolt", "Arctozolt", "Dracovish", "Arctovish", "Greedent", "Wailord",
     ]
   },
   { 
