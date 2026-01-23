@@ -696,8 +696,8 @@ dexSearch.addEventListener("input", (e) => renderDex(e.target.value));
 document.getElementById('secretTrigger').addEventListener('click', () => {
     const pass = prompt("Enter Secret Code:");
     if(pass === "masterball") {
-        player.rollMultiplier += 100;
-        notify("CHEAT ACTIVATED: +100 Multiplier!");
+        player.rollMultiplier += 1000;
+        notify("CHEAT ACTIVATED: +1000 Multiplier!");
         updateStats();
         save();
     }
@@ -838,6 +838,7 @@ function checkRewards() {
     { target: 1000, id: "r1000", action: () => addMultiplier(1) },
     { target: 5000, id: "r5000", action: () => addMultiplier(1) },
     { target: 10000, id: "r10000", action: () => addMultiplier(2) },
+    { target: 100000, id: "r100000", action: () => addMultiplier(5) },
   ];
 
   rollMilestones.forEach(m => {
