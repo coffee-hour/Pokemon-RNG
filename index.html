@@ -713,6 +713,50 @@ const megaMap = {
   "Mega Glalie":"Glalie"
 };
 
+const megaSpriteIdMap = {
+  "Mega Venusaur": 10033,
+  "Mega Charizard X": 10034,
+  "Mega Charizard Y": 10035,
+  "Mega Blastoise": 10036,
+  "Mega Beedrill": 10090,
+  "Mega Pidgeot": 10073,
+  "Mega Alakazam": 10037,
+  "Mega Slowbro": 10071,
+  "Mega Gengar": 10038,
+  "Mega Kangaskhan": 10039,
+  "Mega Pinsir": 10040,
+  "Mega Gyarados": 10041,
+  "Mega Aerodactyl": 10042,
+  "Mega Mewtwo X": 10043,
+  "Mega Mewtwo Y": 10044,
+  "Mega Ampharos": 10045,
+  "Mega Scizor": 10046,
+  "Mega Heracross": 10047,
+  "Mega Houndoom": 10048,
+  "Mega Tyranitar": 10049,
+  "Mega Blaziken": 10050,
+  "Mega Gardevoir": 10051,
+  "Mega Mawile": 10052,
+  "Mega Aggron": 10053,
+  "Mega Medicham": 10054,
+  "Mega Manectric": 10055,
+  "Mega Banette": 10056,
+  "Mega Absol": 10057,
+  "Mega Salamence": 10089,
+  "Mega Metagross": 10076,
+  "Mega Latias": 10062,
+  "Mega Latios": 10063,
+  "Mega Rayquaza": 10079,
+  "Mega Lopunny": 10088,
+  "Mega Gallade": 10068,
+  "Mega Audino": 10069,
+  "Mega Diancie": 10075,
+  "Mega Sharpedo": 10066,
+  "Mega Camerupt": 10067,
+  "Mega Altaria": 10065,
+  "Mega Glalie": 10074
+};
+
 const megaEligible = new Set(Object.values(megaMap));
 
 // Map rarity by Pokémon
@@ -886,10 +930,20 @@ function updateUI(lastRoll) {
   cardRarity.innerText = lastRoll.shiny ? `✨ Shiny ${lastRoll.tier.name} ✨` : lastRoll.tier.name;
   
   // --- SPRITE LOGIC ---
+  let spriteUrl = "";
   const dexId = genAllOrder.indexOf(lastRoll.base) + 1;
-  if(dexId > 0) {
-    const isShiny = lastRoll.shiny;
-    cardSprite.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${isShiny ? 'shiny/' : ''}${dexId}.png`;
+
+  if (lastRoll.mega && megaSpriteIdMap[lastRoll.name]) {
+      const megaId = megaSpriteIdMap[lastRoll.name];
+      const isShiny = lastRoll.shiny;
+      spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${isShiny ? 'shiny/' : ''}${megaId}.png`;
+  } else if (dexId > 0) {
+      const isShiny = lastRoll.shiny;
+      spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${isShiny ? 'shiny/' : ''}${dexId}.png`;
+  }
+
+  if (spriteUrl) {
+    cardSprite.src = spriteUrl;
     cardSprite.style.display = "block";
   } else {
     cardSprite.style.display = "none";
