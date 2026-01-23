@@ -282,6 +282,57 @@ input { background: #eee; color: #333; }
 #rollLog::-webkit-scrollbar { width: 6px; }
 #rollLog::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
 
+/* --- BAG MODAL STYLES --- */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.85); z-index: 2000;
+  display: flex; justify-content: center; align-items: center;
+  backdrop-filter: blur(5px);
+}
+.modal-content {
+  background: #16193b; border: 2px solid #444; border-radius: 12px;
+  width: 90%; max-width: 800px; height: 80%;
+  padding: 20px; position: relative;
+  display: flex; flex-direction: column;
+  box-shadow: 0 0 30px rgba(0,0,0,0.8);
+}
+.modal-content h2 { margin-top: 0; border-bottom: 1px solid #444; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+.close-btn { background: #e74c3c; width: 30px; height: 30px; border-radius: 50%; padding: 0; font-size: 16px; line-height: 30px; }
+.bag-grid {
+  flex: 1; overflow-y: auto;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 12px; padding: 10px; margin-top: 10px;
+}
+.bag-grid::-webkit-scrollbar { width: 8px; }
+.bag-grid::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+
+.bag-item {
+  background: #222; border-radius: 8px; padding: 8px 4px;
+  display: flex; flex-direction: column; align-items: center;
+  position: relative; border: 2px solid #444;
+  cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+.bag-item:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.5); }
+.bag-item img { width: 50px; height: 50px; object-fit: contain; }
+.bag-item .name { font-size: 10px; text-align: center; margin-top: 5px; font-weight: bold; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bag-item .release-btn {
+  position: absolute; top: -5px; right: -5px;
+  background: #e74c3c; color: white; width: 20px; height: 20px;
+  border-radius: 50%; font-size: 12px; line-height: 20px;
+  text-align: center; cursor: pointer; opacity: 0; transition: 0.2s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5); font-weight: bold;
+}
+.bag-item:hover .release-btn { opacity: 1; }
+
+/* Bag Item Rarity Colors */
+.bag-item.common { border-color: #94a3b8; }
+.bag-item.uncommon { border-color: #22c55e; }
+.bag-item.rare { border-color: #3b82f6; }
+.bag-item.ultra { border-color: #eab308; box-shadow: 0 0 5px rgba(234, 179, 8, 0.3); }
+.bag-item.mythical { border-color: #a855f7; box-shadow: 0 0 8px rgba(168, 85, 247, 0.4); }
+.bag-item.mega { border-color: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
+.bag-item.shiny { background: linear-gradient(135deg, #333, #1a1a1a); border-style: double; border-width: 3px; }
+
 /* --- SECRET BUTTON STYLE --- */
 #secretTrigger {
   position: fixed;
@@ -337,6 +388,11 @@ input { background: #eee; color: #333; }
       <p style="font-size: 12px; color: #aaa;">Last Save: <span id="lastSave">Not saved yet</span></p>
     </div>
     
+    <!-- Bag Button -->
+    <div style="margin-top: 10px;">
+        <button id="openBagBtn" style="background:#8e44ad; width: 200px; font-size: 14px; padding: 8px;">🎒 Open Bag (<span id="bagBtnCount">0</span>/100)</button>
+    </div>
+    
     <div id="logContainer">
       <h4 style="margin:0 0 10px 0; border-bottom:1px solid #444; padding-bottom:5px; font-size:14px; color:#aaa;">Batch Results</h4>
       <div id="rollLog"><div style="text-align:center; opacity:0.5; font-size:12px;">No pulls yet</div></div>
@@ -344,6 +400,24 @@ input { background: #eee; color: #333; }
 
     <br>
     <button onclick="resetData()" style="background:#555; font-size:12px; padding:8px;">Reset Data</button>
+  </div>
+</div>
+
+<!-- BAG MODAL -->
+<div id="bagModal" class="modal-overlay" style="display:none;">
+  <div class="modal-content">
+    <h2>
+      <span>Pokemon Bag</span>
+      <span style="font-size: 14px; color: #aaa;">Capacity: <span id="bagCapacity">0/100</span></span>
+    </h2>
+    <button class="close-btn" style="position: absolute; top: 15px; right: 15px;" onclick="toggleBag(false)">X</button>
+    
+    <div id="bagGrid" class="bag-grid">
+      <!-- Items injected here -->
+    </div>
+    <div style="text-align: center; margin-top: 10px; font-size: 12px; color: #777;">
+        Hover over a Pokemon and click 'X' to release it.
+    </div>
   </div>
 </div>
 
@@ -356,6 +430,7 @@ window.onerror = function(msg, url, line) {
 
 // --- CONFIGURATION ---
 const SHINY_ODDS = 512; 
+const MAX_BAG_CAPACITY = 100; // New Bag Limit
 
 const rarityTable = [
   { 
@@ -769,7 +844,8 @@ let player = {
   totalRolls: 0,
   pokedex: {},
   rollMultiplier: 1,
-  rewards: {}
+  rewards: {},
+  bag: [] // New Bag Array
 };
 
 // --- DOM ELEMENTS ---
@@ -788,6 +864,11 @@ const caughtText = document.getElementById("caughtCount");
 const totalText = document.getElementById("totalCount");
 const lastSaveText = document.getElementById("lastSave");
 const rollMultDisplay = document.getElementById("rollMultDisplay");
+const openBagBtn = document.getElementById("openBagBtn");
+const bagModal = document.getElementById("bagModal");
+const bagGrid = document.getElementById("bagGrid");
+const bagCapacity = document.getElementById("bagCapacity");
+const bagBtnCount = document.getElementById("bagBtnCount");
 
 // --- INITIALIZATION ---
 document.addEventListener("DOMContentLoaded", () => {
@@ -810,10 +891,21 @@ startBtn.addEventListener("click", () => {
   startGame();
 });
 
+// Open/Close Bag
+openBagBtn.addEventListener("click", () => toggleBag(true));
+
 rollBtn.addEventListener("click", () => {
   rollBtn.disabled = true;
   
   const loops = player.rollMultiplier;
+  
+  // Check bag capacity before rolling
+  if (player.bag.length + loops > MAX_BAG_CAPACITY) {
+      alert(`Bag full! You can't roll ${loops} times because it exceeds the limit of ${MAX_BAG_CAPACITY}. Release some Pokemon!`);
+      rollBtn.disabled = false;
+      return;
+  }
+
   const batch = [];
   
   for(let i=0; i<loops; i++){
@@ -867,6 +959,67 @@ function startGame() {
   save();
 }
 
+function toggleBag(show) {
+    if(show) {
+        renderBag();
+        bagModal.style.display = "flex";
+    } else {
+        bagModal.style.display = "none";
+    }
+}
+
+function renderBag() {
+    bagGrid.innerHTML = "";
+    bagCapacity.innerText = `${player.bag.length}/${MAX_BAG_CAPACITY}`;
+    bagBtnCount.innerText = player.bag.length;
+
+    player.bag.forEach((p, index) => {
+        const div = document.createElement("div");
+        div.className = `bag-item ${p.tier.class} ${p.shiny ? 'shiny' : ''}`;
+        
+        const img = document.createElement("img");
+        
+        // Sprite Logic (Reused)
+        let spriteUrl = "";
+        const dexId = genAllOrder.indexOf(p.base) + 1;
+        if (p.mega && megaSpriteIdMap[p.name]) {
+            const megaId = megaSpriteIdMap[p.name];
+            spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${megaId}.png`;
+        } else if (dexId > 0) {
+            spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${dexId}.png`;
+        }
+        img.src = spriteUrl || "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png";
+        
+        const name = document.createElement("div");
+        name.className = "name";
+        name.innerText = p.name;
+        if(p.shiny) name.style.color = "#f39c12";
+
+        const btn = document.createElement("div");
+        btn.className = "release-btn";
+        btn.innerText = "X";
+        btn.title = "Release Pokemon";
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            releasePokemon(index);
+        };
+
+        div.appendChild(btn);
+        div.appendChild(img);
+        div.appendChild(name);
+        bagGrid.appendChild(div);
+    });
+}
+
+function releasePokemon(index) {
+    if(confirm("Release this Pokemon?")) {
+        player.bag.splice(index, 1);
+        renderBag();
+        updateStats(); // updates bag count on main screen
+        save();
+    }
+}
+
 function performSingleRoll() {
   player.totalRolls++;
   
@@ -909,13 +1062,18 @@ function performSingleRoll() {
     player.pokedex[baseName].mega[pickedName] = true;
   }
   
-  return {
+  const newMon = {
     name: pickedName,
     base: baseName,
-    tier: chosenTier,
+    tier: { name: chosenTier.name, class: chosenTier.class, rank: chosenTier.rank }, // Store clean tier obj
     shiny: isShiny,
-    mega: isMegaPull
+    mega: isMegaPull,
+    id: Date.now() + Math.random()
   };
+  
+  player.bag.push(newMon);
+
+  return newMon;
 }
 
 function updateUI(lastRoll) {
@@ -992,6 +1150,12 @@ function updateStats() {
   rollsText.innerText = player.totalRolls.toLocaleString();
   caughtText.innerText = Object.keys(player.pokedex).length;
   rollMultDisplay.innerText = player.rollMultiplier;
+  
+  // Update bag counts
+  if(player.bag) {
+      bagBtnCount.innerText = player.bag.length;
+      bagCapacity.innerText = `${player.bag.length}/${MAX_BAG_CAPACITY}`;
+  }
 }
 
 function renderDex(filter = "") {
@@ -1088,6 +1252,7 @@ function load(){
       if(!player.pokedex) player.pokedex = {};
       if(!player.rewards) player.rewards = {};
       if(!player.rollMultiplier) player.rollMultiplier = 1;
+      if(!player.bag) player.bag = []; // Init bag if new feature
 
       console.log("Save loaded:", player);
       startGame();
