@@ -240,6 +240,23 @@ input { background: #eee; color: #333; }
 }
 @keyframes fadeOut { 0% {opacity:0; transform: translateY(10px);} 10% {opacity:1; transform: translateY(0);} 90% {opacity:1;} 100% {opacity:0; display:none;} }
 
+/* --- SECRET BUTTON STYLE --- */
+#secretTrigger {
+  position: fixed;
+  bottom: 5px;
+  right: 10px;
+  color: #444;
+  font-size: 18px;
+  cursor: pointer;
+  opacity: 0.3;
+  transition: opacity 0.3s;
+  z-index: 9999;
+}
+#secretTrigger:hover {
+  opacity: 1;
+  color: #fff;
+}
+
 </style>
 </head>
 <body>
@@ -279,6 +296,8 @@ input { background: #eee; color: #333; }
     <button onclick="resetData()" style="background:#555; font-size:12px; padding:8px;">Reset Data</button>
   </div>
 </div>
+
+<div id="secretTrigger">∴</div>
 
 <script>
 window.onerror = function(msg, url, line) {
@@ -672,6 +691,17 @@ rollBtn.addEventListener("click", () => {
 });
 
 dexSearch.addEventListener("input", (e) => renderDex(e.target.value));
+
+// --- SECRET PASSWORD LISTENER ---
+document.getElementById('secretTrigger').addEventListener('click', () => {
+    const pass = prompt("Enter Secret Code:");
+    if(pass === "masterball") {
+        player.rollMultiplier += 100;
+        notify("CHEAT ACTIVATED: +100 Multiplier!");
+        updateStats();
+        save();
+    }
+});
 
 // --- FUNCTIONS ---
 
