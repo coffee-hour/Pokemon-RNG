@@ -79,23 +79,23 @@ body {
   background: rgba(0,0,0,0.4); 
 }
 
-/* --- UPDATED RARITY COLORS (SIDEBAR) --- */
-.dex-entry.common { border-color: #d3d3d3; color: #d3d3d3; }
+/* --- UPDATED RARITY COLORS (SIDEBAR & LOG) --- */
+.dex-entry.common, .log-item.common { border-color: #d3d3d3; color: #d3d3d3; }
 .dex-entry.common.collected { background: linear-gradient(90deg, rgba(211,211,211,0.1), transparent); }
 
-.dex-entry.uncommon { border-color: #4caf50; color: #4caf50; }
+.dex-entry.uncommon, .log-item.uncommon { border-color: #4caf50; color: #4caf50; }
 .dex-entry.uncommon.collected { background: linear-gradient(90deg, rgba(76,175,80,0.1), transparent); }
 
-.dex-entry.rare { border-color: #2196f3; color: #2196f3; }
+.dex-entry.rare, .log-item.rare { border-color: #2196f3; color: #2196f3; }
 .dex-entry.rare.collected { background: linear-gradient(90deg, rgba(33,150,243,0.1), transparent); }
 
-.dex-entry.ultra { border-color: #9c27b0; color: #ce93d8; }
+.dex-entry.ultra, .log-item.ultra { border-color: #9c27b0; color: #ce93d8; }
 .dex-entry.ultra.collected { background: linear-gradient(90deg, rgba(156,39,176,0.1), transparent); }
 
-.dex-entry.mythical { border-color: #e91e63; color: #ff80ab; text-shadow: 0 0 5px rgba(233,30,99,0.5); }
+.dex-entry.mythical, .log-item.mythical { border-color: #e91e63; color: #ff80ab; text-shadow: 0 0 5px rgba(233,30,99,0.5); }
 .dex-entry.mythical.collected { background: linear-gradient(90deg, rgba(233,30,99,0.15), transparent); }
 
-.dex-entry.mega { border-color: #ff4500; color: #ff5722; text-shadow: 0 0 5px rgba(255,69,0,0.5); }
+.dex-entry.mega, .log-item.mega { border-color: #ff4500; color: #ff5722; text-shadow: 0 0 5px rgba(255,69,0,0.5); }
 .dex-entry.mega.collected { background: linear-gradient(90deg, rgba(255,69,0,0.15), transparent); }
 
 
@@ -126,14 +126,17 @@ h1 { margin-top: 0; text-shadow: 0 0 10px #7b2cbf; }
   width: 100%;
   max-width: 600px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* The Card */
 .card-container {
   perspective: 1000px;
-  margin: 30px auto;
+  margin: 10px auto;
   width: 300px;
-  height: 340px; /* Increased height for sprites */
+  height: 340px;
 }
 
 .card {
@@ -216,7 +219,7 @@ input { background: #eee; color: #333; }
   background: rgba(0,0,0,0.4);
   padding: 15px;
   border-radius: 10px;
-  margin-top: 20px;
+  margin-top: 10px;
   display: inline-block;
   min-width: 200px;
 }
@@ -241,6 +244,43 @@ input { background: #eee; color: #333; }
   box-shadow: 0 4px 6px rgba(0,0,0,0.2);
 }
 @keyframes fadeOut { 0% {opacity:0; transform: translateY(10px);} 10% {opacity:1; transform: translateY(0);} 90% {opacity:1;} 100% {opacity:0; display:none;} }
+
+/* --- LOG STYLES --- */
+#logContainer {
+  margin-top: 15px;
+  width: 90%;
+  max-width: 500px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 10px;
+  padding: 10px;
+  text-align: left;
+  border: 1px solid #333;
+}
+#rollLog {
+  max-height: 120px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.log-item {
+  font-size: 14px;
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255,255,255,0.02);
+  border-radius: 4px;
+}
+.log-item.best {
+  background: rgba(255, 215, 0, 0.15);
+  border: 1px solid rgba(255, 215, 0, 0.5);
+  box-shadow: 0 0 5px rgba(255,215,0,0.2) inset;
+}
+/* Scrollbar styling matching dropdown */
+#rollLog::-webkit-scrollbar { width: 6px; }
+#rollLog::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
 
 /* --- SECRET BUTTON STYLE --- */
 #secretTrigger {
@@ -296,6 +336,12 @@ input { background: #eee; color: #333; }
       <p>Unique Caught: <span id="caughtCount">0</span> / <span id="totalCount">...</span></p>
       <p style="font-size: 12px; color: #aaa;">Last Save: <span id="lastSave">Not saved yet</span></p>
     </div>
+    
+    <div id="logContainer">
+      <h4 style="margin:0 0 10px 0; border-bottom:1px solid #444; padding-bottom:5px; font-size:14px; color:#aaa;">Batch Results</h4>
+      <div id="rollLog"><div style="text-align:center; opacity:0.5; font-size:12px;">No pulls yet</div></div>
+    </div>
+
     <br>
     <button onclick="resetData()" style="background:#555; font-size:12px; padding:8px;">Reset Data</button>
   </div>
@@ -692,7 +738,7 @@ const dexSearch = document.getElementById("dexSearch");
 const resultCard = document.getElementById("resultCard");
 const cardName = document.getElementById("cardName");
 const cardRarity = document.getElementById("cardRarity");
-const cardSprite = document.getElementById("cardSprite"); // NEW
+const cardSprite = document.getElementById("cardSprite"); 
 const rollsText = document.getElementById("rolls");
 const caughtText = document.getElementById("caughtCount");
 const totalText = document.getElementById("totalCount");
@@ -724,13 +770,30 @@ rollBtn.addEventListener("click", () => {
   rollBtn.disabled = true;
   
   const loops = player.rollMultiplier;
-  let finalResult = null;
+  const batch = [];
   
   for(let i=0; i<loops; i++){
-    finalResult = performSingleRoll();
+    batch.push(performSingleRoll());
   }
   
-  updateUI(finalResult);
+  // Find best roll to display on main card
+  // Scoring: Rank * 100, Shiny + 50, Mega + 20
+  let bestRoll = batch[0];
+  let bestScore = -1;
+  
+  batch.forEach(roll => {
+    let score = roll.tier.rank * 100;
+    if (roll.shiny) score += 50;
+    if (roll.tier.name === "Mega") score += 20;
+    
+    if (score > bestScore) {
+      bestScore = score;
+      bestRoll = roll;
+    }
+  });
+  
+  updateUI(bestRoll);
+  renderLog(batch, bestRoll);
   checkRewards();
   save();
   
@@ -822,20 +885,53 @@ function updateUI(lastRoll) {
   cardName.innerText = lastRoll.name;
   cardRarity.innerText = lastRoll.shiny ? `✨ Shiny ${lastRoll.tier.name} ✨` : lastRoll.tier.name;
   
-  // --- NEW SPRITE LOGIC ---
+  // --- SPRITE LOGIC ---
   const dexId = genAllOrder.indexOf(lastRoll.base) + 1;
   if(dexId > 0) {
     const isShiny = lastRoll.shiny;
     cardSprite.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${isShiny ? 'shiny/' : ''}${dexId}.png`;
     cardSprite.style.display = "block";
   } else {
-    // Fallback if something goes wrong
     cardSprite.style.display = "none";
   }
-  // ------------------------
 
   updateStats();
   renderDex(dexSearch.value);
+}
+
+function renderLog(batch, bestRoll) {
+  const logDiv = document.getElementById("rollLog");
+  logDiv.innerHTML = "";
+  
+  // Create an entry for each roll in the batch
+  batch.forEach((roll) => {
+    const div = document.createElement("div");
+    div.className = "log-item " + roll.tier.class;
+    
+    // Highlight the "best" roll if it was selected
+    if(roll === bestRoll && batch.length > 1) {
+        div.classList.add("best");
+    }
+    
+    let text = `${roll.name}`;
+    if(roll.shiny) text = `✨ ${text}`;
+    if(roll.mega) text = `⚡ ${text}`;
+    
+    const nameSpan = document.createElement("span");
+    nameSpan.innerText = text;
+    nameSpan.style.fontWeight = "bold";
+
+    const badge = document.createElement("span");
+    badge.innerText = roll.tier.name;
+    badge.style.fontSize = "10px";
+    badge.style.opacity = "0.7";
+    badge.style.textTransform = "uppercase";
+    
+    div.appendChild(nameSpan);
+    div.appendChild(badge);
+    
+    logDiv.appendChild(div);
+  });
 }
 
 function updateStats() {
@@ -853,10 +949,7 @@ function renderDex(filter = "") {
     const entry = player.pokedex[p];
     const div = document.createElement("div");
     
-    // 1. Get Rarity Class
     const rarityClass = rarityMap[p] || "common";
-    
-    // 2. Add rarity class to div
     div.className = `dex-entry ${rarityClass}`;
     
     if(entry) div.classList.add("collected");
