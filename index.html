@@ -761,7 +761,7 @@ const rarityTable = [
   { 
     name: "Ultra", 
     class: "ultra", 
-    chance: 6, 
+    chance: 7.5, 
     rank: 4, 
     coinValue: 500,
     pool: [
@@ -783,8 +783,8 @@ const rarityTable = [
   { 
     name: "Mythical", 
     class: "mythical", 
-    chance: 2.88, 
-    rank: 5, 
+    chance: 2.4, 
+    rank: 4, 
     coinValue: 2000,
     pool: [
       "Mew", "Mewtwo", "Articuno", "Zapdos", "Moltres",
@@ -822,7 +822,7 @@ const rarityTable = [
   { 
     name: "Giga", 
     class: "giga", 
-    chance: 0.5, 
+    chance: 0.1, 
     rank: 6, 
     coinValue: 5000,
     pool: [
@@ -1757,7 +1757,7 @@ function renderLog(batch, bestRoll) {
     let text = `${roll.name}`;
     if(roll.shiny) text = `✨ ${text}`;
     if(roll.mega) text = `⚡ ${text}`;
-    if(roll.giga) text = `❌ ${text}`;
+    if(roll.giga) text = `⯌ ${text}`;
     
     const nameSpan = document.createElement("span");
     nameSpan.innerText = text;
@@ -1842,7 +1842,7 @@ function renderDex(filter = "") {
       
       if(gigaEligible.has(p)) {
         const hasGiga = Object.keys(entry.giga || {}).length > 0;
-        icons += hasGiga ? " <span style='color:#e74c3c'>❌</span>" : " <span style='color:rgba(255,255,255,0.2)'>x</span>";
+        icons += hasGiga ? " <span style='color:#e74c3c'>⯌</span>" : " <span style='color:rgba(255,255,255,0.2)'>x</span>";
       }
     } else {
       div.style.opacity = "0.3";
