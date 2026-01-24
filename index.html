@@ -4,10 +4,6 @@
 <meta charset="UTF-8">
 <title>Pokemon RNG</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- Load Firebase Libraries via CDN (Global Scope) -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <style>
 /* --- CSS STYLES --- */
@@ -86,15 +82,15 @@ body {
 }
 
 /* Rarity Colors */
-.dex-entry.common, .log-item.common, .bag-item.common, .trade-item.common { border-color: #94a3b8; color: #d3d3d3; }
-.dex-entry.uncommon, .log-item.uncommon, .bag-item.uncommon, .trade-item.uncommon { border-color: #22c55e; color: #4caf50; }
-.dex-entry.rare, .log-item.rare, .bag-item.rare, .trade-item.rare { border-color: #3b82f6; color: #2196f3; }
-.dex-entry.ultra, .log-item.ultra, .bag-item.ultra, .trade-item.ultra { border-color: #eab308; color: #ce93d8; box-shadow: 0 0 5px rgba(234, 179, 8, 0.3); }
-.dex-entry.mythical, .log-item.mythical, .bag-item.mythical, .trade-item.mythical { border-color: #a855f7; color: #ff80ab; text-shadow: 0 0 5px rgba(233,30,99,0.5); box-shadow: 0 0 8px rgba(168, 85, 247, 0.4); }
-.dex-entry.mega, .log-item.mega, .bag-item.mega, .trade-item.mega { border-color: #ef4444; color: #ff5722; text-shadow: 0 0 5px rgba(255,69,0,0.5); box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
-.dex-entry.giga, .log-item.giga, .bag-item.giga, .trade-item.giga { border-color: #c0392b; color: #e74c3c; background: linear-gradient(90deg, rgba(142, 68, 173, 0.15), transparent); text-shadow: 0 0 5px rgba(231, 76, 60, 0.6); box-shadow: 0 0 10px rgba(192, 57, 43, 0.5); }
+.dex-entry.common, .log-item.common, .bag-item.common { border-color: #94a3b8; color: #d3d3d3; }
+.dex-entry.uncommon, .log-item.uncommon, .bag-item.uncommon { border-color: #22c55e; color: #4caf50; }
+.dex-entry.rare, .log-item.rare, .bag-item.rare { border-color: #3b82f6; color: #2196f3; }
+.dex-entry.ultra, .log-item.ultra, .bag-item.ultra { border-color: #eab308; color: #ce93d8; box-shadow: 0 0 5px rgba(234, 179, 8, 0.3); }
+.dex-entry.mythical, .log-item.mythical, .bag-item.mythical { border-color: #a855f7; color: #ff80ab; text-shadow: 0 0 5px rgba(233,30,99,0.5); box-shadow: 0 0 8px rgba(168, 85, 247, 0.4); }
+.dex-entry.mega, .log-item.mega, .bag-item.mega { border-color: #ef4444; color: #ff5722; text-shadow: 0 0 5px rgba(255,69,0,0.5); box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
+.dex-entry.giga, .log-item.giga, .bag-item.giga { border-color: #c0392b; color: #e74c3c; background: linear-gradient(90deg, rgba(142, 68, 173, 0.15), transparent); text-shadow: 0 0 5px rgba(231, 76, 60, 0.6); box-shadow: 0 0 10px rgba(192, 57, 43, 0.5); }
 
-.bag-item.shiny, .trade-item.shiny { background: linear-gradient(135deg, #333, #1a1a1a); border-style: double; border-width: 3px; border-color: #f1c40f !important;}
+.bag-item.shiny { background: linear-gradient(135deg, #333, #1a1a1a); border-style: double; border-width: 3px; border-color: #f1c40f !important;}
 
 /* Main Content */
 #mainContent {
@@ -417,20 +413,6 @@ input { background: #eee; color: #333; }
 .quest-progress { font-size: 12px; background: #444; padding: 2px 6px; border-radius: 4px; margin-left: 10px; }
 .quest-complete { border-color: #27ae60; background: #222; opacity: 0.7; }
 
-/* Trade Station Styles */
-.trade-tabs { display: flex; gap: 10px; margin-bottom: 10px; }
-.trade-tab { flex: 1; padding: 10px; background: #34495e; border: none; cursor: pointer; color: #aaa; }
-.trade-tab.active { background: #27ae60; color: white; font-weight: bold; }
-
-.trade-list { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; flex: 1; }
-.trade-item {
-  background: #222; border: 2px solid #444; border-radius: 8px; padding: 10px;
-  display: flex; justify-content: space-between; align-items: center;
-}
-.trade-info { display: flex; align-items: center; gap: 10px; }
-.trade-info img { width: 40px; height: 40px; object-fit: contain; }
-.trade-price { font-weight: bold; color: #f1c40f; }
-
 /* --- SECRET BUTTON STYLE --- */
 #secretTrigger {
   position: fixed;
@@ -467,7 +449,6 @@ input { background: #eee; color: #333; }
   <div style="position: absolute; top: 10px; right: 10px; z-index: 100; display: flex; gap: 10px; align-items: center;">
     <button onclick="toggleQuests(true)" class="menu-btn" style="background:#2980b9;">📜 Quests</button>
     <button onclick="toggleShop(true)" class="menu-btn" style="background:#f39c12;">🏪 Shop</button>
-    <button onclick="toggleTrade(true)" class="menu-btn" style="background:#27ae60;">🤝 Trade</button>
     <div class="coin-display">
         🪙 <span id="coinCount">0</span>
     </div>
@@ -568,40 +549,6 @@ input { background: #eee; color: #333; }
   </div>
 </div>
 
-<!-- TRADE STATION MODAL -->
-<div id="tradeModal" class="modal-overlay" style="display:none;">
-  <div class="modal-content">
-    <h2>
-        <span>Global Trade Station</span>
-        <span style="font-size: 14px; color: #aaa;">Status: <span id="tradeStatus">Connecting...</span></span>
-    </h2>
-    <button class="close-btn" style="position: absolute; top: 15px; right: 15px;" onclick="toggleTrade(false)">X</button>
-    
-    <div class="trade-tabs">
-        <button id="tabMarket" class="trade-tab active" onclick="switchTradeTab('market')">Global Market</button>
-        <button id="tabMyListings" class="trade-tab" onclick="switchTradeTab('mine')">My Listings</button>
-    </div>
-
-    <div id="tradeList" class="trade-list">
-        <!-- Trades injected here -->
-        <div style="text-align:center; padding:20px; color:#666;">Loading trades...</div>
-    </div>
-    
-    <div id="createListingArea" style="display:none; border-top:1px solid #444; padding-top:10px; margin-top:10px; text-align:center;">
-        <button onclick="openListingSelector()" style="background:#27ae60; width:100%;">+ List New Pokemon</button>
-    </div>
-  </div>
-</div>
-
-<!-- LISTING SELECTOR MODAL (Sub-modal) -->
-<div id="listingModal" class="modal-overlay" style="display:none; z-index: 2100;">
-  <div class="modal-content" style="max-width: 600px; height: 70%;">
-    <h2>Select Pokemon to Sell</h2>
-    <button class="close-btn" style="position: absolute; top: 15px; right: 15px;" onclick="closeListingSelector()">X</button>
-    <div id="listingGrid" class="bag-grid"></div>
-  </div>
-</div>
-
 <div id="secretTrigger">∴</div>
 
 <script>
@@ -681,7 +628,7 @@ const rarityTable = [
       "Wooper", "Murkrow", "Gligar", "Snubbull", "Swinub", "Remoraid", "Phanpy", "Tyrogue",
       "Pineco", "Teddiursa", "Slugma", "Treecko", "Torchic", "Mudkip", "Poochyena", "Zigzagoon", 
       "Wurmple", "Lotad", "Seedot", "Ralts", "Surskit", "Shroomish", "Slakoth", "Nincada", "Whismur", 
-      "Makuhita", "Azurill", "Meditite", "Electrike", "Numel", "Spoink", "Aron", "Taillow", "Wingull",
+      "Makuhita", "Azurill", "Meditite", "Electrike", "Numel", "Spoink", "Aron", "Aron", "Taillow", "Wingull",
       "Nosepass", "Skitty", "Carvanha", "Wailmer", "Trapinch", "Snorunt", "Spheal", "Clamperl", "Bagon", "Beldum",
       "Turtwig", "Chimchar", "Piplup", "Starly", "Bidoof", "Kricketot", "Shinx", "Budew",
       "Cranidos", "Shieldon", "Burmy", "Combee", "Cherubi", "Bonsly", "Happiny", "Buneary",
@@ -1127,332 +1074,876 @@ const gigaMap = {
 
 const gigaSpriteIdMap = {
   "Giga Venusaur": 10186,
-  "Giga Charizard": 10187,
-  "Giga Blastoise": 10188,
-  "Giga Butterfree": 10189,
-  "Giga Pikachu": 10190,
-  "Giga Meowth": 10191,
-  "Giga Machamp": 10192,
-  "Giga Gengar": 10193,
-  "Giga Kingler": 10194,
-  "Giga Lapras": 10195,
-  "Giga Eevee": 10196,
-  "Giga Snorlax": 10197,
-  "Giga Garbodor": 10198,
-  "Giga Melmetal": 10199,
-  "Giga Rillaboom": 10200,
-  "Giga Cinderace": 10201,
-  "Giga Inteleon": 10202,
-  "Giga Corviknight": 10203,
-  "Giga Orbeetle": 10204,
-  "Giga Drednaw": 10205,
-  "Giga Coalossal": 10206,
-  "Giga Flapple": 10207,
-  "Giga Appletun": 10208,
-  "Giga Sandaconda": 10209,
-  "Giga Toxtricity": 10210,
-  "Giga Centiskorch": 10211,
-  "Giga Hatterene": 10212,
-  "Giga Grimmsnarl": 10213,
-  "Giga Alcremie": 10214,
-  "Giga Copperajah": 10215,
-  "Giga Duraludon": 10216,
+  "Giga Charizard": 10196,
+  "Giga Blastoise": 10197,
+  "Giga Butterfree": 10198,
+  "Giga Pikachu": 10199,
+  "Giga Meowth": 10200,
+  "Giga Machamp": 10201,
+  "Giga Gengar": 10202,
+  "Giga Kingler": 10203,
+  "Giga Lapras": 10204,
+  "Giga Eevee": 10205,
+  "Giga Snorlax": 10206,
+  "Giga Garbodor": 10207,
+  "Giga Melmetal": 10208,
+  "Giga Rillaboom": 10209,
+  "Giga Cinderace": 10210,
+  "Giga Inteleon": 10211,
+  "Giga Corviknight": 10212,
+  "Giga Orbeetle": 10213,
+  "Giga Drednaw": 10214,
+  "Giga Coalossal": 10215,
+  "Giga Flapple": 10216,
+  "Giga Appletun": 10217,
+  "Giga Sandaconda": 10218,
+  "Giga Toxtricity": 10219,
+  "Giga Centiskorch": 10220,
+  "Giga Hatterene": 10221,
+  "Giga Grimmsnarl": 10222,
+  "Giga Alcremie": 10223,
+  "Giga Copperajah": 10224,
+  "Giga Duraludon": 10225,
   "Giga Urshifu": 10226,
   "Sacred Sword Zacian": 10188,
   "Sacred Shield Zamazenta": 10189
 };
 
-// --- FIREBASE LOGIC (Global Scope) ---
-let db, auth, user;
-let appId = 'default-app-id';
+const megaEligible = new Set(Object.values(megaMap));
+const gigaEligible = new Set(Object.values(gigaMap));
 
-// Initialize Firebase if config exists
-if (typeof __firebase_config !== 'undefined') {
+// Map rarity by Pokémon
+const rarityMap = {};
+rarityTable.forEach(tier => tier.pool.forEach(p => rarityMap[p] = tier.class));
+
+// --- PLAYER STATE ---
+let player = {
+  username: "",
+  totalRolls: 0,
+  pokedex: {},
+  rollMultiplier: 1,
+  rewards: {},
+  bag: [],
+  coins: 0,
+  candy: {},
+  upgrades: { bagLevel: 0, luckLevel: 0, candyLevel: 0 },
+  activeQuests: [],
+  maxBag: 100
+};
+
+// --- DOM ELEMENTS ---
+const loginScreen = document.getElementById("login");
+const gameScreen = document.getElementById("game");
+const rollBtn = document.getElementById("rollBtn");
+const startBtn = document.getElementById("startBtn");
+const pokedexDropdown = document.getElementById("pokedexDropdown");
+const dexSearch = document.getElementById("dexSearch");
+const resultCard = document.getElementById("resultCard");
+const cardName = document.getElementById("cardName");
+const cardRarity = document.getElementById("cardRarity");
+const cardSprite = document.getElementById("cardSprite"); 
+const rollsText = document.getElementById("rolls");
+const caughtText = document.getElementById("caughtCount");
+const totalText = document.getElementById("totalCount");
+const lastSaveText = document.getElementById("lastSave");
+const rollMultDisplay = document.getElementById("rollMultDisplay");
+const openBagBtn = document.getElementById("openBagBtn");
+const bagModal = document.getElementById("bagModal");
+const bagGrid = document.getElementById("bagGrid");
+const bagCapacity = document.getElementById("bagCapacity");
+const bagBtnCount = document.getElementById("bagBtnCount");
+const bagMaxDisplay = document.getElementById("bagMaxDisplay");
+const cardCatchBtn = document.getElementById("cardCatchBtn");
+const coinCount = document.getElementById("coinCount");
+const shopModal = document.getElementById("shopModal");
+const shopGrid = document.getElementById("shopGrid");
+const shopCoinDisplay = document.getElementById("shopCoinDisplay");
+const questModal = document.getElementById("questModal");
+const questList = document.getElementById("questList");
+
+// --- INITIALIZATION ---
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("Game loading...");
   try {
-      const firebaseConfig = JSON.parse(__firebase_config);
-      firebase.initializeApp(firebaseConfig);
-      auth = firebase.auth();
-      db = firebase.firestore();
-      if (typeof __app_id !== 'undefined') appId = __app_id;
-
-      // Auth
-      auth.signInAnonymously().catch(err => console.error("Auth failed:", err));
-      
-      auth.onAuthStateChanged((u) => {
-          user = u;
-          if (user) {
-              console.log("Firebase Connected. User:", user.uid);
-              // Setup Listeners
-              setupTradeListeners();
-          }
-      });
-  } catch (e) {
-      console.error("Firebase Init Error:", e);
+    load();
+    totalText.innerText = genAllOrder.length;
+    // Initial Quest Gen
+    if(!player.activeQuests || player.activeQuests.length === 0) {
+        generateQuests();
+    }
+    console.log("Game loaded successfully.");
+  } catch(e) {
+    console.error("Critical error during init: ", e);
+    alert("Game crashed during load. Please check console.");
   }
-}
+});
 
-// --- TRADE LOGIC ---
-let marketUnsubscribe = null;
-let myListingsUnsubscribe = null;
-let currentTradeTab = 'market';
+// Event Listeners
+startBtn.addEventListener("click", () => {
+  const name = document.getElementById("usernameInput").value.trim();
+  if(!name) return alert("Please enter a username!");
+  player.username = name;
+  startGame();
+});
 
-function setupTradeListeners() {
-    refreshTradeView();
-}
+// Open/Close Bag
+openBagBtn.addEventListener("click", () => toggleBag(true));
 
-function refreshTradeView() {
-    if(!user || !db) return;
-    
-    const listEl = document.getElementById('tradeList');
-    listEl.innerHTML = '<div style="text-align:center; padding:20px; color:#666;">Loading...</div>';
-    
-    if(marketUnsubscribe) marketUnsubscribe();
-    if(myListingsUnsubscribe) myListingsUnsubscribe();
-    
-    const tradesRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('trades');
-    
-    if(currentTradeTab === 'market') {
-        const q = tradesRef.where('status', '==', 'open');
+rollBtn.addEventListener("click", () => {
+  rollBtn.disabled = true;
+  cardCatchBtn.style.display = 'none'; // Hide until roll finishes
+  
+  // Use setTimeout to allow UI to update (disable button) before heavy processing
+  setTimeout(() => {
+      const loops = player.rollMultiplier;
+      const batch = [];
+      
+      for(let i=0; i<loops; i++){
+        batch.push(performSingleRoll());
+      }
+      
+      // Find best roll
+      let bestRoll = batch[0];
+      let bestScore = -1;
+      
+      batch.forEach(roll => {
+        let score = roll.tier.rank * 100;
+        if (roll.shiny) score += 50;
+        if (roll.tier.name === "Mega") score += 20;
+        if (roll.tier.name === "Giga") score += 40;
         
-        marketUnsubscribe = q.onSnapshot((snapshot) => {
-            const trades = [];
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                if(data.sellerId !== user.uid) {
-                    trades.push({ id: doc.id, ...data });
-                }
-            });
-            trades.sort((a,b) => b.createdAt - a.createdAt);
-            renderTradeList(trades, 'market');
-        });
-        
-        document.getElementById('createListingArea').style.display = 'none';
-        document.getElementById('tabMarket').classList.add('active');
-        document.getElementById('tabMyListings').classList.remove('active');
-        
-    } else {
-        const q = tradesRef.where('sellerId', '==', user.uid);
-        
-        myListingsUnsubscribe = q.onSnapshot((snapshot) => {
-            const trades = [];
-            snapshot.forEach(doc => {
-                trades.push({ id: doc.id, ...doc.data() });
-            });
-            trades.sort((a,b) => b.createdAt - a.createdAt);
-            renderTradeList(trades, 'mine');
-        });
-        
-        document.getElementById('createListingArea').style.display = 'block';
-        document.getElementById('tabMarket').classList.remove('active');
-        document.getElementById('tabMyListings').classList.add('active');
-    }
-}
-
-function renderTradeList(trades, type) {
-    const listEl = document.getElementById('tradeList');
-    listEl.innerHTML = "";
-    
-    if(trades.length === 0) {
-        listEl.innerHTML = '<div style="text-align:center; padding:20px; color:#666;">No listings found.</div>';
-        return;
-    }
-    
-    trades.forEach(t => {
-        const div = document.createElement('div');
-        const p = t.pokemon;
-        div.className = `trade-item ${p.tier.class}`;
-        if(p.shiny) div.style.borderColor = "#f1c40f";
-        
-        // Sprite URL Logic (Duplicated safely)
-        let imgUrl = "";
-        const dexId = genAllOrder.indexOf(p.base) + 1;
-        if (p.giga && gigaSpriteIdMap[p.name]) {
-            imgUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${gigaSpriteIdMap[p.name]}.png`;
-        } else if (p.mega && megaSpriteIdMap[p.name]) {
-            imgUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${megaSpriteIdMap[p.name]}.png`;
-        } else if (dexId > 0) {
-            imgUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${dexId}.png`;
-        } else {
-             imgUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png";
+        if (score > bestScore) {
+          bestScore = score;
+          bestRoll = roll;
         }
-        
-        let actionBtn = "";
-        if(type === 'market') {
-           actionBtn = `<button onclick="buyPokemon('${t.id}', ${t.price})" style="background:#27ae60;">Buy (${t.price} 🪙)</button>`;
-        } else {
-           if(t.status === 'open') {
-               actionBtn = `<button onclick="cancelListing('${t.id}')" style="background:#c0392b;">Cancel</button>`;
-           } else if(t.status === 'sold') {
-               actionBtn = `<button onclick="claimCoins('${t.id}', ${t.price})" style="background:#f39c12; color:black; font-weight:bold;">Claim ${t.price} 🪙</button>`;
-           } else {
-               actionBtn = `<span style="color:#aaa;">Claimed</span>`;
-           }
-        }
-        
-        div.innerHTML = `
-          <div class="trade-info">
-              <img src="${imgUrl}">
-              <div>
-                  <div style="font-weight:bold; font-size:14px;">${p.name} ${p.shiny ? '✨' : ''}</div>
-                  <div style="font-size:10px; color:#aaa;">Seller: ${t.sellerName}</div>
-              </div>
-          </div>
-          <div style="text-align:right;">
-              <div class="trade-price">${t.price} 🪙</div>
-              ${actionBtn}
-          </div>
-        `;
-        listEl.appendChild(div);
-    });
+      });
+      
+      updateUI(bestRoll);
+      renderLog(batch, bestRoll);
+      
+      // Quests Check
+      checkQuestProgress("roll", loops);
+      checkRewards();
+      save();
+      
+      rollBtn.disabled = false;
+  }, 50);
+});
+
+dexSearch.addEventListener("input", (e) => renderDex(e.target.value));
+
+// --- SECRET PASSWORD LISTENER ---
+document.getElementById('secretTrigger').addEventListener('click', () => {
+    const pass = prompt("Enter Secret Code:");
+    if(pass === "masterball") {
+        player.rollMultiplier += 100000;
+        notify("CHEAT ACTIVATED: +100000 Multiplier!");
+        updateStats();
+        save();
+    } else if (pass === "rich") {
+        player.coins += 10000;
+        notify("CHEAT ACTIVATED: +10,000 Coins!");
+        updateStats();
+        save();
+    }
+});
+
+// --- FUNCTIONS ---
+
+function startGame() {
+  loginScreen.style.display = "none";
+  gameScreen.style.display = "block";
+  applyUpgrades();
+  renderDex();
+  updateStats();
+  save();
 }
 
-function toggleTrade(show) {
-    const modal = document.getElementById("tradeModal");
+function applyUpgrades() {
+    // Recalculate stats based on upgrades
+    player.maxBag = 100 + (player.upgrades.bagLevel * 10);
+    CURRENT_SHINY_ODDS = Math.max(100, BASE_SHINY_ODDS - (player.upgrades.luckLevel * 50));
+}
+
+function toggleBag(show) {
     if(show) {
-        if(!user) {
-            alert("Connecting to trade network...");
-            return;
-        }
-        refreshTradeView();
-        modal.style.display = "flex";
+        renderBag();
+        bagModal.style.display = "flex";
     } else {
-        modal.style.display = "none";
+        bagModal.style.display = "none";
     }
 }
 
-function switchTradeTab(tab) {
-    currentTradeTab = tab;
-    refreshTradeView();
+function toggleShop(show) {
+    if(show) {
+        renderShop();
+        shopModal.style.display = "flex";
+    } else {
+        shopModal.style.display = "none";
+    }
 }
 
-function openListingSelector() {
-    const modal = document.getElementById('listingModal');
-    const grid = document.getElementById('listingGrid');
-    grid.innerHTML = "";
-    
+function toggleQuests(show) {
+    if(show) {
+        renderQuests();
+        questModal.style.display = "flex";
+    } else {
+        questModal.style.display = "none";
+    }
+}
+
+// --- BAG LOGIC ---
+function renderBag() {
+    bagGrid.innerHTML = "";
+    bagCapacity.innerText = `${player.bag.length}/${player.maxBag}`;
+    bagBtnCount.innerText = player.bag.length;
+    bagMaxDisplay.innerText = player.maxBag;
+
     player.bag.forEach((p, index) => {
         const div = document.createElement("div");
         div.className = `bag-item ${p.tier.class} ${p.shiny ? 'shiny' : ''}`;
         
+        const img = document.createElement("img");
+        
+        // Sprite Logic
         let spriteUrl = "";
         const dexId = genAllOrder.indexOf(p.base) + 1;
+        
         if (p.giga && gigaSpriteIdMap[p.name]) {
-            spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${gigaSpriteIdMap[p.name]}.png`;
+            const gigaId = gigaSpriteIdMap[p.name];
+            spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${gigaId}.png`;
         } else if (p.mega && megaSpriteIdMap[p.name]) {
-            spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${megaSpriteIdMap[p.name]}.png`;
+            const megaId = megaSpriteIdMap[p.name];
+            spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${megaId}.png`;
         } else if (dexId > 0) {
             spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${dexId}.png`;
         }
         
-        const img = document.createElement("img");
+        // Zacian/Zamazenta fallback
+        if((p.base === "Zacian" || p.base === "Zamazenta") && !spriteUrl) {
+             const manualId = p.base === "Zacian" ? 888 : 889;
+             spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${manualId}.png`;
+        }
+
         img.src = spriteUrl || "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png";
         
+        const name = document.createElement("div");
+        name.className = "name";
+        name.innerText = p.name;
+        if(p.shiny) name.style.color = "#f39c12";
+
+        const btn = document.createElement("div");
+        btn.className = "release-btn";
+        btn.innerText = "X";
+        btn.title = "Release (+Coins)";
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            releasePokemon(index);
+        };
+
+        div.appendChild(btn);
+        div.appendChild(img);
+        div.appendChild(name);
+
+        // Evolution Button Check
+        if(evolutionMap[p.name]) {
+            const evoInfo = evolutionMap[p.name];
+            const candyCount = player.candy[p.base] || 0;
+            if(candyCount >= evoInfo.cost) {
+                const evoBtn = document.createElement("button");
+                evoBtn.className = "evo-btn";
+                evoBtn.innerText = `Evolve (${evoInfo.cost}🍬)`;
+                evoBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    evolvePokemon(index, p);
+                };
+                div.appendChild(evoBtn);
+            }
+        }
+
+        bagGrid.appendChild(div);
+    });
+}
+
+function releasePokemon(index) {
+    const mon = player.bag[index];
+    // Calculate Value
+    let value = 0;
+    const tierData = rarityTable.find(t => t.name === mon.tier.name);
+    if(tierData) value = tierData.coinValue;
+    if(mon.shiny) value *= 5;
+    if(mon.mega) value *= 2;
+    if(mon.giga) value *= 3;
+
+    if(confirm(`Release ${mon.name} for ${value} coins?`)) {
+        player.bag.splice(index, 1);
+        player.coins += value;
+        
+        checkQuestProgress("release", 1);
+        
+        notify(`Released! +${value} Coins`);
+        renderBag();
+        updateStats();
+        save();
+    }
+}
+
+function evolvePokemon(index, mon) {
+    const evoInfo = evolutionMap[mon.name];
+    if(!evoInfo) return;
+    
+    if(player.candy[mon.base] >= evoInfo.cost) {
+        player.candy[mon.base] -= evoInfo.cost;
+        
+        const oldName = mon.name;
+        mon.name = evoInfo.into; // Evolve!
+        mon.base = evoInfo.into; // Base changes too
+        
+        notify(`🧬 Evolved ${oldName} into ${mon.name}!`);
+        
+        // Add to Dex
+        if(!player.pokedex[mon.name]) player.pokedex[mon.name] = { count: 0, shiny: 0, mega: {}, giga: {} };
+        player.pokedex[mon.name].count++;
+        
+        renderBag();
+        renderDex();
+        updateStats();
+        save();
+    }
+}
+
+function sortBag(criteria) {
+    if(criteria === 'name') {
+        player.bag.sort((a,b) => a.name.localeCompare(b.name));
+    } else if (criteria === 'rarity') {
+        const rankMap = { "Common":1, "Uncommon":2, "Rare":3, "Ultra":4, "Mythical":5, "Mega":6, "Giga": 7 };
+        player.bag.sort((a,b) => rankMap[b.tier.name] - rankMap[a.tier.name]);
+    } else if (criteria === 'recent') {
+        player.bag.sort((a,b) => b.id - a.id);
+    } else if (criteria === 'shiny') {
+        player.bag.sort((a,b) => (b.shiny ? 1 : 0) - (a.shiny ? 1 : 0));
+    }
+    renderBag();
+}
+
+// --- SHOP LOGIC ---
+function renderShop() {
+    shopGrid.innerHTML = "";
+    shopCoinDisplay.innerText = player.coins;
+    
+    shopItems.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "shop-item";
+        
+        let currentLevel = 0;
+        if(item.id === "bagUp") currentLevel = player.upgrades.bagLevel;
+        if(item.id === "luck") currentLevel = player.upgrades.luckLevel;
+        if(item.id === "candyUp") currentLevel = player.upgrades.candyLevel;
+        
+        const cost = Math.floor(item.cost * Math.pow(1.5, currentLevel));
+        const maxed = item.max && currentLevel >= item.max;
+        
         div.innerHTML = `
-            <img src="${img.src}">
-            <div class="name" style="font-size:9px;">${p.name}</div>
+            <h3>${item.name}</h3>
+            <p>${item.desc}</p>
+            <p style="font-weight:bold; color: #fff;">Lvl: ${currentLevel}</p>
         `;
         
-        div.onclick = () => {
-            const price = prompt("Enter listing price (coins):");
-            if(price && !isNaN(price) && parseInt(price) > 0) {
-                listPokemon(index, price);
-            }
-        };
+        const btn = document.createElement("button");
+        btn.innerText = maxed ? "MAXED" : `Buy (${cost} 🪙)`;
+        btn.disabled = maxed || player.coins < cost;
+        btn.onclick = () => buyItem(item, cost);
         
-        grid.appendChild(div);
+        div.appendChild(btn);
+        shopGrid.appendChild(div);
     });
+}
+
+function buyItem(item, cost) {
+    if(player.coins >= cost) {
+        player.coins -= cost;
+        
+        if(item.id === "bagUp") player.upgrades.bagLevel++;
+        if(item.id === "luck") player.upgrades.luckLevel++;
+        if(item.id === "candyUp") player.upgrades.candyLevel++;
+        
+        applyUpgrades();
+        updateStats();
+        renderShop();
+        save();
+        notify(`Purchased ${item.name}!`);
+    }
+}
+
+// --- QUEST LOGIC ---
+function generateQuests() {
+    const types = ["catch", "roll", "release"];
+    const rarities = ["Common", "Uncommon", "Rare"];
+    player.activeQuests = [];
     
-    modal.style.display = 'flex';
+    for(let i=0; i<3; i++) {
+        const type = types[Math.floor(Math.random() * types.length)];
+        let target = 0;
+        let desc = "";
+        let reward = 0;
+        let filter = null;
+        
+        if(type === "roll") {
+            target = 10 + Math.floor(Math.random() * 40);
+            desc = `Roll ${target} times`;
+            reward = target * 5;
+        } else if (type === "catch") {
+            const r = rarities[Math.floor(Math.random() * rarities.length)];
+            filter = r;
+            target = 1 + Math.floor(Math.random() * 3);
+            desc = `Catch ${target} ${r} Pokemon`;
+            reward = target * (r==="Rare"? 300 : 50);
+        } else if (type === "release") {
+            target = 5;
+            desc = `Release 5 Pokemon`;
+            reward = 100;
+        }
+        
+        player.activeQuests.push({
+            desc: desc,
+            type: type,
+            target: target,
+            current: 0,
+            reward: reward,
+            filter: filter,
+            completed: false,
+            id: Date.now() + i
+        });
+    }
+    save();
 }
 
-function closeListingSelector() {
-    document.getElementById('listingModal').style.display = 'none';
-}
-
-// Global Actions for Trade
-async function listPokemon(bagIndex, price) {
-    const mon = player.bag[bagIndex];
-    if(confirm(`List ${mon.name} for ${price} coins?`)) {
-        // Remove locally
-        player.bag.splice(bagIndex, 1);
+function checkQuestProgress(actionType, amount, meta) {
+    let changed = false;
+    player.activeQuests.forEach(q => {
+        if(q.completed) return;
+        if(q.type !== actionType) return;
+        
+        if(q.filter && meta && meta.tier.name !== q.filter) return;
+        
+        q.current += amount;
+        if(q.current >= q.target) {
+            q.current = q.target;
+            q.completed = true;
+            player.coins += q.reward;
+            notify(`🏆 Quest Complete! +${q.reward} Coins`);
+            changed = true;
+        }
+    });
+    if(changed) {
         updateStats();
         save();
-        closeListingSelector();
-        
-        try {
-            await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('trades').add({
-                sellerId: user.uid,
-                sellerName: player.username || "Trainer",
-                pokemon: mon,
-                price: parseInt(price),
-                status: 'open',
-                buyerId: null,
-                createdAt: Date.now()
-            });
-            notify("Listing Created!");
-        } catch(e) {
-            console.error(e);
-            alert("Error listing item.");
-        }
     }
 }
 
-async function buyPokemon(tradeId, price) {
-    if(player.coins < price) return alert("Not enough coins!");
-    if(player.bag.length >= player.maxBag) return alert("Bag Full!");
-    
-    const tradeRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('trades').doc(tradeId);
-    
-    try {
-        await db.runTransaction(async (transaction) => {
-            const doc = await transaction.get(tradeRef);
-            if(!doc.exists) throw "Trade missing";
-            const data = doc.data();
-            if(data.status !== 'open') throw "Sold already";
-            
-            transaction.update(tradeRef, { status: 'sold', buyerId: user.uid });
-            return data.pokemon;
-        }).then((mon) => {
-            player.coins -= price;
-            player.bag.push(mon);
-            
-            // Dex Update
-            if(!player.pokedex[mon.base]) player.pokedex[mon.base] = { count: 0, shiny: 0, mega: {}, giga: {} };
-            player.pokedex[mon.base].count++;
-            if(mon.shiny) player.pokedex[mon.base].shiny++;
-            
-            updateStats();
-            save();
-            notify(`Bought ${mon.name}!`);
-        });
-    } catch(e) {
-        alert("Purchase failed: " + e);
+function renderQuests() {
+    questList.innerHTML = "";
+    player.activeQuests.forEach(q => {
+        const div = document.createElement("div");
+        div.className = `quest-item ${q.completed ? 'quest-complete' : ''}`;
+        div.innerHTML = `
+            <div class="quest-info">
+                <h4>${q.desc}</h4>
+                <p>Reward: <span class="quest-reward">${q.reward} 🪙</span></p>
+            </div>
+            <div class="quest-progress">${q.current}/${q.target}</div>
+        `;
+        questList.appendChild(div);
+    });
+}
+
+function refreshQuests() {
+    if(player.coins >= 100) {
+        player.coins -= 100;
+        generateQuests();
+        renderQuests();
+        updateStats();
+        notify("Quests Refreshed!");
+    } else {
+        alert("Not enough coins!");
     }
 }
 
-async function claimCoins(tradeId, amount) {
-    player.coins += amount;
+// --- CORE GAME FUNCTIONS ---
+
+function addToBag(mon, btn) {
+    if(player.bag.length >= player.maxBag) {
+        alert(`Your bag is full! (${player.bag.length}/${player.maxBag})`);
+        return;
+    }
+    if(mon.caught) return; 
+
+    player.bag.push(mon);
+    mon.caught = true; 
+    
+    // Add Candy
+    if(!player.candy) player.candy = {};
+    if(!player.candy[mon.base]) player.candy[mon.base] = 0;
+    
+    // Candy multiplier check
+    let candyGain = 1;
+    if(Math.random() < (player.upgrades.candyLevel * 0.1)) candyGain = 2; // 10% chance per level
+    
+    player.candy[mon.base] += candyGain;
+    
+    if(candyGain > 1) notify(`Lucky! +${candyGain} Candy!`);
+    
+    checkQuestProgress("catch", 1, mon);
+    
+    if(btn) {
+        btn.disabled = true;
+        btn.innerText = "Caught!";
+        btn.style.background = "#555";
+    }
+    
     updateStats();
     save();
-    notify(`Claimed ${amount} coins!`);
-    
-    await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('trades').doc(tradeId).delete();
 }
 
-async function cancelListing(tradeId) {
-    if(!confirm("Cancel listing?")) return;
-    const tradeRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('trades').doc(tradeId);
-    const snap = await tradeRef.get();
-    if(snap.exists) {
-        const data = snap.data();
-        player.bag.push(data.pokemon);
-        updateStats();
-        save();
-        await tradeRef.delete();
-        notify("Listing cancelled.");
+function performSingleRoll() {
+  player.totalRolls++;
+  
+  let rand = Math.random() * 100;
+  let chosenTier = rarityTable[0];
+  let cumulative = 0;
+  
+  for(let tier of rarityTable) {
+    cumulative += tier.chance;
+    if(rand < cumulative) {
+      chosenTier = tier;
+      break;
     }
+  }
+  
+  const pool = chosenTier.pool;
+  const pickedName = pool[Math.floor(Math.random() * pool.length)];
+  
+  let baseName = pickedName;
+  let isMegaPull = false;
+  let isGigaPull = false;
+  
+  if(chosenTier.name === "Mega") {
+    isMegaPull = true;
+    baseName = megaMap[pickedName]; 
+  } else if (chosenTier.name === "Giga") {
+    isGigaPull = true;
+    baseName = gigaMap[pickedName];
+  }
+  
+  const isShiny = (Math.floor(Math.random() * CURRENT_SHINY_ODDS) === 0);
+  
+  if(!player.pokedex[baseName]) {
+    player.pokedex[baseName] = { count: 0, shiny: 0, mega: {}, giga: {} };
+  }
+  
+  player.pokedex[baseName].count++;
+  
+  if(isShiny) {
+    player.pokedex[baseName].shiny++;
+  }
+  
+  if(isMegaPull) {
+    player.pokedex[baseName].mega[pickedName] = true;
+  }
+  if(isGigaPull) {
+    if(!player.pokedex[baseName].giga) player.pokedex[baseName].giga = {};
+    player.pokedex[baseName].giga[pickedName] = true;
+  }
+  
+  const newMon = {
+    name: pickedName,
+    base: baseName,
+    tier: { name: chosenTier.name, class: chosenTier.class, rank: chosenTier.rank }, 
+    shiny: isShiny,
+    mega: isMegaPull,
+    giga: isGigaPull,
+    id: Date.now() + Math.random(),
+    caught: false
+  };
+  
+  return newMon;
 }
 
+function updateUI(lastRoll) {
+  resultCard.className = `card ${lastRoll.tier.class}`;
+  if(lastRoll.shiny) resultCard.classList.add("is-shiny");
+  
+  resultCard.classList.remove("pop-anim");
+  void resultCard.offsetWidth; 
+  resultCard.classList.add("pop-anim");
+  
+  cardName.innerText = lastRoll.name;
+  cardRarity.innerText = lastRoll.shiny ? `✨ Shiny ${lastRoll.tier.name} ✨` : lastRoll.tier.name;
+  
+  let spriteUrl = "";
+  const dexId = genAllOrder.indexOf(lastRoll.base) + 1;
+
+  if (lastRoll.giga && gigaSpriteIdMap[lastRoll.name]) {
+      const gigaId = gigaSpriteIdMap[lastRoll.name];
+      spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${gigaId}.png`;
+  } else if (lastRoll.mega && megaSpriteIdMap[lastRoll.name]) {
+      const megaId = megaSpriteIdMap[lastRoll.name];
+      spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${megaId}.png`;
+  } else if (dexId > 0) {
+      spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${dexId}.png`;
+  }
+  
+  // Manual check for Zacian/Zamazenta base forms if ID fails
+  if(!spriteUrl && (lastRoll.base === "Zacian" || lastRoll.base === "Zamazenta")) {
+        const manualId = lastRoll.base === "Zacian" ? 888 : 889;
+        spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${manualId}.png`;
+  }
+
+  if (spriteUrl) {
+    cardSprite.src = spriteUrl;
+    cardSprite.style.display = "block";
+  } else {
+    cardSprite.style.display = "none";
+  }
+
+  cardCatchBtn.style.display = "inline-block";
+  cardCatchBtn.innerText = "Catch!";
+  cardCatchBtn.disabled = false;
+  cardCatchBtn.style.background = "#27ae60";
+  
+  // Update click handler to work for current roll
+  // Must remove old handlers first to prevent multiple clicks
+  // Easiest is to set onclick property directly
+  cardCatchBtn.onclick = function() {
+      addToBag(lastRoll, cardCatchBtn);
+  };
+
+  updateStats();
+  renderDex(dexSearch.value);
+}
+
+function renderLog(batch, bestRoll) {
+  const logDiv = document.getElementById("rollLog");
+  logDiv.innerHTML = "";
+  
+  // Optimization: If batch is huge, sort and only show top items
+  let displayBatch = batch;
+  if (batch.length > 100) {
+      // Sort by score (rank/shiny/mega) descending
+      displayBatch = [...batch].sort((a, b) => {
+          let scoreA = a.tier.rank * 10 + (a.shiny?5:0) + (a.mega?2:0) + (a.giga?3:0);
+          let scoreB = b.tier.rank * 10 + (b.shiny?5:0) + (b.mega?2:0) + (b.giga?3:0);
+          return scoreB - scoreA;
+      }).slice(0, 100); 
+      
+      const summary = document.createElement("div");
+      summary.style.padding = "10px";
+      summary.style.color = "#aaa";
+      summary.style.fontSize = "12px";
+      summary.style.borderBottom = "1px solid #444";
+      summary.innerText = `Showing top 100 results of ${batch.length} rolls...`;
+      logDiv.appendChild(summary);
+  }
+  
+  displayBatch.forEach((roll) => {
+    const div = document.createElement("div");
+    div.className = "log-item " + roll.tier.class;
+    
+    if(roll === bestRoll && batch.length > 1) {
+        div.classList.add("best");
+    }
+    
+    const leftDiv = document.createElement("div");
+    let text = `${roll.name}`;
+    if(roll.shiny) text = `✨ ${text}`;
+    if(roll.mega) text = `⚡ ${text}`;
+    if(roll.giga) text = `❌ ${text}`;
+    
+    const nameSpan = document.createElement("span");
+    nameSpan.innerText = text;
+    nameSpan.style.fontWeight = "bold";
+    leftDiv.appendChild(nameSpan);
+
+    const rightDiv = document.createElement("div");
+    rightDiv.style.display = "flex";
+    rightDiv.style.alignItems = "center";
+
+    const badge = document.createElement("span");
+    badge.innerText = roll.tier.name;
+    badge.style.fontSize = "10px";
+    badge.style.opacity = "0.7";
+    badge.style.textTransform = "uppercase";
+    badge.style.marginRight = "5px";
+    
+    const catchBtn = document.createElement("button");
+    catchBtn.className = "catch-btn";
+    catchBtn.innerText = "Catch";
+    catchBtn.onclick = function() {
+        addToBag(roll, catchBtn);
+        if(roll === bestRoll) {
+             cardCatchBtn.disabled = true;
+             cardCatchBtn.innerText = "Caught!";
+             cardCatchBtn.style.background = "#555";
+        }
+    };
+
+    rightDiv.appendChild(badge);
+    rightDiv.appendChild(catchBtn);
+    
+    div.appendChild(leftDiv);
+    div.appendChild(rightDiv);
+    
+    logDiv.appendChild(div);
+  });
+}
+
+function updateStats() {
+  rollsText.innerText = player.totalRolls.toLocaleString();
+  caughtText.innerText = Object.keys(player.pokedex).length;
+  rollMultDisplay.innerText = player.rollMultiplier;
+  
+  if(player.bag) {
+      bagBtnCount.innerText = player.bag.length;
+      bagMaxDisplay.innerText = player.maxBag;
+      bagCapacity.innerText = `${player.bag.length}/${player.maxBag}`;
+  }
+  coinCount.innerText = player.coins;
+}
+
+function renderDex(filter = "") {
+  pokedexDropdown.innerHTML = "";
+  
+  genAllOrder.forEach((p, index) => {
+    if(filter && !p.toLowerCase().includes(filter.toLowerCase())) return;
+    
+    const entry = player.pokedex[p];
+    const div = document.createElement("div");
+    
+    const rarityClass = rarityMap[p] || "common";
+    div.className = `dex-entry ${rarityClass}`;
+    
+    if(entry) div.classList.add("collected");
+    
+    let html = `<span>#${String(index+1).padStart(3,"0")} ${p}</span>`;
+    let icons = "<span>";
+    
+    if(entry) {
+      if(entry.shiny > 0) {
+        div.classList.add("shiny");
+        icons += " <span style='color:red'>★</span>";
+      } else {
+        icons += " <span style='color:rgba(255,255,255,0.2)'>☆</span>";
+      }
+      
+      if(megaEligible.has(p)) {
+        const hasMega = Object.keys(entry.mega || {}).length > 0;
+        icons += hasMega ? " <span style='color:gold'>⚡</span>" : " <span style='color:rgba(255,255,255,0.2)'>◇</span>";
+      }
+      
+      if(gigaEligible.has(p)) {
+        const hasGiga = Object.keys(entry.giga || {}).length > 0;
+        icons += hasGiga ? " <span style='color:#e74c3c'>❌</span>" : " <span style='color:rgba(255,255,255,0.2)'>x</span>";
+      }
+    } else {
+      div.style.opacity = "0.3";
+    }
+    
+    icons += "</span>";
+    div.innerHTML = html + icons;
+    
+    pokedexDropdown.appendChild(div);
+  });
+}
+
+// --- REWARDS SYSTEM ---
+function checkRewards() {
+  if (!player.rewards) player.rewards = {};
+  
+  const rollMilestones = [
+    { target: 100, id: "r100", action: () => addMultiplier(1) },
+    { target: 500, id: "r500", action: () => addMultiplier(1) },
+    { target: 1000, id: "r1000", action: () => addMultiplier(1) },
+    { target: 5000, id: "r5000", action: () => addMultiplier(1) },
+    { target: 10000, id: "r10000", action: () => addMultiplier(2) },
+    { target: 100000, id: "r100000", action: () => addMultiplier(5) },
+  ];
+
+  rollMilestones.forEach(m => {
+    if(player.totalRolls >= m.target && !player.rewards[m.id]) {
+      player.rewards[m.id] = true;
+      m.action();
+      notify(`Milestone: ${m.target} Rolls! +Roll Multiplier!`);
+    }
+  });
+  
+  const totalMons = genAllOrder.length;
+  const currentCaught = Object.keys(player.pokedex).length;
+  
+  if(currentCaught >= totalMons && totalMons > 0 && !player.rewards["baseDex"]) {
+    player.rewards["baseDex"] = true;
+    addMultiplier(5);
+    notify("MASTER: Pokedex Complete! Huge Bonus!");
+  }
+}
+
+function addMultiplier(amount) {
+  player.rollMultiplier += amount;
+  updateStats();
+}
+
+// --- SAVE / LOAD SYSTEM ---
+function save(){ 
+  player.lastSave = Date.now();
+  localStorage.setItem("pokemonRNG", JSON.stringify(player));
+  const date = new Date(player.lastSave);
+  lastSaveText.innerText = date.toLocaleTimeString();
+}
+
+function load(){ 
+  const data = localStorage.getItem("pokemonRNG"); 
+  if(data){ 
+    try {
+      const parsed = JSON.parse(data);
+      player = { ...player, ...parsed };
+      
+      if(!player.pokedex) player.pokedex = {};
+      if(!player.rewards) player.rewards = {};
+      if(!player.rollMultiplier) player.rollMultiplier = 1;
+      if(!player.bag) player.bag = [];
+      if(!player.coins) player.coins = 0;
+      if(!player.candy) player.candy = {};
+      if(!player.upgrades) player.upgrades = { bagLevel: 0, luckLevel: 0, candyLevel: 0 };
+      if(!player.activeQuests) player.activeQuests = [];
+      
+      applyUpgrades(); // Apply loaded upgrade stats
+
+      console.log("Save loaded:", player);
+      startGame();
+    } catch (e) {
+      console.error("Save file corrupted", e);
+      notify("Save file corrupted or old version.");
+    }
+  } else {
+    console.log("No save found.");
+  }
+}
+
+function resetData() {
+  if(confirm("Are you sure you want to wipe your save?")) {
+    localStorage.removeItem("pokemonRNG");
+    location.reload();
+  }
+}
+
+function notify(msg) {
+  const area = document.getElementById("notificationArea");
+  if(!area) return;
+  const div = document.createElement("div");
+  div.className = "toast";
+  div.innerText = msg;
+  area.appendChild(div);
+  setTimeout(() => div.remove(), 3000);
+}
 </script>
 </body>
 </html>
