@@ -2,10 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Pokemon RNG - Cloud Edition</title>
+<title>Pokemon RNG</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- Load Supabase from CDN -->
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
 <style>
 /* --- CSS STYLES --- */
@@ -106,16 +104,7 @@ body {
 
 h1 { margin-top: 0; text-shadow: 0 0 10px #7b2cbf; }
 
-/* Menu Bar */
-.menu-bar {
-  display: flex;
-  gap: 10px;
-  position: absolute; 
-  top: 10px; 
-  left: 10px; 
-  z-index: 100;
-}
-
+/* Menus Row */
 .menu-btn {
   background: #34495e;
   color: white;
@@ -128,8 +117,23 @@ h1 { margin-top: 0; text-shadow: 0 0 10px #7b2cbf; }
   display: flex;
   align-items: center;
   gap: 5px;
+  margin: 0;
 }
 .menu-btn:hover { background: #455a64; transform: translateY(-2px); }
+
+/* Currency Display */
+.coin-display {
+  background: rgba(0,0,0,0.6);
+  padding: 8px 15px;
+  border-radius: 20px;
+  border: 1px solid #f1c40f;
+  color: #f1c40f;
+  font-weight: bold;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
 
 /* Login Area */
 #login {
@@ -384,6 +388,31 @@ input { background: #eee; color: #333; }
 }
 .bag-controls button:hover { background: #666; }
 
+/* Shop Grid */
+.shop-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px; padding: 10px; overflow-y: auto;
+}
+.shop-item {
+  background: #2c3e50; border: 1px solid #34495e; border-radius: 8px;
+  padding: 15px; text-align: center; display: flex; flex-direction: column; justify-content: space-between;
+}
+.shop-item h3 { margin: 0 0 5px 0; font-size: 16px; color: #f1c40f; }
+.shop-item p { font-size: 12px; color: #bdc3c7; margin-bottom: 10px; }
+.shop-item button { width: 100%; margin: 0; }
+
+/* Quest List */
+.quest-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+.quest-item {
+  background: #2c3e50; padding: 15px; border-radius: 8px; border-left: 5px solid #e67e22;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.quest-info h4 { margin: 0 0 5px 0; }
+.quest-info p { margin: 0; font-size: 12px; color: #aaa; }
+.quest-reward { font-weight: bold; color: #f1c40f; }
+.quest-progress { font-size: 12px; background: #444; padding: 2px 6px; border-radius: 4px; margin-left: 10px; }
+.quest-complete { border-color: #27ae60; background: #222; opacity: 0.7; }
+
 /* --- SECRET BUTTON STYLE --- */
 #secretTrigger {
   position: fixed;
@@ -400,6 +429,7 @@ input { background: #eee; color: #333; }
   opacity: 1;
   color: #fff;
 }
+
 </style>
 </head>
 <body>
@@ -410,12 +440,21 @@ input { background: #eee; color: #333; }
 </div>
 
 <div id="mainContent">
-  <!-- Menu Bar -->
-  <div class="menu-bar">
+  <!-- Bag Button Top Left -->
+  <div style="position: absolute; top: 10px; left: 10px; z-index: 100;">
     <button id="openBagBtn" class="menu-btn" style="background:#8e44ad;">🎒 Bag (<span id="bagBtnCount">0</span>/<span id="bagMaxDisplay">100</span>)</button>
   </div>
 
-  <h1>🎲 Pokemon RNG (Base Game)</h1>
+  <!-- Right Menu Bar: Quests, Shop, Coins -->
+  <div style="position: absolute; top: 10px; right: 10px; z-index: 100; display: flex; gap: 10px; align-items: center;">
+    <button onclick="toggleQuests(true)" class="menu-btn" style="background:#2980b9;">📜 Quests</button>
+    <button onclick="toggleShop(true)" class="menu-btn" style="background:#f39c12;">🏪 Shop</button>
+    <div class="coin-display">
+        🪙 <span id="coinCount">0</span>
+    </div>
+  </div>
+
+  <h1>🎲 Pokemon RNG</h1>
   <div id="notificationArea"></div>
 
   <div id="login">
@@ -444,10 +483,6 @@ input { background: #eee; color: #333; }
       <p>Total Rolls: <span id="rolls">0</span></p>
       <p>Dex Entries: <span id="caughtCount">0</span> / <span id="totalCount">...</span></p>
       <p style="font-size: 12px; color: #aaa;">Last Save: <span id="lastSave">Not saved yet</span></p>
-      <div style="margin-top:5px;">
-        <button onclick="saveToCloud()" style="font-size:10px; padding:4px 8px; background:#2980b9;">☁️ Cloud Save</button>
-        <button onclick="loadFromCloud()" style="font-size:10px; padding:4px 8px; background:#e67e22;">☁️ Cloud Load</button>
-      </div>
     </div>
     
     <div id="logContainer">
@@ -456,7 +491,7 @@ input { background: #eee; color: #333; }
     </div>
 
     <br>
-    <button onclick="resetData()" style="background:#555; font-size:12px; padding:8px;">Reset Local Data</button>
+    <button onclick="resetData()" style="background:#555; font-size:12px; padding:8px;">Reset Data</button>
   </div>
 </div>
 
@@ -485,6 +520,35 @@ input { background: #eee; color: #333; }
   </div>
 </div>
 
+<!-- SHOP MODAL -->
+<div id="shopModal" class="modal-overlay" style="display:none;">
+  <div class="modal-content" style="max-width: 600px; height: 70%;">
+    <h2>
+        <span>Item Shop</span>
+        <span style="font-size: 16px; color: #f1c40f;">🪙 <span id="shopCoinDisplay">0</span></span>
+    </h2>
+    <button class="close-btn" style="position: absolute; top: 15px; right: 15px;" onclick="toggleShop(false)">X</button>
+    
+    <div id="shopGrid" class="shop-grid">
+        <!-- Shop Items injected here -->
+    </div>
+  </div>
+</div>
+
+<!-- QUEST MODAL -->
+<div id="questModal" class="modal-overlay" style="display:none;">
+  <div class="modal-content" style="max-width: 500px; height: 60%;">
+    <h2>Daily Quests</h2>
+    <button class="close-btn" style="position: absolute; top: 15px; right: 15px;" onclick="toggleQuests(false)">X</button>
+    <div id="questList" class="quest-list">
+        <!-- Quests injected here -->
+    </div>
+    <div style="margin-top:auto; text-align:center;">
+        <button onclick="refreshQuests()" style="font-size:12px; background:#e67e22;">Refresh Quests (Cost: 100 🪙)</button>
+    </div>
+  </div>
+</div>
+
 <div id="secretTrigger">∴</div>
 
 <script>
@@ -492,28 +556,58 @@ window.onerror = function(msg, url, line) {
   console.error("Game Error: " + msg);
 };
 
-// --- SUPABASE INIT ---
-const SUPABASE_URL = "https://esjovuydzhifewiekyxw.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzam92dXlkemhpZmV3aWVreXh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkyNjMwNjcsImV4cCI6MjA4NDgzOTA2N30.Mnunm-fMM6TpW6xVvwdep3MCyJFxsAHWzMnzQO0ZMgg";
-let supabase = null;
-
-try {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    console.log("Supabase Client Initialized");
-} catch(e) {
-    console.error("Supabase Init Failed", e);
-}
-
 // --- CONFIGURATION ---
 const BASE_SHINY_ODDS = 512; 
 let CURRENT_SHINY_ODDS = 512;
 
+// --- EVOLUTION DATA (Partial Implementation for Demo) ---
 const evolutionMap = {
     "Bulbasaur": { into: "Ivysaur", cost: 3 }, "Ivysaur": { into: "Venusaur", cost: 5 },
     "Charmander": { into: "Charmeleon", cost: 3 }, "Charmeleon": { into: "Charizard", cost: 5 },
-    "Squirtle": { into: "Wartortle", cost: 3 }, "Wartortle": { into: "Blastoise", cost: 5 }
-    // Add more evolutions as needed...
+    "Squirtle": { into: "Wartortle", cost: 3 }, "Wartortle": { into: "Blastoise", cost: 5 },
+    "Caterpie": { into: "Metapod", cost: 2 }, "Metapod": { into: "Butterfree", cost: 4 },
+    "Weedle": { into: "Kakuna", cost: 2 }, "Kakuna": { into: "Beedrill", cost: 4 },
+    "Pidgey": { into: "Pidgeotto", cost: 3 }, "Pidgeotto": { into: "Pidgeot", cost: 5 },
+    "Rattata": { into: "Raticate", cost: 3 }, "Spearow": { into: "Fearow", cost: 3 },
+    "Ekans": { into: "Arbok", cost: 3 }, "Pikachu": { into: "Raichu", cost: 3 },
+    "Sandshrew": { into: "Sandslash", cost: 3 },
+    "Nidoran-F": { into: "Nidorina", cost: 3 }, "Nidorina": { into: "Nidoqueen", cost: 5 },
+    "Nidoran-M": { into: "Nidorino", cost: 3 }, "Nidorino": { into: "Nidoking", cost: 5 },
+    "Clefairy": { into: "Clefable", cost: 3 }, "Vulpix": { into: "Ninetales", cost: 3 },
+    "Jigglypuff": { into: "Wigglytuff", cost: 3 }, "Zubat": { into: "Golbat", cost: 3 },
+    "Oddish": { into: "Gloom", cost: 3 }, "Gloom": { into: "Vileplume", cost: 5 },
+    "Paras": { into: "Parasect", cost: 3 }, "Venonat": { into: "Venomoth", cost: 3 },
+    "Diglett": { into: "Dugtrio", cost: 3 }, "Meowth": { into: "Persian", cost: 3 },
+    "Psyduck": { into: "Golduck", cost: 3 }, "Mankey": { into: "Primeape", cost: 3 },
+    "Growlithe": { into: "Arcanine", cost: 3 },
+    "Poliwag": { into: "Poliwhirl", cost: 3 }, "Poliwhirl": { into: "Poliwrath", cost: 5 },
+    "Abra": { into: "Kadabra", cost: 3 }, "Kadabra": { into: "Alakazam", cost: 5 },
+    "Machop": { into: "Machoke", cost: 3 }, "Machoke": { into: "Machamp", cost: 5 },
+    "Bellsprout": { into: "Weepinbell", cost: 3 }, "Weepinbell": { into: "Victreebel", cost: 5 },
+    "Tentacool": { into: "Tentacruel", cost: 3 }, "Geodude": { into: "Graveler", cost: 3 },
+    "Graveler": { into: "Golem", cost: 5 }, "Ponyta": { into: "Rapidash", cost: 3 },
+    "Slowpoke": { into: "Slowbro", cost: 3 }, "Magnemite": { into: "Magneton", cost: 3 },
+    "Doduo": { into: "Dodrio", cost: 3 }, "Seel": { into: "Dewgong", cost: 3 },
+    "Grimer": { into: "Muk", cost: 3 }, "Shellder": { into: "Cloyster", cost: 3 },
+    "Gastly": { into: "Haunter", cost: 3 }, "Haunter": { into: "Gengar", cost: 5 },
+    "Onix": { into: "Steelix", cost: 5 }, "Drowzee": { into: "Hypno", cost: 3 },
+    "Krabby": { into: "Kingler", cost: 3 }, "Voltorb": { into: "Electrode", cost: 3 },
+    "Exeggcute": { into: "Exeggutor", cost: 3 }, "Cubone": { into: "Marowak", cost: 3 },
+    "Koffing": { into: "Weezing", cost: 3 }, "Rhyhorn": { into: "Rhydon", cost: 3 },
+    "Horsea": { into: "Seadra", cost: 3 }, "Seadra": { into: "Kingdra", cost: 5 },
+    "Goldeen": { into: "Seaking", cost: 3 }, "Staryu": { into: "Starmie", cost: 3 },
+    "Scyther": { into: "Scizor", cost: 5 }, "Magikarp": { into: "Gyarados", cost: 10 },
+    "Eevee": { into: "Vaporeon", cost: 3 }, "Omanyte": { into: "Omastar", cost: 3 },
+    "Kabuto": { into: "Kabutops", cost: 3 }, "Dratini": { into: "Dragonair", cost: 3 },
+    "Dragonair": { into: "Dragonite", cost: 5 }
 };
+
+// --- SHOP ITEMS ---
+const shopItems = [
+    { id: "bagUp", name: "Bag Upgrade", desc: "+10 Bag Slots", cost: 500, type: "upgrade" },
+    { id: "luck", name: "Shiny Charm", desc: "Improves Shiny Odds", cost: 2000, type: "passive", max: 5 },
+    { id: "candyUp", name: "Candy Machine", desc: "Chance for 2x Candy", cost: 1500, type: "passive", max: 3 }
+];
 
 const rarityTable = [
   { 
@@ -534,7 +628,7 @@ const rarityTable = [
       "Wooper", "Murkrow", "Gligar", "Snubbull", "Swinub", "Remoraid", "Phanpy", "Tyrogue",
       "Pineco", "Teddiursa", "Slugma", "Treecko", "Torchic", "Mudkip", "Poochyena", "Zigzagoon", 
       "Wurmple", "Lotad", "Seedot", "Ralts", "Surskit", "Shroomish", "Slakoth", "Nincada", "Whismur", 
-      "Makuhita", "Azurill", "Meditite", "Electrike", "Numel", "Spoink", "Aron", "Taillow", "Wingull",
+      "Makuhita", "Azurill", "Meditite", "Electrike", "Numel", "Spoink", "Aron", "Aron", "Taillow", "Wingull",
       "Nosepass", "Skitty", "Carvanha", "Wailmer", "Trapinch", "Snorunt", "Spheal", "Clamperl", "Bagon", "Beldum",
       "Turtwig", "Chimchar", "Piplup", "Starly", "Bidoof", "Kricketot", "Shinx", "Budew",
       "Cranidos", "Shieldon", "Burmy", "Combee", "Cherubi", "Bonsly", "Happiny", "Buneary",
@@ -667,7 +761,7 @@ const rarityTable = [
   { 
     name: "Ultra", 
     class: "ultra", 
-    chance: 6, 
+    chance: 7.5, 
     rank: 4, 
     coinValue: 500,
     pool: [
@@ -689,8 +783,8 @@ const rarityTable = [
   { 
     name: "Mythical", 
     class: "mythical", 
-    chance: 2.88, 
-    rank: 5, 
+    chance: 2.4, 
+    rank: 4, 
     coinValue: 2000,
     pool: [
       "Mew", "Mewtwo", "Articuno", "Zapdos", "Moltres",
@@ -728,7 +822,7 @@ const rarityTable = [
   { 
     name: "Giga", 
     class: "giga", 
-    chance: 0.5, 
+    chance: 0.1, 
     rank: 6, 
     coinValue: 5000,
     pool: [
@@ -979,38 +1073,38 @@ const gigaMap = {
 };
 
 const gigaSpriteIdMap = {
-  "Giga Venusaur": 10196,
-  "Giga Charizard": 10197,
-  "Giga Blastoise": 10198,
-  "Giga Butterfree": 10199,
-  "Giga Pikachu": 10200,
-  "Giga Meowth": 10201,
-  "Giga Machamp": 10202,
-  "Giga Gengar": 10203,
-  "Giga Kingler": 10204,
-  "Giga Lapras": 10205,
-  "Giga Eevee": 10206,
-  "Giga Snorlax": 10207,
-  "Giga Garbodor": 10208,
-  "Giga Melmetal": 10209,
-  "Giga Rillaboom": 10210,
-  "Giga Cinderace": 10211,
-  "Giga Inteleon": 10212,
-  "Giga Corviknight": 10213,
-  "Giga Orbeetle": 10214,
-  "Giga Drednaw": 10215,
-  "Giga Coalossal": 10216,
-  "Giga Flapple": 10217,
-  "Giga Appletun": 10218,
-  "Giga Sandaconda": 10219,
-  "Giga Toxtricity": 10220,
-  "Giga Centiskorch": 10222,
-  "Giga Hatterene": 10223,
-  "Giga Grimmsnarl": 10224,
-  "Giga Alcremie": 10225,
-  "Giga Copperajah": 10226,
-  "Giga Duraludon": 10227,
-  "Giga Urshifu": 10228,
+  "Giga Venusaur": 10186,
+  "Giga Charizard": 10196,
+  "Giga Blastoise": 10197,
+  "Giga Butterfree": 10198,
+  "Giga Pikachu": 10199,
+  "Giga Meowth": 10200,
+  "Giga Machamp": 10201,
+  "Giga Gengar": 10202,
+  "Giga Kingler": 10203,
+  "Giga Lapras": 10204,
+  "Giga Eevee": 10205,
+  "Giga Snorlax": 10206,
+  "Giga Garbodor": 10207,
+  "Giga Melmetal": 10208,
+  "Giga Rillaboom": 10209,
+  "Giga Cinderace": 10210,
+  "Giga Inteleon": 10211,
+  "Giga Corviknight": 10212,
+  "Giga Orbeetle": 10213,
+  "Giga Drednaw": 10214,
+  "Giga Coalossal": 10215,
+  "Giga Flapple": 10216,
+  "Giga Appletun": 10217,
+  "Giga Sandaconda": 10218,
+  "Giga Toxtricity": 10219,
+  "Giga Centiskorch": 10220,
+  "Giga Hatterene": 10221,
+  "Giga Grimmsnarl": 10222,
+  "Giga Alcremie": 10223,
+  "Giga Copperajah": 10224,
+  "Giga Duraludon": 10225,
+  "Giga Urshifu": 10226,
   "Sacred Sword Zacian": 10188,
   "Sacred Shield Zamazenta": 10189
 };
@@ -1073,6 +1167,10 @@ document.addEventListener("DOMContentLoaded", () => {
   try {
     load();
     totalText.innerText = genAllOrder.length;
+    // Initial Quest Gen
+    if(!player.activeQuests || player.activeQuests.length === 0) {
+        generateQuests();
+    }
     console.log("Game loaded successfully.");
   } catch(e) {
     console.error("Critical error during init: ", e);
@@ -1123,6 +1221,9 @@ rollBtn.addEventListener("click", () => {
       updateUI(bestRoll);
       renderLog(batch, bestRoll);
       
+      // Quests Check
+      checkQuestProgress("roll", loops);
+      checkRewards();
       save();
       
       rollBtn.disabled = false;
@@ -1170,6 +1271,24 @@ function toggleBag(show) {
         bagModal.style.display = "flex";
     } else {
         bagModal.style.display = "none";
+    }
+}
+
+function toggleShop(show) {
+    if(show) {
+        renderShop();
+        shopModal.style.display = "flex";
+    } else {
+        shopModal.style.display = "none";
+    }
+}
+
+function toggleQuests(show) {
+    if(show) {
+        renderQuests();
+        questModal.style.display = "flex";
+    } else {
+        questModal.style.display = "none";
     }
 }
 
@@ -1260,6 +1379,8 @@ function releasePokemon(index) {
         player.bag.splice(index, 1);
         player.coins += value;
         
+        checkQuestProgress("release", 1);
+        
         notify(`Released! +${value} Coins`);
         renderBag();
         updateStats();
@@ -1305,6 +1426,149 @@ function sortBag(criteria) {
     renderBag();
 }
 
+// --- SHOP LOGIC ---
+function renderShop() {
+    shopGrid.innerHTML = "";
+    shopCoinDisplay.innerText = player.coins;
+    
+    shopItems.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "shop-item";
+        
+        let currentLevel = 0;
+        if(item.id === "bagUp") currentLevel = player.upgrades.bagLevel;
+        if(item.id === "luck") currentLevel = player.upgrades.luckLevel;
+        if(item.id === "candyUp") currentLevel = player.upgrades.candyLevel;
+        
+        const cost = Math.floor(item.cost * Math.pow(1.5, currentLevel));
+        const maxed = item.max && currentLevel >= item.max;
+        
+        div.innerHTML = `
+            <h3>${item.name}</h3>
+            <p>${item.desc}</p>
+            <p style="font-weight:bold; color: #fff;">Lvl: ${currentLevel}</p>
+        `;
+        
+        const btn = document.createElement("button");
+        btn.innerText = maxed ? "MAXED" : `Buy (${cost} 🪙)`;
+        btn.disabled = maxed || player.coins < cost;
+        btn.onclick = () => buyItem(item, cost);
+        
+        div.appendChild(btn);
+        shopGrid.appendChild(div);
+    });
+}
+
+function buyItem(item, cost) {
+    if(player.coins >= cost) {
+        player.coins -= cost;
+        
+        if(item.id === "bagUp") player.upgrades.bagLevel++;
+        if(item.id === "luck") player.upgrades.luckLevel++;
+        if(item.id === "candyUp") player.upgrades.candyLevel++;
+        
+        applyUpgrades();
+        updateStats();
+        renderShop();
+        save();
+        notify(`Purchased ${item.name}!`);
+    }
+}
+
+// --- QUEST LOGIC ---
+function generateQuests() {
+    const types = ["catch", "roll", "release"];
+    const rarities = ["Common", "Uncommon", "Rare"];
+    player.activeQuests = [];
+    
+    for(let i=0; i<3; i++) {
+        const type = types[Math.floor(Math.random() * types.length)];
+        let target = 0;
+        let desc = "";
+        let reward = 0;
+        let filter = null;
+        
+        if(type === "roll") {
+            target = 10 + Math.floor(Math.random() * 40);
+            desc = `Roll ${target} times`;
+            reward = target * 5;
+        } else if (type === "catch") {
+            const r = rarities[Math.floor(Math.random() * rarities.length)];
+            filter = r;
+            target = 1 + Math.floor(Math.random() * 3);
+            desc = `Catch ${target} ${r} Pokemon`;
+            reward = target * (r==="Rare"? 300 : 50);
+        } else if (type === "release") {
+            target = 5;
+            desc = `Release 5 Pokemon`;
+            reward = 100;
+        }
+        
+        player.activeQuests.push({
+            desc: desc,
+            type: type,
+            target: target,
+            current: 0,
+            reward: reward,
+            filter: filter,
+            completed: false,
+            id: Date.now() + i
+        });
+    }
+    save();
+}
+
+function checkQuestProgress(actionType, amount, meta) {
+    let changed = false;
+    player.activeQuests.forEach(q => {
+        if(q.completed) return;
+        if(q.type !== actionType) return;
+        
+        if(q.filter && meta && meta.tier.name !== q.filter) return;
+        
+        q.current += amount;
+        if(q.current >= q.target) {
+            q.current = q.target;
+            q.completed = true;
+            player.coins += q.reward;
+            notify(`🏆 Quest Complete! +${q.reward} Coins`);
+            changed = true;
+        }
+    });
+    if(changed) {
+        updateStats();
+        save();
+    }
+}
+
+function renderQuests() {
+    questList.innerHTML = "";
+    player.activeQuests.forEach(q => {
+        const div = document.createElement("div");
+        div.className = `quest-item ${q.completed ? 'quest-complete' : ''}`;
+        div.innerHTML = `
+            <div class="quest-info">
+                <h4>${q.desc}</h4>
+                <p>Reward: <span class="quest-reward">${q.reward} 🪙</span></p>
+            </div>
+            <div class="quest-progress">${q.current}/${q.target}</div>
+        `;
+        questList.appendChild(div);
+    });
+}
+
+function refreshQuests() {
+    if(player.coins >= 100) {
+        player.coins -= 100;
+        generateQuests();
+        renderQuests();
+        updateStats();
+        notify("Quests Refreshed!");
+    } else {
+        alert("Not enough coins!");
+    }
+}
+
 // --- CORE GAME FUNCTIONS ---
 
 function addToBag(mon, btn) {
@@ -1328,6 +1592,8 @@ function addToBag(mon, btn) {
     player.candy[mon.base] += candyGain;
     
     if(candyGain > 1) notify(`Lucky! +${candyGain} Candy!`);
+    
+    checkQuestProgress("catch", 1, mon);
     
     if(btn) {
         btn.disabled = true;
@@ -1541,6 +1807,7 @@ function updateStats() {
       bagMaxDisplay.innerText = player.maxBag;
       bagCapacity.innerText = `${player.bag.length}/${player.maxBag}`;
   }
+  coinCount.innerText = player.coins;
 }
 
 function renderDex(filter = "") {
@@ -1588,6 +1855,37 @@ function renderDex(filter = "") {
   });
 }
 
+// --- REWARDS SYSTEM ---
+function checkRewards() {
+  if (!player.rewards) player.rewards = {};
+  
+  const rollMilestones = [
+    { target: 100, id: "r100", action: () => addMultiplier(1) },
+    { target: 500, id: "r500", action: () => addMultiplier(1) },
+    { target: 1000, id: "r1000", action: () => addMultiplier(1) },
+    { target: 5000, id: "r5000", action: () => addMultiplier(1) },
+    { target: 10000, id: "r10000", action: () => addMultiplier(2) },
+    { target: 100000, id: "r100000", action: () => addMultiplier(5) },
+  ];
+
+  rollMilestones.forEach(m => {
+    if(player.totalRolls >= m.target && !player.rewards[m.id]) {
+      player.rewards[m.id] = true;
+      m.action();
+      notify(`Milestone: ${m.target} Rolls! +Roll Multiplier!`);
+    }
+  });
+  
+  const totalMons = genAllOrder.length;
+  const currentCaught = Object.keys(player.pokedex).length;
+  
+  if(currentCaught >= totalMons && totalMons > 0 && !player.rewards["baseDex"]) {
+    player.rewards["baseDex"] = true;
+    addMultiplier(5);
+    notify("MASTER: Pokedex Complete! Huge Bonus!");
+  }
+}
+
 function addMultiplier(amount) {
   player.rollMultiplier += amount;
   updateStats();
@@ -1628,46 +1926,6 @@ function load(){
   } else {
     console.log("No save found.");
   }
-}
-
-async function saveToCloud() {
-    if(!supabase || !player.username) return alert("Please refresh and login first.");
-    
-    // Save to 'player_saves' table: username (PK), save_data (JSON)
-    const { error } = await supabase
-        .from('player_saves')
-        .upsert({ 
-            username: player.username, 
-            save_data: player,
-            updated_at: new Date().toISOString()
-        });
-        
-    if(error) {
-        alert("Cloud Save Failed: " + error.message);
-    } else {
-        notify("Cloud Save Successful!");
-    }
-}
-
-async function loadFromCloud() {
-    if(!supabase || !player.username) return alert("Please refresh and login first.");
-    
-    const { data, error } = await supabase
-        .from('player_saves')
-        .select('save_data')
-        .eq('username', player.username)
-        .single();
-        
-    if(error) {
-        alert("Cloud Load Failed: " + error.message);
-    } else if (data) {
-        player = data.save_data;
-        // Re-apply logic after load
-        applyUpgrades();
-        updateStats();
-        renderDex();
-        notify("Cloud Load Successful!");
-    }
 }
 
 function resetData() {
