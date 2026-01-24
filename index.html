@@ -14,9 +14,9 @@ body {
   margin: 0;
   padding: 20px;
   display: flex;
-  height: 100vh;
+  min-height: 100vh; /* Changed to min-height to allow scrolling */
   box-sizing: border-box;
-  overflow: hidden;
+  overflow-y: auto; /* Enabled vertical scrolling */
 }
 
 /* Sidebar (Pokédex) */
@@ -30,7 +30,9 @@ body {
   padding: 10px;
   border-radius: 12px;
   border: 1px solid #333;
-  height: 95%;
+  height: calc(100vh - 40px); /* Fixed height relative to viewport */
+  position: sticky; /* Keeps sidebar visible while scrolling */
+  top: 20px;
 }
 
 #dexSearch {
