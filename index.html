@@ -88,7 +88,6 @@ body {
 .dex-entry.ultra, .log-item.ultra, .bag-item.ultra { border-color: #eab308; color: #ce93d8; box-shadow: 0 0 5px rgba(234, 179, 8, 0.3); }
 .dex-entry.mythical, .log-item.mythical, .bag-item.mythical { border-color: #a855f7; color: #ff80ab; text-shadow: 0 0 5px rgba(233,30,99,0.5); box-shadow: 0 0 8px rgba(168, 85, 247, 0.4); }
 .dex-entry.mega, .log-item.mega, .bag-item.mega { border-color: #ef4444; color: #ff5722; text-shadow: 0 0 5px rgba(255,69,0,0.5); box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
-.dex-entry.giga, .log-item.giga, .bag-item.giga { border-color: #c0392b; color: #e74c3c; background: linear-gradient(90deg, rgba(142, 68, 173, 0.15), transparent); text-shadow: 0 0 5px rgba(231, 76, 60, 0.6); box-shadow: 0 0 10px rgba(192, 57, 43, 0.5); }
 
 .bag-item.shiny { background: linear-gradient(135deg, #333, #1a1a1a); border-style: double; border-width: 3px; border-color: #f1c40f !important;}
 
@@ -105,6 +104,12 @@ body {
 h1 { margin-top: 0; text-shadow: 0 0 10px #7b2cbf; }
 
 /* Menus Row */
+.menu-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
 .menu-btn {
   background: #34495e;
   color: white;
@@ -117,12 +122,14 @@ h1 { margin-top: 0; text-shadow: 0 0 10px #7b2cbf; }
   display: flex;
   align-items: center;
   gap: 5px;
-  margin: 0;
 }
 .menu-btn:hover { background: #455a64; transform: translateY(-2px); }
 
 /* Currency Display */
 .coin-display {
+  position: absolute;
+  top: 10px;
+  right: 10px;
   background: rgba(0,0,0,0.6);
   padding: 8px 15px;
   border-radius: 20px;
@@ -130,6 +137,7 @@ h1 { margin-top: 0; text-shadow: 0 0 10px #7b2cbf; }
   color: #f1c40f;
   font-weight: bold;
   font-size: 16px;
+  z-index: 100;
   display: flex;
   align-items: center;
   gap: 5px;
@@ -207,7 +215,6 @@ h1 { margin-top: 0; text-shadow: 0 0 10px #7b2cbf; }
 .card.ultra { color: #ce93d8; border-color: #9c27b0; box-shadow: 0 0 25px #9c27b0 inset; }
 .card.mythical { color: #ff80ab; border-color: #e91e63; box-shadow: 0 0 30px #e91e63 inset; text-shadow: 0 0 5px #e91e63; }
 .card.mega { color: #ff5722; border-color: #bf360c; box-shadow: 0 0 30px #bf360c inset; text-shadow: 0 0 5px #ff5722; }
-.card.giga { color: #e74c3c; border-color: #8e44ad; box-shadow: 0 0 35px #8e44ad inset; text-shadow: 0 0 10px #c0392b; border-width: 4px; background: linear-gradient(135deg, #2c0b0e, #4a235a); }
 
 .is-shiny {
   background: linear-gradient(135deg, #222, #000);
@@ -440,18 +447,16 @@ input { background: #eee; color: #333; }
 </div>
 
 <div id="mainContent">
-  <!-- Bag Button Top Left -->
-  <div style="position: absolute; top: 10px; left: 10px; z-index: 100;">
-    <button id="openBagBtn" class="menu-btn" style="background:#8e44ad;">🎒 Bag (<span id="bagBtnCount">0</span>/<span id="bagMaxDisplay">100</span>)</button>
+  <!-- Coin Display -->
+  <div class="coin-display">
+    🪙 <span id="coinCount">0</span>
   </div>
 
-  <!-- Right Menu Bar: Quests, Shop, Coins -->
-  <div style="position: absolute; top: 10px; right: 10px; z-index: 100; display: flex; gap: 10px; align-items: center;">
-    <button onclick="toggleQuests(true)" class="menu-btn" style="background:#2980b9;">📜 Quests</button>
+  <!-- Menu Bar -->
+  <div style="position: absolute; top: 10px; left: 10px; z-index: 100; display: flex; gap: 5px;">
+    <button id="openBagBtn" class="menu-btn" style="background:#8e44ad;">🎒 Bag (<span id="bagBtnCount">0</span>/<span id="bagMaxDisplay">100</span>)</button>
     <button onclick="toggleShop(true)" class="menu-btn" style="background:#f39c12;">🏪 Shop</button>
-    <div class="coin-display">
-        🪙 <span id="coinCount">0</span>
-    </div>
+    <button onclick="toggleQuests(true)" class="menu-btn" style="background:#2980b9;">📜 Quests</button>
   </div>
 
   <h1>🎲 Pokemon RNG</h1>
@@ -816,23 +821,7 @@ const rarityTable = [
       "Mega Sharpedo", "Mega Camerupt", "Mega Altaria", "Mega Banette", "Mega Absol", "Mega Glalie", "Mega Salamence",
       "Mega Metagross", "Mega Latias", "Mega Latios",
       "Mega Rayquaza", "Mega Lopunny", "Mega Gallade", "Mega Audino",
-      "Mega Diancie", "Mega Sceptile", "Mega Swampert"
-    ]
-  },
-  { 
-    name: "Giga", 
-    class: "giga", 
-    chance: 0.5, 
-    rank: 6, 
-    coinValue: 5000,
-    pool: [
-      "Giga Venusaur", "Giga Charizard", "Giga Blastoise", "Giga Butterfree", "Giga Pikachu", 
-      "Giga Meowth", "Giga Machamp", "Giga Gengar", "Giga Kingler", "Giga Lapras", 
-      "Giga Eevee", "Giga Snorlax", "Giga Garbodor", "Giga Melmetal", "Giga Rillaboom", 
-      "Giga Cinderace", "Giga Inteleon", "Giga Corviknight", "Giga Orbeetle", "Giga Drednaw", 
-      "Giga Coalossal", "Giga Flapple", "Giga Appletun", "Giga Sandaconda", "Giga Toxtricity", 
-      "Giga Centiskorch", "Giga Hatterene", "Giga Grimmsnarl", "Giga Alcremie", "Giga Copperajah", 
-      "Giga Duraludon", "Giga Urshifu", "Sacred Sword Zacian", "Sacred Shield Zamazenta"
+      "Mega Diancie"
     ]
   }
 ];
@@ -984,9 +973,7 @@ const megaMap = {
   "Mega Sharpedo":"Sharpedo",
   "Mega Camerupt":"Camerupt",
   "Mega Altaria":"Altaria",
-  "Mega Glalie":"Glalie",
-  "Mega Sceptile": "Sceptile",
-  "Mega Swampert": "Swampert"
+  "Mega Glalie":"Glalie"
 };
 
 const megaSpriteIdMap = {
@@ -1028,89 +1015,12 @@ const megaSpriteIdMap = {
   "Mega Audino": 10069,
   "Mega Diancie": 10075,
   "Mega Sharpedo": 10066,
-  "Mega Camerupt": 10087,
-  "Mega Altaria": 10067,
-  "Mega Glalie": 10074,
-  "Mega Sceptile": 10065,
-  "Mega Swampert": 10064
-};
-
-const gigaMap = {
-  "Giga Venusaur": "Venusaur",
-  "Giga Charizard": "Charizard",
-  "Giga Blastoise": "Blastoise",
-  "Giga Butterfree": "Butterfree",
-  "Giga Pikachu": "Pikachu",
-  "Giga Meowth": "Meowth",
-  "Giga Machamp": "Machamp",
-  "Giga Gengar": "Gengar",
-  "Giga Kingler": "Kingler",
-  "Giga Lapras": "Lapras",
-  "Giga Eevee": "Eevee",
-  "Giga Snorlax": "Snorlax",
-  "Giga Garbodor": "Garbodor",
-  "Giga Melmetal": "Melmetal",
-  "Giga Rillaboom": "Rillaboom",
-  "Giga Cinderace": "Cinderace",
-  "Giga Inteleon": "Inteleon",
-  "Giga Corviknight": "Corviknight",
-  "Giga Orbeetle": "Orbeetle",
-  "Giga Drednaw": "Drednaw",
-  "Giga Coalossal": "Coalossal",
-  "Giga Flapple": "Flapple",
-  "Giga Appletun": "Appletun",
-  "Giga Sandaconda": "Sandaconda",
-  "Giga Toxtricity": "Toxtricity",
-  "Giga Centiskorch": "Centiskorch",
-  "Giga Hatterene": "Hatterene",
-  "Giga Grimmsnarl": "Grimmsnarl",
-  "Giga Alcremie": "Alcremie",
-  "Giga Copperajah": "Copperajah",
-  "Giga Duraludon": "Duraludon",
-  "Giga Urshifu": "Urshifu",
-  "Sacred Sword Zacian": "Zacian",
-  "Sacred Shield Zamazenta": "Zamazenta"
-};
-
-const gigaSpriteIdMap = {
-  "Giga Venusaur": 10205,
-  "Giga Charizard": 10206,
-  "Giga Blastoise": 10207,
-  "Giga Butterfree": 10208,
-  "Giga Pikachu": 10209,
-  "Giga Meowth": 10210,
-  "Giga Machamp": 10211,
-  "Giga Gengar": 10212,
-  "Giga Kingler": 10213,
-  "Giga Lapras": 10214,
-  "Giga Eevee": 10215,
-  "Giga Snorlax": 10216,
-  "Giga Garbodor": 10217,
-  "Giga Melmetal": 10218,
-  "Giga Rillaboom": 10219,
-  "Giga Cinderace": 10220,
-  "Giga Inteleon": 10221,
-  "Giga Corviknight": 10222,
-  "Giga Orbeetle": 10223,
-  "Giga Drednaw": 10224,
-  "Giga Coalossal": 10225,
-  "Giga Flapple": 10226,
-  "Giga Appletun": 10227,
-  "Giga Sandaconda": 10228,
-  "Giga Toxtricity": 10229,
-  "Giga Centiskorch": 10231,
-  "Giga Hatterene": 10232,
-  "Giga Grimmsnarl": 10233,
-  "Giga Alcremie": 10234,
-  "Giga Copperajah": 10235,
-  "Giga Duraludon": 10236,
-  "Giga Urshifu": 10237,
-  "Sacred Sword Zacian": 10188,
-  "Sacred Shield Zamazenta": 10189
+  "Mega Camerupt": 10067,
+  "Mega Altaria": 10065,
+  "Mega Glalie": 10074
 };
 
 const megaEligible = new Set(Object.values(megaMap));
-const gigaEligible = new Set(Object.values(gigaMap));
 
 // Map rarity by Pokémon
 const rarityMap = {};
@@ -1193,41 +1103,37 @@ rollBtn.addEventListener("click", () => {
   rollBtn.disabled = true;
   cardCatchBtn.style.display = 'none'; // Hide until roll finishes
   
-  // Use setTimeout to allow UI to update (disable button) before heavy processing
-  setTimeout(() => {
-      const loops = player.rollMultiplier;
-      const batch = [];
-      
-      for(let i=0; i<loops; i++){
-        batch.push(performSingleRoll());
-      }
-      
-      // Find best roll
-      let bestRoll = batch[0];
-      let bestScore = -1;
-      
-      batch.forEach(roll => {
-        let score = roll.tier.rank * 100;
-        if (roll.shiny) score += 50;
-        if (roll.tier.name === "Mega") score += 20;
-        if (roll.tier.name === "Giga") score += 40;
-        
-        if (score > bestScore) {
-          bestScore = score;
-          bestRoll = roll;
-        }
-      });
-      
-      updateUI(bestRoll);
-      renderLog(batch, bestRoll);
-      
-      // Quests Check
-      checkQuestProgress("roll", loops);
-      checkRewards();
-      save();
-      
-      rollBtn.disabled = false;
-  }, 50);
+  const loops = player.rollMultiplier;
+  const batch = [];
+  
+  for(let i=0; i<loops; i++){
+    batch.push(performSingleRoll());
+  }
+  
+  // Find best roll
+  let bestRoll = batch[0];
+  let bestScore = -1;
+  
+  batch.forEach(roll => {
+    let score = roll.tier.rank * 100;
+    if (roll.shiny) score += 50;
+    if (roll.tier.name === "Mega") score += 20;
+    
+    if (score > bestScore) {
+      bestScore = score;
+      bestRoll = roll;
+    }
+  });
+  
+  updateUI(bestRoll);
+  renderLog(batch, bestRoll);
+  
+  // Quests Check
+  checkQuestProgress("roll", loops);
+  checkRewards();
+  save();
+  
+  setTimeout(() => rollBtn.disabled = false, 450);
 });
 
 dexSearch.addEventListener("input", (e) => renderDex(e.target.value));
@@ -1308,23 +1214,12 @@ function renderBag() {
         // Sprite Logic
         let spriteUrl = "";
         const dexId = genAllOrder.indexOf(p.base) + 1;
-        
-        if (p.giga && gigaSpriteIdMap[p.name]) {
-            const gigaId = gigaSpriteIdMap[p.name];
-            spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${gigaId}.png`;
-        } else if (p.mega && megaSpriteIdMap[p.name]) {
+        if (p.mega && megaSpriteIdMap[p.name]) {
             const megaId = megaSpriteIdMap[p.name];
             spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${megaId}.png`;
         } else if (dexId > 0) {
             spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${dexId}.png`;
         }
-        
-        // Zacian/Zamazenta fallback
-        if((p.base === "Zacian" || p.base === "Zamazenta") && !spriteUrl) {
-             const manualId = p.base === "Zacian" ? 888 : 889;
-             spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${manualId}.png`;
-        }
-
         img.src = spriteUrl || "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png";
         
         const name = document.createElement("div");
@@ -1373,7 +1268,6 @@ function releasePokemon(index) {
     if(tierData) value = tierData.coinValue;
     if(mon.shiny) value *= 5;
     if(mon.mega) value *= 2;
-    if(mon.giga) value *= 3;
 
     if(confirm(`Release ${mon.name} for ${value} coins?`)) {
         player.bag.splice(index, 1);
@@ -1399,10 +1293,14 @@ function evolvePokemon(index, mon) {
         mon.name = evoInfo.into; // Evolve!
         mon.base = evoInfo.into; // Base changes too
         
+        // Rarity might change? For simplicity, we keep current tier or bump it?
+        // Let's bump tier if possible, but finding new tier is tricky without lookups.
+        // For now, Name change + sprite update is sufficient for fun.
+        
         notify(`🧬 Evolved ${oldName} into ${mon.name}!`);
         
         // Add to Dex
-        if(!player.pokedex[mon.name]) player.pokedex[mon.name] = { count: 0, shiny: 0, mega: {}, giga: {} };
+        if(!player.pokedex[mon.name]) player.pokedex[mon.name] = { count: 0, shiny: 0, mega: {} };
         player.pokedex[mon.name].count++;
         
         renderBag();
@@ -1416,7 +1314,7 @@ function sortBag(criteria) {
     if(criteria === 'name') {
         player.bag.sort((a,b) => a.name.localeCompare(b.name));
     } else if (criteria === 'rarity') {
-        const rankMap = { "Common":1, "Uncommon":2, "Rare":3, "Ultra":4, "Mythical":5, "Mega":6, "Giga": 7 };
+        const rankMap = { "Common":1, "Uncommon":2, "Rare":3, "Ultra":4, "Mythical":5, "Mega":6 };
         player.bag.sort((a,b) => rankMap[b.tier.name] - rankMap[a.tier.name]);
     } else if (criteria === 'recent') {
         player.bag.sort((a,b) => b.id - a.id);
@@ -1625,20 +1523,16 @@ function performSingleRoll() {
   
   let baseName = pickedName;
   let isMegaPull = false;
-  let isGigaPull = false;
   
   if(chosenTier.name === "Mega") {
     isMegaPull = true;
     baseName = megaMap[pickedName]; 
-  } else if (chosenTier.name === "Giga") {
-    isGigaPull = true;
-    baseName = gigaMap[pickedName];
   }
   
   const isShiny = (Math.floor(Math.random() * CURRENT_SHINY_ODDS) === 0);
   
   if(!player.pokedex[baseName]) {
-    player.pokedex[baseName] = { count: 0, shiny: 0, mega: {}, giga: {} };
+    player.pokedex[baseName] = { count: 0, shiny: 0, mega: {} };
   }
   
   player.pokedex[baseName].count++;
@@ -1650,10 +1544,6 @@ function performSingleRoll() {
   if(isMegaPull) {
     player.pokedex[baseName].mega[pickedName] = true;
   }
-  if(isGigaPull) {
-    if(!player.pokedex[baseName].giga) player.pokedex[baseName].giga = {};
-    player.pokedex[baseName].giga[pickedName] = true;
-  }
   
   const newMon = {
     name: pickedName,
@@ -1661,7 +1551,6 @@ function performSingleRoll() {
     tier: { name: chosenTier.name, class: chosenTier.class, rank: chosenTier.rank }, 
     shiny: isShiny,
     mega: isMegaPull,
-    giga: isGigaPull,
     id: Date.now() + Math.random(),
     caught: false
   };
@@ -1683,20 +1572,13 @@ function updateUI(lastRoll) {
   let spriteUrl = "";
   const dexId = genAllOrder.indexOf(lastRoll.base) + 1;
 
-  if (lastRoll.giga && gigaSpriteIdMap[lastRoll.name]) {
-      const gigaId = gigaSpriteIdMap[lastRoll.name];
-      spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${gigaId}.png`;
-  } else if (lastRoll.mega && megaSpriteIdMap[lastRoll.name]) {
+  if (lastRoll.mega && megaSpriteIdMap[lastRoll.name]) {
       const megaId = megaSpriteIdMap[lastRoll.name];
-      spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${megaId}.png`;
+      const isShiny = lastRoll.shiny;
+      spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${isShiny ? 'shiny/' : ''}${megaId}.png`;
   } else if (dexId > 0) {
-      spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${dexId}.png`;
-  }
-  
-  // Manual check for Zacian/Zamazenta base forms if ID fails
-  if(!spriteUrl && (lastRoll.base === "Zacian" || lastRoll.base === "Zamazenta")) {
-        const manualId = lastRoll.base === "Zacian" ? 888 : 889;
-        spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${manualId}.png`;
+      const isShiny = lastRoll.shiny;
+      spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${isShiny ? 'shiny/' : ''}${dexId}.png`;
   }
 
   if (spriteUrl) {
@@ -1723,26 +1605,7 @@ function renderLog(batch, bestRoll) {
   const logDiv = document.getElementById("rollLog");
   logDiv.innerHTML = "";
   
-  // Optimization: If batch is huge, sort and only show top items
-  let displayBatch = batch;
-  if (batch.length > 100) {
-      // Sort by score (rank/shiny/mega) descending
-      displayBatch = [...batch].sort((a, b) => {
-          let scoreA = a.tier.rank * 10 + (a.shiny?5:0) + (a.mega?2:0) + (a.giga?3:0);
-          let scoreB = b.tier.rank * 10 + (b.shiny?5:0) + (b.mega?2:0) + (b.giga?3:0);
-          return scoreB - scoreA;
-      }).slice(0, 100); 
-      
-      const summary = document.createElement("div");
-      summary.style.padding = "10px";
-      summary.style.color = "#aaa";
-      summary.style.fontSize = "12px";
-      summary.style.borderBottom = "1px solid #444";
-      summary.innerText = `Showing top 100 results of ${batch.length} rolls...`;
-      logDiv.appendChild(summary);
-  }
-  
-  displayBatch.forEach((roll) => {
+  batch.forEach((roll) => {
     const div = document.createElement("div");
     div.className = "log-item " + roll.tier.class;
     
@@ -1754,7 +1617,6 @@ function renderLog(batch, bestRoll) {
     let text = `${roll.name}`;
     if(roll.shiny) text = `✨ ${text}`;
     if(roll.mega) text = `⚡ ${text}`;
-    if(roll.giga) text = `❌ ${text}`;
     
     const nameSpan = document.createElement("span");
     nameSpan.innerText = text;
@@ -1835,11 +1697,6 @@ function renderDex(filter = "") {
       if(megaEligible.has(p)) {
         const hasMega = Object.keys(entry.mega || {}).length > 0;
         icons += hasMega ? " <span style='color:gold'>⚡</span>" : " <span style='color:rgba(255,255,255,0.2)'>◇</span>";
-      }
-      
-      if(gigaEligible.has(p)) {
-        const hasGiga = Object.keys(entry.giga || {}).length > 0;
-        icons += hasGiga ? " <span style='color:#e74c3c'>❌</span>" : " <span style='color:rgba(255,255,255,0.2)'>x</span>";
       }
     } else {
       div.style.opacity = "0.3";
