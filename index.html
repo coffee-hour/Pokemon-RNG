@@ -82,15 +82,15 @@ body {
 }
 
 /* Rarity Colors */
-.dex-entry.common, .log-item.common, .bag-item.common { border-color: #94a3b8; color: #d3d3d3; }
-.dex-entry.uncommon, .log-item.uncommon, .bag-item.uncommon { border-color: #22c55e; color: #4caf50; }
-.dex-entry.rare, .log-item.rare, .bag-item.rare { border-color: #3b82f6; color: #2196f3; }
-.dex-entry.ultra, .log-item.ultra, .bag-item.ultra { border-color: #eab308; color: #ce93d8; box-shadow: 0 0 5px rgba(234, 179, 8, 0.3); }
-.dex-entry.mythical, .log-item.mythical, .bag-item.mythical { border-color: #a855f7; color: #ff80ab; text-shadow: 0 0 5px rgba(233,30,99,0.5); box-shadow: 0 0 8px rgba(168, 85, 247, 0.4); }
-.dex-entry.mega, .log-item.mega, .bag-item.mega { border-color: #ef4444; color: #ff5722; text-shadow: 0 0 5px rgba(255,69,0,0.5); box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
-.dex-entry.giga, .log-item.giga, .bag-item.giga { border-color: #c0392b; color: #e74c3c; background: linear-gradient(90deg, rgba(142, 68, 173, 0.15), transparent); text-shadow: 0 0 5px rgba(231, 76, 60, 0.6); box-shadow: 0 0 10px rgba(192, 57, 43, 0.5); }
+.dex-entry.common, .log-item.common, .bag-item.common, .trade-item.common { border-color: #94a3b8; color: #d3d3d3; }
+.dex-entry.uncommon, .log-item.uncommon, .bag-item.uncommon, .trade-item.uncommon { border-color: #22c55e; color: #4caf50; }
+.dex-entry.rare, .log-item.rare, .bag-item.rare, .trade-item.rare { border-color: #3b82f6; color: #2196f3; }
+.dex-entry.ultra, .log-item.ultra, .bag-item.ultra, .trade-item.ultra { border-color: #eab308; color: #ce93d8; box-shadow: 0 0 5px rgba(234, 179, 8, 0.3); }
+.dex-entry.mythical, .log-item.mythical, .bag-item.mythical, .trade-item.mythical { border-color: #a855f7; color: #ff80ab; text-shadow: 0 0 5px rgba(233,30,99,0.5); box-shadow: 0 0 8px rgba(168, 85, 247, 0.4); }
+.dex-entry.mega, .log-item.mega, .bag-item.mega, .trade-item.mega { border-color: #ef4444; color: #ff5722; text-shadow: 0 0 5px rgba(255,69,0,0.5); box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
+.dex-entry.giga, .log-item.giga, .bag-item.giga, .trade-item.giga { border-color: #c0392b; color: #e74c3c; background: linear-gradient(90deg, rgba(142, 68, 173, 0.15), transparent); text-shadow: 0 0 5px rgba(231, 76, 60, 0.6); box-shadow: 0 0 10px rgba(192, 57, 43, 0.5); }
 
-.bag-item.shiny { background: linear-gradient(135deg, #333, #1a1a1a); border-style: double; border-width: 3px; border-color: #f1c40f !important;}
+.bag-item.shiny, .trade-item.shiny { background: linear-gradient(135deg, #333, #1a1a1a); border-style: double; border-width: 3px; border-color: #f1c40f !important;}
 
 /* Main Content */
 #mainContent {
@@ -413,6 +413,20 @@ input { background: #eee; color: #333; }
 .quest-progress { font-size: 12px; background: #444; padding: 2px 6px; border-radius: 4px; margin-left: 10px; }
 .quest-complete { border-color: #27ae60; background: #222; opacity: 0.7; }
 
+/* Trade Station Styles */
+.trade-tabs { display: flex; gap: 10px; margin-bottom: 10px; }
+.trade-tab { flex: 1; padding: 10px; background: #34495e; border: none; cursor: pointer; color: #aaa; }
+.trade-tab.active { background: #27ae60; color: white; font-weight: bold; }
+
+.trade-list { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; flex: 1; }
+.trade-item {
+  background: #222; border: 2px solid #444; border-radius: 8px; padding: 10px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.trade-info { display: flex; align-items: center; gap: 10px; }
+.trade-info img { width: 40px; height: 40px; object-fit: contain; }
+.trade-price { font-weight: bold; color: #f1c40f; }
+
 /* --- SECRET BUTTON STYLE --- */
 #secretTrigger {
   position: fixed;
@@ -449,6 +463,7 @@ input { background: #eee; color: #333; }
   <div style="position: absolute; top: 10px; right: 10px; z-index: 100; display: flex; gap: 10px; align-items: center;">
     <button onclick="toggleQuests(true)" class="menu-btn" style="background:#2980b9;">📜 Quests</button>
     <button onclick="toggleShop(true)" class="menu-btn" style="background:#f39c12;">🏪 Shop</button>
+    <button onclick="toggleTrade(true)" class="menu-btn" style="background:#27ae60;">🤝 Trade</button>
     <div class="coin-display">
         🪙 <span id="coinCount">0</span>
     </div>
@@ -549,7 +564,308 @@ input { background: #eee; color: #333; }
   </div>
 </div>
 
+<!-- TRADE STATION MODAL -->
+<div id="tradeModal" class="modal-overlay" style="display:none;">
+  <div class="modal-content">
+    <h2>
+        <span>Global Trade Station</span>
+        <span style="font-size: 14px; color: #aaa;">Status: <span id="tradeStatus">Connecting...</span></span>
+    </h2>
+    <button class="close-btn" style="position: absolute; top: 15px; right: 15px;" onclick="toggleTrade(false)">X</button>
+    
+    <div class="trade-tabs">
+        <button id="tabMarket" class="trade-tab active" onclick="switchTradeTab('market')">Global Market</button>
+        <button id="tabMyListings" class="trade-tab" onclick="switchTradeTab('mine')">My Listings</button>
+    </div>
+
+    <div id="tradeList" class="trade-list">
+        <!-- Trades injected here -->
+        <div style="text-align:center; padding:20px; color:#666;">Loading trades...</div>
+    </div>
+    
+    <div id="createListingArea" style="display:none; border-top:1px solid #444; padding-top:10px; margin-top:10px; text-align:center;">
+        <button onclick="openListingSelector()" style="background:#27ae60; width:100%;">+ List New Pokemon</button>
+    </div>
+  </div>
+</div>
+
+<!-- LISTING SELECTOR MODAL (Sub-modal) -->
+<div id="listingModal" class="modal-overlay" style="display:none; z-index: 2100;">
+  <div class="modal-content" style="max-width: 600px; height: 70%;">
+    <h2>Select Pokemon to Sell</h2>
+    <button class="close-btn" style="position: absolute; top: 15px; right: 15px;" onclick="document.getElementById('listingModal').style.display='none'">X</button>
+    <div id="listingGrid" class="bag-grid"></div>
+  </div>
+</div>
+
 <div id="secretTrigger">∴</div>
+
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+  import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+  import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc, getDoc, runTransaction } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+
+  let db, auth, user;
+  let appId = 'default-app-id'; // Fallback
+  
+  if (typeof __firebase_config !== 'undefined') {
+      try {
+          const firebaseConfig = JSON.parse(__firebase_config);
+          const app = initializeApp(firebaseConfig);
+          auth = getAuth(app);
+          db = getFirestore(app);
+          if (typeof __app_id !== 'undefined') appId = __app_id;
+
+          // Authenticate
+          signInAnonymously(auth).catch(err => console.error("Auth failed:", err));
+          
+          onAuthStateChanged(auth, (u) => {
+              user = u;
+              if (user) {
+                  console.log("Firebase Connected. User:", user.uid);
+                  document.getElementById('tradeStatus').innerText = "Online";
+                  document.getElementById('tradeStatus').style.color = "#2ecc71";
+                  
+                  // Initialize Trade Listeners
+                  setupTradeListeners();
+              }
+          });
+
+      } catch (e) {
+          console.error("Firebase Init Error:", e);
+          document.getElementById('tradeStatus').innerText = "Offline (Config Error)";
+      }
+  } else {
+      document.getElementById('tradeStatus').innerText = "Offline (Local Mode)";
+  }
+  
+  // --- TRADE LOGIC ---
+  let marketUnsubscribe = null;
+  let myListingsUnsubscribe = null;
+  
+  window.setupTradeListeners = function() {
+      // We will listen based on active tab to save reads
+      window.refreshTradeView();
+  };
+  
+  window.refreshTradeView = function() {
+      if(!user || !db) return;
+      
+      const tab = window.currentTradeTab; // 'market' or 'mine'
+      const listEl = document.getElementById('tradeList');
+      listEl.innerHTML = '<div style="text-align:center; padding:20px; color:#666;">Loading...</div>';
+      
+      // Cleanup old listeners
+      if(marketUnsubscribe) marketUnsubscribe();
+      if(myListingsUnsubscribe) myListingsUnsubscribe();
+      
+      const tradesRef = collection(db, 'artifacts', appId, 'public', 'data', 'trades');
+      
+      if(tab === 'market') {
+          // Fetch open trades NOT created by me
+          // Note: Firestore doesn't support != in simple queries well mixed with other filters sometimes.
+          // We will fetch ALL 'open' trades and filter in memory as per constraints.
+          // Constraint: "Fetch all data with simple collection() queries, then filter/sort in JavaScript" - 
+          // actually standard constraint allows simple where. 'status' == 'open' is simple.
+          
+          const q = query(tradesRef, where('status', '==', 'open'));
+          
+          marketUnsubscribe = onSnapshot(q, (snapshot) => {
+              const trades = [];
+              snapshot.forEach(doc => {
+                  const data = doc.data();
+                  if(data.sellerId !== user.uid) {
+                      trades.push({ id: doc.id, ...data });
+                  }
+              });
+              
+              // Sort by date desc
+              trades.sort((a,b) => b.createdAt - a.createdAt);
+              renderTradeList(trades, 'market');
+          });
+          
+          document.getElementById('createListingArea').style.display = 'none';
+          
+      } else {
+          // My Listings (Active + Sold)
+          const q = query(tradesRef, where('sellerId', '==', user.uid));
+          
+          myListingsUnsubscribe = onSnapshot(q, (snapshot) => {
+              const trades = [];
+              snapshot.forEach(doc => {
+                  trades.push({ id: doc.id, ...doc.data() });
+              });
+              
+              trades.sort((a,b) => b.createdAt - a.createdAt);
+              renderTradeList(trades, 'mine');
+          });
+          
+          document.getElementById('createListingArea').style.display = 'block';
+      }
+  };
+  
+  window.renderTradeList = function(trades, type) {
+      const listEl = document.getElementById('tradeList');
+      listEl.innerHTML = "";
+      
+      if(trades.length === 0) {
+          listEl.innerHTML = '<div style="text-align:center; padding:20px; color:#666;">No listings found.</div>';
+          return;
+      }
+      
+      trades.forEach(t => {
+          const div = document.createElement('div');
+          const p = t.pokemon;
+          div.className = `trade-item ${p.tier.class}`;
+          if(p.shiny) div.style.borderColor = "#f1c40f";
+          
+          // Get Sprite URL (helper function needed or logic replication)
+          // We can't access `getSpriteUrl` easily if it's not on window. 
+          // I'll attach `getSpriteUrl` to window in main script.
+          const imgUrl = window.getSpriteUrl ? window.getSpriteUrl(p) : "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png";
+          
+          let actionBtn = "";
+          
+          if(type === 'market') {
+             actionBtn = `<button onclick="buyPokemon('${t.id}', ${t.price})" style="background:#27ae60;">Buy (${t.price} 🪙)</button>`;
+          } else {
+             if(t.status === 'open') {
+                 actionBtn = `<button onclick="cancelListing('${t.id}')" style="background:#c0392b;">Cancel</button>`;
+             } else if(t.status === 'sold') {
+                 actionBtn = `<button onclick="claimCoins('${t.id}', ${t.price})" style="background:#f39c12; color:black; font-weight:bold;">Claim ${t.price} 🪙</button>`;
+             } else {
+                 actionBtn = `<span style="color:#aaa;">Claimed</span>`;
+             }
+          }
+          
+          div.innerHTML = `
+            <div class="trade-info">
+                <img src="${imgUrl}">
+                <div>
+                    <div style="font-weight:bold; font-size:14px;">${p.name} ${p.shiny ? '✨' : ''}</div>
+                    <div style="font-size:10px; color:#aaa;">Seller: ${t.sellerName}</div>
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <div class="trade-price">${t.price} 🪙</div>
+                ${actionBtn}
+            </div>
+          `;
+          listEl.appendChild(div);
+      });
+  };
+  
+  // --- ACTIONS ---
+  
+  window.listPokemon = async function(bagIndex, price) {
+      if(!user) return alert("Not connected to Trade Network.");
+      const mon = window.player.bag[bagIndex];
+      
+      if(confirm(`List ${mon.name} for ${price} coins? It will be removed from your bag.`)) {
+          // 1. Remove from local bag
+          window.player.bag.splice(bagIndex, 1);
+          window.updateStats();
+          window.save();
+          window.closeListingSelector(); // Close modal
+          
+          // 2. Add to Firestore
+          try {
+              await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'trades'), {
+                  sellerId: user.uid,
+                  sellerName: window.player.username || "Trainer",
+                  pokemon: mon,
+                  price: parseInt(price),
+                  status: 'open',
+                  buyerId: null,
+                  createdAt: Date.now()
+              });
+              window.notify("Listing created!");
+          } catch(e) {
+              console.error(e);
+              alert("Error creating listing. Pokemon lost locally (save/load to reset if testing).");
+              // Ideally revert local change here
+          }
+      }
+  };
+  
+  window.buyPokemon = async function(tradeId, price) {
+      if(!user) return;
+      if(window.player.coins < price) return alert("Not enough coins!");
+      
+      if(window.player.bag.length >= window.player.maxBag) return alert("Your bag is full!");
+      
+      const tradeRef = doc(db, 'artifacts', appId, 'public', 'data', 'trades', tradeId);
+      
+      try {
+          await runTransaction(db, async (transaction) => {
+              const sfDoc = await transaction.get(tradeRef);
+              if (!sfDoc.exists()) throw "Trade does not exist!";
+              
+              const data = sfDoc.data();
+              if (data.status !== 'open') throw "Trade already sold!";
+              
+              transaction.update(tradeRef, { 
+                  status: 'sold',
+                  buyerId: user.uid
+              });
+              
+              return data.pokemon;
+          }).then((boughtPokemon) => {
+              // Success! Deduct coins and add pokemon
+              window.player.coins -= price;
+              // Reset catch status so new owner doesn't treat as "caught in this session" if we care, 
+              // but we want to add it to bag.
+              window.player.bag.push(boughtPokemon);
+              
+              // Register dex entry if new
+              const p = boughtPokemon;
+              if(!window.player.pokedex[p.base]) window.player.pokedex[p.base] = { count: 0, shiny: 0, mega: {}, giga: {} };
+              window.player.pokedex[p.base].count++;
+              if(p.shiny) window.player.pokedex[p.base].shiny++;
+              
+              window.updateStats();
+              window.save();
+              window.notify(`Bought ${boughtPokemon.name}!`);
+          });
+      } catch (e) {
+          console.error(e);
+          alert("Purchase failed: " + e);
+      }
+  };
+  
+  window.claimCoins = async function(tradeId, amount) {
+      if(!user) return;
+      const tradeRef = doc(db, 'artifacts', appId, 'public', 'data', 'trades', tradeId);
+      
+      // Update local
+      window.player.coins += amount;
+      window.updateStats();
+      window.save();
+      window.notify(`Claimed ${amount} coins!`);
+      
+      // Delete trade from DB or mark claimed
+      // Deleting helps cleanup
+      await deleteDoc(tradeRef);
+  };
+  
+  window.cancelListing = async function(tradeId) {
+      if(!confirm("Cancel listing? Pokemon will return to bag.")) return;
+      
+      const tradeRef = doc(db, 'artifacts', appId, 'public', 'data', 'trades', tradeId);
+      const snap = await getDoc(tradeRef);
+      if(snap.exists()) {
+          const data = snap.data();
+          // Return to bag
+          window.player.bag.push(data.pokemon);
+          window.updateStats();
+          window.save();
+          
+          await deleteDoc(tradeRef);
+          window.notify("Listing cancelled.");
+      }
+  };
+
+</script>
 
 <script>
 window.onerror = function(msg, url, line) {
@@ -628,7 +944,7 @@ const rarityTable = [
       "Wooper", "Murkrow", "Gligar", "Snubbull", "Swinub", "Remoraid", "Phanpy", "Tyrogue",
       "Pineco", "Teddiursa", "Slugma", "Treecko", "Torchic", "Mudkip", "Poochyena", "Zigzagoon", 
       "Wurmple", "Lotad", "Seedot", "Ralts", "Surskit", "Shroomish", "Slakoth", "Nincada", "Whismur", 
-      "Makuhita", "Azurill", "Meditite", "Electrike", "Numel", "Spoink", "Aron", "Aron", "Taillow", "Wingull",
+      "Makuhita", "Azurill", "Meditite", "Electrike", "Numel", "Spoink", "Aron", "Taillow", "Wingull",
       "Nosepass", "Skitty", "Carvanha", "Wailmer", "Trapinch", "Snorunt", "Spheal", "Clamperl", "Bagon", "Beldum",
       "Turtwig", "Chimchar", "Piplup", "Starly", "Bidoof", "Kricketot", "Shinx", "Budew",
       "Cranidos", "Shieldon", "Burmy", "Combee", "Cherubi", "Bonsly", "Happiny", "Buneary",
@@ -1074,36 +1390,36 @@ const gigaMap = {
 
 const gigaSpriteIdMap = {
   "Giga Venusaur": 10186,
-  "Giga Charizard": 10196,
-  "Giga Blastoise": 10197,
-  "Giga Butterfree": 10198,
-  "Giga Pikachu": 10199,
-  "Giga Meowth": 10200,
-  "Giga Machamp": 10201,
-  "Giga Gengar": 10202,
-  "Giga Kingler": 10203,
-  "Giga Lapras": 10204,
-  "Giga Eevee": 10205,
-  "Giga Snorlax": 10206,
-  "Giga Garbodor": 10207,
-  "Giga Melmetal": 10208,
-  "Giga Rillaboom": 10209,
-  "Giga Cinderace": 10210,
-  "Giga Inteleon": 10211,
-  "Giga Corviknight": 10212,
-  "Giga Orbeetle": 10213,
-  "Giga Drednaw": 10214,
-  "Giga Coalossal": 10215,
-  "Giga Flapple": 10216,
-  "Giga Appletun": 10217,
-  "Giga Sandaconda": 10218,
-  "Giga Toxtricity": 10219,
-  "Giga Centiskorch": 10220,
-  "Giga Hatterene": 10221,
-  "Giga Grimmsnarl": 10222,
-  "Giga Alcremie": 10223,
-  "Giga Copperajah": 10224,
-  "Giga Duraludon": 10225,
+  "Giga Charizard": 10187,
+  "Giga Blastoise": 10188,
+  "Giga Butterfree": 10189,
+  "Giga Pikachu": 10190,
+  "Giga Meowth": 10191,
+  "Giga Machamp": 10192,
+  "Giga Gengar": 10193,
+  "Giga Kingler": 10194,
+  "Giga Lapras": 10195,
+  "Giga Eevee": 10196,
+  "Giga Snorlax": 10197,
+  "Giga Garbodor": 10198,
+  "Giga Melmetal": 10199,
+  "Giga Rillaboom": 10200,
+  "Giga Cinderace": 10201,
+  "Giga Inteleon": 10202,
+  "Giga Corviknight": 10203,
+  "Giga Orbeetle": 10204,
+  "Giga Drednaw": 10205,
+  "Giga Coalossal": 10206,
+  "Giga Flapple": 10207,
+  "Giga Appletun": 10208,
+  "Giga Sandaconda": 10209,
+  "Giga Toxtricity": 10210,
+  "Giga Centiskorch": 10211,
+  "Giga Hatterene": 10212,
+  "Giga Grimmsnarl": 10213,
+  "Giga Alcremie": 10214,
+  "Giga Copperajah": 10215,
+  "Giga Duraludon": 10216,
   "Giga Urshifu": 10226,
   "Sacred Sword Zacian": 10188,
   "Sacred Shield Zamazenta": 10189
