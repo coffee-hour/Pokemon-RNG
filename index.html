@@ -104,12 +104,6 @@ body {
 h1 { margin-top: 0; text-shadow: 0 0 10px #7b2cbf; }
 
 /* Menus Row */
-.menu-bar {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
 .menu-btn {
   background: #34495e;
   color: white;
@@ -122,14 +116,12 @@ h1 { margin-top: 0; text-shadow: 0 0 10px #7b2cbf; }
   display: flex;
   align-items: center;
   gap: 5px;
+  margin: 0;
 }
 .menu-btn:hover { background: #455a64; transform: translateY(-2px); }
 
 /* Currency Display */
 .coin-display {
-  position: absolute;
-  top: 10px;
-  right: 10px;
   background: rgba(0,0,0,0.6);
   padding: 8px 15px;
   border-radius: 20px;
@@ -137,7 +129,6 @@ h1 { margin-top: 0; text-shadow: 0 0 10px #7b2cbf; }
   color: #f1c40f;
   font-weight: bold;
   font-size: 16px;
-  z-index: 100;
   display: flex;
   align-items: center;
   gap: 5px;
@@ -447,16 +438,18 @@ input { background: #eee; color: #333; }
 </div>
 
 <div id="mainContent">
-  <!-- Coin Display -->
-  <div class="coin-display">
-    🪙 <span id="coinCount">0</span>
+  <!-- Bag Button Top Left -->
+  <div style="position: absolute; top: 10px; left: 10px; z-index: 100;">
+    <button id="openBagBtn" class="menu-btn" style="background:#8e44ad;">🎒 Bag (<span id="bagBtnCount">0</span>/<span id="bagMaxDisplay">100</span>)</button>
   </div>
 
-  <!-- Menu Bar -->
-  <div style="position: absolute; top: 10px; left: 10px; z-index: 100; display: flex; gap: 5px;">
-    <button id="openBagBtn" class="menu-btn" style="background:#8e44ad;">🎒 Bag (<span id="bagBtnCount">0</span>/<span id="bagMaxDisplay">100</span>)</button>
-    <button onclick="toggleShop(true)" class="menu-btn" style="background:#f39c12;">🏪 Shop</button>
+  <!-- Right Menu Bar: Quests, Shop, Coins -->
+  <div style="position: absolute; top: 10px; right: 10px; z-index: 100; display: flex; gap: 10px; align-items: center;">
     <button onclick="toggleQuests(true)" class="menu-btn" style="background:#2980b9;">📜 Quests</button>
+    <button onclick="toggleShop(true)" class="menu-btn" style="background:#f39c12;">🏪 Shop</button>
+    <div class="coin-display">
+        🪙 <span id="coinCount">0</span>
+    </div>
   </div>
 
   <h1>🎲 Pokemon RNG</h1>
@@ -1017,11 +1010,11 @@ const megaSpriteIdMap = {
   "Mega Audino": 10069,
   "Mega Diancie": 10075,
   "Mega Sharpedo": 10066,
-  "Mega Camerupt": 10067,
-  "Mega Altaria": 10065,
+  "Mega Camerupt": 10087,
+  "Mega Altaria": 10067,
   "Mega Glalie": 10074,
-  "Mega Sceptile": 10064,
-  "Mega Swampert": 10060
+  "Mega Sceptile": 10065,
+  "Mega Swampert": 10064
 };
 
 const megaEligible = new Set(Object.values(megaMap));
