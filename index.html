@@ -1103,37 +1103,40 @@ rollBtn.addEventListener("click", () => {
   rollBtn.disabled = true;
   cardCatchBtn.style.display = 'none'; // Hide until roll finishes
   
-  const loops = player.rollMultiplier;
-  const batch = [];
-  
-  for(let i=0; i<loops; i++){
-    batch.push(performSingleRoll());
-  }
-  
-  // Find best roll
-  let bestRoll = batch[0];
-  let bestScore = -1;
-  
-  batch.forEach(roll => {
-    let score = roll.tier.rank * 100;
-    if (roll.shiny) score += 50;
-    if (roll.tier.name === "Mega") score += 20;
-    
-    if (score > bestScore) {
-      bestScore = score;
-      bestRoll = roll;
-    }
-  });
-  
-  updateUI(bestRoll);
-  renderLog(batch, bestRoll);
-  
-  // Quests Check
-  checkQuestProgress("roll", loops);
-  checkRewards();
-  save();
-  
-  setTimeout(() => rollBtn.disabled = false, 450);
+  // Use setTimeout to allow UI to update (disable button) before heavy processing
+  setTimeout(() => {
+      const loops = player.rollMultiplier;
+      const batch = [];
+      
+      for(let i=0; i<loops; i++){
+        batch.push(performSingleRoll());
+      }
+      
+      // Find best roll
+      let bestRoll = batch[0];
+      let bestScore = -1;
+      
+      batch.forEach(roll => {
+        let score = roll.tier.rank * 100;
+        if (roll.shiny) score += 50;
+        if (roll.tier.name === "Mega") score += 20;
+        
+        if (score > bestScore) {
+          bestScore = score;
+          bestRoll = roll;
+        }
+      });
+      
+      updateUI(bestRoll);
+      renderLog(batch, bestRoll);
+      
+      // Quests Check
+      checkQuestProgress("roll", loops);
+      checkRewards();
+      save();
+      
+      rollBtn.disabled = false;
+  }, 50);
 });
 
 dexSearch.addEventListener("input", (e) => renderDex(e.target.value));
@@ -1605,7 +1608,26 @@ function renderLog(batch, bestRoll) {
   const logDiv = document.getElementById("rollLog");
   logDiv.innerHTML = "";
   
-  batch.forEach((roll) => {
+  // Optimization: If batch is huge, sort and only show top items
+  let displayBatch = batch;
+  if (batch.length > 100) {
+      // Sort by score (rank/shiny/mega) descending
+      displayBatch = [...batch].sort((a, b) => {
+          let scoreA = a.tier.rank * 10 + (a.shiny?5:0) + (a.mega?2:0);
+          let scoreB = b.tier.rank * 10 + (b.shiny?5:0) + (b.mega?2:0);
+          return scoreB - scoreA;
+      }).slice(0, 100); 
+      
+      const summary = document.createElement("div");
+      summary.style.padding = "10px";
+      summary.style.color = "#aaa";
+      summary.style.fontSize = "12px";
+      summary.style.borderBottom = "1px solid #444";
+      summary.innerText = `Showing top 100 results of ${batch.length} rolls...`;
+      logDiv.appendChild(summary);
+  }
+  
+  displayBatch.forEach((roll) => {
     const div = document.createElement("div");
     div.className = "log-item " + roll.tier.class;
     
