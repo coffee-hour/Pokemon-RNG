@@ -5,6 +5,11 @@
 <title>Pokemon RNG</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
+
 <style>
 /* --- CSS STYLES --- */
 body {
@@ -55,9 +60,9 @@ body {
   padding-right: 5px;
 }
 
-pokedexDropdown::-webkit-scrollbar { width: 8px; }
-pokedexDropdown::-webkit-scrollbar-track { background: #0a0c1a; }
-pokedexDropdown::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+#pokedexDropdown::-webkit-scrollbar { width: 8px; }
+#pokedexDropdown::-webkit-scrollbar-track { background: #0a0c1a; }
+#pokedexDropdown::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
 
 /* Dex Entry Base Styling */
 .dex-entry {
@@ -356,6 +361,8 @@ input { background: #eee; color: #333; }
   cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
 .bag-item:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.5); }
+.bag-item.selected { border-color: #f1c40f; box-shadow: 0 0 10px #f1c40f; }
+
 .bag-item img { width: 50px; height: 50px; object-fit: contain; }
 .bag-item .name { font-size: 10px; text-align: center; margin-top: 5px; font-weight: bold; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bag-item .release-btn {
@@ -413,6 +420,16 @@ input { background: #eee; color: #333; }
 .quest-progress { font-size: 12px; background: #444; padding: 2px 6px; border-radius: 4px; margin-left: 10px; }
 .quest-complete { border-color: #27ae60; background: #222; opacity: 0.7; }
 
+/* GTS Styles */
+.trade-container { display: flex; gap: 20px; height: 100%; }
+.trade-half { flex: 1; background: rgba(0,0,0,0.2); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; }
+.trade-selection-box { 
+    flex: 1; border: 2px dashed #555; border-radius: 10px; 
+    display: flex; justify-content: center; align-items: center; margin-bottom: 10px;
+    flex-direction: column;
+}
+.trade-status { text-align: center; font-size: 14px; color: #aaa; margin-top: 10px; }
+
 /* --- SECRET BUTTON STYLE --- */
 #secretTrigger {
   position: fixed;
@@ -447,6 +464,7 @@ input { background: #eee; color: #333; }
 
   <!-- Right Menu Bar: Quests, Shop, Coins -->
   <div style="position: absolute; top: 10px; right: 10px; z-index: 100; display: flex; gap: 10px; align-items: center;">
+    <button onclick="toggleTrade(true)" class="menu-btn" style="background:#27ae60;">🌍 Global Trade</button>
     <button onclick="toggleQuests(true)" class="menu-btn" style="background:#2980b9;">📜 Quests</button>
     <button onclick="toggleShop(true)" class="menu-btn" style="background:#f39c12;">🏪 Shop</button>
     <div class="coin-display">
@@ -549,12 +567,71 @@ input { background: #eee; color: #333; }
   </div>
 </div>
 
+<!-- TRADE MODAL -->
+<div id="tradeModal" class="modal-overlay" style="display:none;">
+  <div class="modal-content" style="max-width: 700px; height: 80%;">
+    <h2>Global Wonder Trade Station</h2>
+    <button class="close-btn" style="position: absolute; top: 15px; right: 15px;" onclick="toggleTrade(false)">X</button>
+    
+    <div class="trade-container">
+        <!-- Left Side: User Bag Selection -->
+        <div class="trade-half">
+            <h3>1. Select Offer</h3>
+            <div id="tradeBagGrid" class="bag-grid" style="flex:1; border:1px solid #444; border-radius:5px;">
+                <!-- Mini bag for selection -->
+            </div>
+        </div>
+
+        <!-- Right Side: Action Area -->
+        <div class="trade-half">
+            <h3>2. Wonder Trade</h3>
+            <div id="tradePreviewBox" class="trade-selection-box">
+                <span style="opacity:0.5">Select a Pokemon from left</span>
+            </div>
+            
+            <div id="tradeStatus" class="trade-status">Ready to connect...</div>
+            
+            <button id="confirmTradeBtn" disabled onclick="executeWonderTrade()" style="width:100%; margin:0; margin-top:10px; background:#27ae60;">
+                Start Wonder Trade
+            </button>
+        </div>
+    </div>
+    <div style="margin-top:10px; font-size:12px; color:#aaa; text-align:center;">
+        Warning: You will lose the selected Pokemon and receive a random one from another player!
+    </div>
+  </div>
+</div>
+
+
 <div id="secretTrigger">∴</div>
 
 <script>
 window.onerror = function(msg, url, line) {
   console.error("Game Error: " + msg);
 };
+
+// --- FIREBASE CONFIGURATION ---
+const firebaseConfig = JSON.parse(__firebase_config);
+const app = firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+let currentUser = null;
+
+// Initialize Auth
+const initAuth = async () => {
+  if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+    await auth.signInWithCustomToken(__initial_auth_token);
+  } else {
+    await auth.signInAnonymously();
+  }
+};
+initAuth();
+auth.onAuthStateChanged((user) => {
+    currentUser = user;
+    console.log("Auth State:", user ? "Logged In" : "Logged Out");
+});
 
 // --- CONFIGURATION ---
 const BASE_SHINY_ODDS = 512; 
@@ -1157,6 +1234,13 @@ const shopGrid = document.getElementById("shopGrid");
 const shopCoinDisplay = document.getElementById("shopCoinDisplay");
 const questModal = document.getElementById("questModal");
 const questList = document.getElementById("questList");
+const tradeModal = document.getElementById("tradeModal");
+const tradeBagGrid = document.getElementById("tradeBagGrid");
+const tradePreviewBox = document.getElementById("tradePreviewBox");
+const tradeStatus = document.getElementById("tradeStatus");
+const confirmTradeBtn = document.getElementById("confirmTradeBtn");
+
+let selectedTradeIndex = -1;
 
 // --- INITIALIZATION ---
 document.addEventListener("DOMContentLoaded", () => {
@@ -1289,6 +1373,22 @@ function toggleQuests(show) {
     }
 }
 
+function toggleTrade(show) {
+    if(show) {
+        if(!currentUser) {
+            notify("Connecting to Global Server...");
+            // Allow opening even if still connecting, state logic handles buttons
+        }
+        selectedTradeIndex = -1;
+        renderTradeBag();
+        updateTradePreview();
+        tradeStatus.innerText = "Select a Pokemon to offer.";
+        tradeModal.style.display = "flex";
+    } else {
+        tradeModal.style.display = "none";
+    }
+}
+
 // --- BAG LOGIC ---
 function renderBag() {
     bagGrid.innerHTML = "";
@@ -1301,28 +1401,7 @@ function renderBag() {
         div.className = `bag-item ${p.tier.class} ${p.shiny ? 'shiny' : ''}`;
         
         const img = document.createElement("img");
-        
-        // Sprite Logic
-        let spriteUrl = "";
-        const dexId = genAllOrder.indexOf(p.base) + 1;
-        
-        if (p.giga && gigaSpriteIdMap[p.name]) {
-            const gigaId = gigaSpriteIdMap[p.name];
-            spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${gigaId}.png`;
-        } else if (p.mega && megaSpriteIdMap[p.name]) {
-            const megaId = megaSpriteIdMap[p.name];
-            spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${megaId}.png`;
-        } else if (dexId > 0) {
-            spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${dexId}.png`;
-        }
-        
-        // Zacian/Zamazenta fallback
-        if((p.base === "Zacian" || p.base === "Zamazenta") && !spriteUrl) {
-             const manualId = p.base === "Zacian" ? 888 : 889;
-             spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${manualId}.png`;
-        }
-
-        img.src = spriteUrl || "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png";
+        img.src = getSpriteUrl(p);
         
         const name = document.createElement("div");
         name.className = "name";
@@ -1360,6 +1439,29 @@ function renderBag() {
 
         bagGrid.appendChild(div);
     });
+}
+
+function getSpriteUrl(p) {
+    let spriteUrl = "";
+    const dexId = genAllOrder.indexOf(p.base) + 1;
+    
+    if (p.giga && gigaSpriteIdMap[p.name]) {
+        const gigaId = gigaSpriteIdMap[p.name];
+        spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${gigaId}.png`;
+    } else if (p.mega && megaSpriteIdMap[p.name]) {
+        const megaId = megaSpriteIdMap[p.name];
+        spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${megaId}.png`;
+    } else if (dexId > 0) {
+        spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${dexId}.png`;
+    }
+    
+    // Zacian/Zamazenta fallback
+    if((p.base === "Zacian" || p.base === "Zamazenta") && !spriteUrl) {
+            const manualId = p.base === "Zacian" ? 888 : 889;
+            spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${manualId}.png`;
+    }
+
+    return spriteUrl || "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png";
 }
 
 function releasePokemon(index) {
@@ -1421,6 +1523,149 @@ function sortBag(criteria) {
         player.bag.sort((a,b) => (b.shiny ? 1 : 0) - (a.shiny ? 1 : 0));
     }
     renderBag();
+    if(tradeModal.style.display === "flex") renderTradeBag();
+}
+
+// --- TRADE LOGIC ---
+function renderTradeBag() {
+    tradeBagGrid.innerHTML = "";
+    player.bag.forEach((p, index) => {
+        const div = document.createElement("div");
+        div.className = `bag-item ${p.tier.class} ${p.shiny ? 'shiny' : ''}`;
+        if(index === selectedTradeIndex) div.classList.add("selected");
+        
+        div.onclick = () => {
+            selectedTradeIndex = index;
+            renderTradeBag();
+            updateTradePreview();
+        };
+
+        const img = document.createElement("img");
+        img.src = getSpriteUrl(p);
+        
+        const name = document.createElement("div");
+        name.className = "name";
+        name.innerText = p.name;
+        
+        div.appendChild(img);
+        div.appendChild(name);
+        tradeBagGrid.appendChild(div);
+    });
+}
+
+function updateTradePreview() {
+    if(selectedTradeIndex > -1) {
+        const p = player.bag[selectedTradeIndex];
+        tradePreviewBox.innerHTML = `
+            <img src="${getSpriteUrl(p)}" style="width:100px; height:100px; image-rendering:pixelated;">
+            <h3>${p.name}</h3>
+            <span style="color:#aaa">${p.tier.name}</span>
+        `;
+        confirmTradeBtn.disabled = false;
+        tradeStatus.innerText = "Ready to Trade!";
+    } else {
+        tradePreviewBox.innerHTML = `<span style="opacity:0.5">Select a Pokemon from left</span>`;
+        confirmTradeBtn.disabled = true;
+        tradeStatus.innerText = "Select a Pokemon to offer.";
+    }
+}
+
+async function executeWonderTrade() {
+    if(selectedTradeIndex === -1) return;
+    if(!currentUser) return notify("Error: No connection to server.");
+
+    const offerPokemon = player.bag[selectedTradeIndex];
+    
+    // Safety check for valuables
+    if(offerPokemon.shiny || offerPokemon.tier.rank >= 4) {
+        if(!confirm(`Are you SURE you want to trade your ${offerPokemon.shiny ? 'Shiny ' : ''}${offerPokemon.name}? You cannot undo this!`)) {
+            return;
+        }
+    }
+
+    confirmTradeBtn.disabled = true;
+    confirmTradeBtn.innerText = "Searching Global Network...";
+    tradeStatus.innerText = "Connecting to satellites...";
+
+    try {
+        const tradeCollection = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('wonder_trade');
+        
+        // 1. Fetch potential trade partners (Limit 20 to pick random)
+        const snapshot = await tradeCollection.limit(20).get();
+        let targetDoc = null;
+        let incomingPokemon = null;
+
+        // Filter out my own uploads if possible (simple client side check)
+        const candidates = snapshot.docs.filter(doc => {
+            const data = doc.data();
+            return data.originalOwnerId !== currentUser.uid;
+        });
+
+        if (candidates.length > 0) {
+            // Pick random existing
+            const randIndex = Math.floor(Math.random() * candidates.length);
+            targetDoc = candidates[randIndex];
+            incomingPokemon = targetDoc.data().pokemon;
+        } else {
+            // Pool empty? Generate a "Bot" trade to keep flow going
+            incomingPokemon = performSingleRoll(); // Reuse roll logic for bot trade
+            incomingPokemon.originalOwnerId = "SYSTEM_BOT";
+            incomingPokemon.tradeNote = "From the wild!";
+            // We don't delete a doc, we just upload ours
+        }
+
+        // 2. Perform Trade (Upload ours, Delete theirs if it existed)
+        const myTradeData = {
+            pokemon: offerPokemon,
+            originalOwnerId: currentUser.uid,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        // Transaction ensures we don't grab a pokemon someone else just grabbed
+        if (targetDoc) {
+             await db.runTransaction(async (transaction) => {
+                const sfDoc = await transaction.get(targetDoc.ref);
+                if (!sfDoc.exists) {
+                    throw "Trade target vanished!";
+                }
+                transaction.delete(targetDoc.ref);
+                transaction.set(tradeCollection.doc(), myTradeData);
+            });
+        } else {
+            // Just upload ours if we got a bot trade
+            await tradeCollection.add(myTradeData);
+        }
+
+        // 3. Complete Client Side
+        player.bag.splice(selectedTradeIndex, 1); // Remove old
+        
+        // Add new (handled like a catch)
+        addToBag(incomingPokemon, null); 
+        
+        // Force caught flag to prevent double add logic if addToBag checks
+        // Actually addToBag handles it.
+        
+        notify("Trade Successful!");
+        
+        // UI Feedback
+        tradePreviewBox.innerHTML = `
+            <div style="color:#2ecc71; font-weight:bold;">TRADE COMPLETE!</div>
+            <img src="${getSpriteUrl(incomingPokemon)}" style="width:100px; height:100px; image-rendering:pixelated;">
+            <h3>Received: ${incomingPokemon.name}</h3>
+        `;
+        
+        tradeStatus.innerText = "Trade Complete! Check your bag.";
+        confirmTradeBtn.innerText = "Trade Again";
+        selectedTradeIndex = -1;
+        renderTradeBag();
+        save();
+
+    } catch (e) {
+        console.error("Trade failed", e);
+        notify("Trade failed. Network busy. Try again.");
+        confirmTradeBtn.disabled = false;
+        confirmTradeBtn.innerText = "Start Wonder Trade";
+    }
 }
 
 // --- SHOP LOGIC ---
@@ -1573,10 +1818,13 @@ function addToBag(mon, btn) {
         alert(`Your bag is full! (${player.bag.length}/${player.maxBag})`);
         return;
     }
-    if(mon.caught) return; 
+    // If it's already caught (e.g. from bag), we might need to clone it if coming from trade?
+    // Actually trade logic splices the old one and passes a new object, so it's fine.
+    
+    // Reset caught flag if coming from trade so we can re-add
+    mon.caught = true; 
 
     player.bag.push(mon);
-    mon.caught = true; 
     
     // Add Candy
     if(!player.candy) player.candy = {};
@@ -1590,8 +1838,22 @@ function addToBag(mon, btn) {
     
     if(candyGain > 1) notify(`Lucky! +${candyGain} Candy!`);
     
+    // Only count as quest progress if it wasn't a trade? Or maybe trades count!
+    // Let's say trades count as "catch" for fun.
     checkQuestProgress("catch", 1, mon);
     
+    // Add to Dex
+    if(!player.pokedex[mon.base]) {
+        player.pokedex[mon.base] = { count: 0, shiny: 0, mega: {}, giga: {} };
+    }
+    player.pokedex[mon.base].count++;
+    if(mon.shiny) player.pokedex[mon.base].shiny++;
+    if(mon.mega) player.pokedex[mon.base].mega[mon.name] = true;
+    if(mon.giga) {
+        if(!player.pokedex[mon.base].giga) player.pokedex[mon.base].giga = {};
+        player.pokedex[mon.base].giga[mon.name] = true;
+    }
+
     if(btn) {
         btn.disabled = true;
         btn.innerText = "Caught!";
@@ -1634,23 +1896,7 @@ function performSingleRoll() {
   
   const isShiny = (Math.floor(Math.random() * CURRENT_SHINY_ODDS) === 0);
   
-  if(!player.pokedex[baseName]) {
-    player.pokedex[baseName] = { count: 0, shiny: 0, mega: {}, giga: {} };
-  }
-  
-  player.pokedex[baseName].count++;
-  
-  if(isShiny) {
-    player.pokedex[baseName].shiny++;
-  }
-  
-  if(isMegaPull) {
-    player.pokedex[baseName].mega[pickedName] = true;
-  }
-  if(isGigaPull) {
-    if(!player.pokedex[baseName].giga) player.pokedex[baseName].giga = {};
-    player.pokedex[baseName].giga[pickedName] = true;
-  }
+  // Note: We don't update Pokedex here anymore, only on Catch/Trade receive
   
   const newMon = {
     name: pickedName,
@@ -1677,24 +1923,7 @@ function updateUI(lastRoll) {
   cardName.innerText = lastRoll.name;
   cardRarity.innerText = lastRoll.shiny ? `✨ Shiny ${lastRoll.tier.name} ✨` : lastRoll.tier.name;
   
-  let spriteUrl = "";
-  const dexId = genAllOrder.indexOf(lastRoll.base) + 1;
-
-  if (lastRoll.giga && gigaSpriteIdMap[lastRoll.name]) {
-      const gigaId = gigaSpriteIdMap[lastRoll.name];
-      spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${gigaId}.png`;
-  } else if (lastRoll.mega && megaSpriteIdMap[lastRoll.name]) {
-      const megaId = megaSpriteIdMap[lastRoll.name];
-      spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${megaId}.png`;
-  } else if (dexId > 0) {
-      spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${dexId}.png`;
-  }
-  
-  // Manual check for Zacian/Zamazenta base forms if ID fails
-  if(!spriteUrl && (lastRoll.base === "Zacian" || lastRoll.base === "Zamazenta")) {
-        const manualId = lastRoll.base === "Zacian" ? 888 : 889;
-        spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${manualId}.png`;
-  }
+  let spriteUrl = getSpriteUrl(lastRoll);
 
   if (spriteUrl) {
     cardSprite.src = spriteUrl;
@@ -1708,11 +1937,11 @@ function updateUI(lastRoll) {
   cardCatchBtn.disabled = false;
   cardCatchBtn.style.background = "#27ae60";
   
-  // Update click handler to work for current roll
-  // Must remove old handlers first to prevent multiple clicks
-  // Easiest is to set onclick property directly
   cardCatchBtn.onclick = function() {
-      addToBag(lastRoll, cardCatchBtn);
+      if(!lastRoll.caught) {
+          addToBag(lastRoll, cardCatchBtn);
+          lastRoll.caught = true; // prevent double catch
+      }
   };
 
   updateStats();
@@ -1776,11 +2005,14 @@ function renderLog(batch, bestRoll) {
     catchBtn.className = "catch-btn";
     catchBtn.innerText = "Catch";
     catchBtn.onclick = function() {
-        addToBag(roll, catchBtn);
-        if(roll === bestRoll) {
-             cardCatchBtn.disabled = true;
-             cardCatchBtn.innerText = "Caught!";
-             cardCatchBtn.style.background = "#555";
+        if(!roll.caught) {
+            addToBag(roll, catchBtn);
+            roll.caught = true;
+            if(roll === bestRoll) {
+                 cardCatchBtn.disabled = true;
+                 cardCatchBtn.innerText = "Caught!";
+                 cardCatchBtn.style.background = "#555";
+            }
         }
     };
 
