@@ -631,38 +631,73 @@ input { background: #eee; color: #333; }
 <script>
 // --- FIREBASE SETUP ---
 // Using Global Variables provided by the environment
-const firebaseConfig = JSON.parse(__firebase_config);
-const app = firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+// We use a safe initialization pattern to handle potential missing configs or network issues
+let app, auth, db;
+let currentUserUID = null;
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-let currentUserUID = null;
+function initGameSystem() {
+    const start = document.getElementById("startBtn");
+    const loginStatus = document.querySelector("#login p");
 
-// Init Auth
-async function initAuth() {
-    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-        await auth.signInWithCustomToken(__initial_auth_token);
-    } else {
-        await auth.signInAnonymously();
+    try {
+        // 1. Check if Firebase config exists
+        const configStr = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
+        
+        if (configStr) {
+            const firebaseConfig = JSON.parse(configStr);
+            app = firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
+            db = firebase.firestore();
+
+            // 2. Setup Auth Listener
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    currentUserUID = user.uid;
+                    console.log("Logged in as:", currentUserUID);
+                    if(start) {
+                        start.disabled = false;
+                        start.innerText = "Start Adventure";
+                    }
+                    if(loginStatus) loginStatus.innerText = "Connected to Global Network";
+                }
+            });
+
+            // 3. Trigger Login
+            performLogin();
+        } else {
+            throw new Error("No Firebase Config");
+        }
+    } catch (e) {
+        console.warn("Firebase Initialization Failed (Offline Mode):", e);
+        if(loginStatus) loginStatus.innerText = "Offline Mode (Local Save Only)";
+        if(start) {
+            start.disabled = false;
+            start.innerText = "Start Offline";
+        }
     }
 }
 
-initAuth().then(() => {
-    console.log("Firebase Auth Initialized");
-    auth.onAuthStateChanged((user) => {
-        if (user) {
-            currentUserUID = user.uid;
-            console.log("Logged in as:", currentUserUID);
-            // Enable start button once auth is ready
-            const start = document.getElementById("startBtn");
-            if(start) {
-                start.disabled = false;
-                start.innerText = "Start Adventure";
-            }
+async function performLogin() {
+    try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+            await auth.signInWithCustomToken(__initial_auth_token);
+        } else {
+            await auth.signInAnonymously();
         }
-    });
-}).catch(e => console.error("Auth Failed:", e));
+    } catch (e) {
+        console.error("Auth Failed:", e);
+        // Fallback to allowing game start without network
+        const start = document.getElementById("startBtn");
+        if(start) {
+            start.disabled = false;
+            start.innerText = "Start Offline";
+        }
+    }
+}
+
+// Start Init
+initGameSystem();
 
 
 // --- GAME CONFIG & LOGIC (Merged) ---
@@ -1189,7 +1224,7 @@ let currentGTSTab = 'browse';
 
 function toggleGTS(show) {
     if(show) {
-        if(!currentUserUID) { notify("Error: No network connection."); return; }
+        if(!db || !currentUserUID) { notify("Error: No network connection."); return; }
         gtsModal.style.display = "flex";
         refreshGTS();
     } else {
@@ -1213,7 +1248,7 @@ function switchGTSTab(tab) {
 
 // 1. LISTING AN ITEM
 function openGTSListing(index) {
-    if(!currentUserUID) return notify("Connecting to server...");
+    if(!db || !currentUserUID) return notify("Connecting to server...");
     const mon = player.bag[index];
     const priceStr = prompt(`Set price for ${mon.name}:`, "500");
     if(!priceStr) return;
@@ -1252,6 +1287,11 @@ function refreshGTS() {
     if(currentGTSTab !== 'browse') return;
     gtsGrid.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">Loading market data...</div>';
     
+    if (!db) {
+         gtsGrid.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">Offline Mode active. GTS unavailable.</div>';
+         return;
+    }
+
     // Fetch all listings (Rule 2: No complex queries, filter locally)
     db.collection('artifacts').doc(appId).collection('public').doc('data').collection('gts_listings').get().then(snapshot => {
         gtsGrid.innerHTML = "";
@@ -1286,6 +1326,7 @@ function refreshGTS() {
 
 // 3. BUYING ITEM
 function buyGTSItem(docId, price, name, sellerId) {
+    if(!db) return notify("Offline mode.");
     if(player.coins < price) return notify("Not enough coins!");
     if(player.bag.length >= player.maxBag) return notify("Bag is full!");
 
@@ -1329,6 +1370,11 @@ function buyGTSItem(docId, price, name, sellerId) {
 function renderEarnings() {
     gtsGrid.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">Checking earnings...</div>';
     
+    if(!db) {
+        gtsGrid.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">Offline Mode.</div>';
+        return;
+    }
+
     db.collection('artifacts').doc(appId).collection('public').doc('data').collection('gts_earnings').get().then(snapshot => {
         gtsGrid.innerHTML = "";
         const earnings = [];
@@ -1367,6 +1413,7 @@ function renderEarnings() {
 }
 
 function claimEarnings(docId, amount) {
+    if(!db) return;
     player.coins += amount;
     updateStats();
     save();
@@ -1378,7 +1425,7 @@ function claimEarnings(docId, amount) {
 }
 
 function checkGTSEarnings() {
-    if(!currentUserUID) return;
+    if(!db || !currentUserUID) return;
     db.collection('artifacts').doc(appId).collection('public').doc('data').collection('gts_earnings').get().then(snapshot => {
         let count = 0;
         snapshot.forEach(doc => {
