@@ -605,7 +605,7 @@ input { background: #eee; color: #333; }
         <h2>
             <span>Global Trade Station</span>
             <span style="font-size: 14px; color: #aaa;">
-                Status: <span id="gtsStatus" style="color:#2ecc71">Online</span>
+                Status: <span id="gtsStatus" style="color:#2ecc71">Connecting...</span>
             </span>
         </h2>
         <button class="close-btn" style="position: absolute; top: 15px; right: 15px;" onclick="toggleGTS(false)">X</button>
@@ -630,8 +630,7 @@ input { background: #eee; color: #333; }
 
 <script>
 // --- FIREBASE SETUP ---
-// Using Global Variables provided by the environment
-// We use a safe initialization pattern to handle potential missing configs or network issues
+// STRICT ONLINE MODE - Debugging Connection Issues
 let app, auth, db;
 let currentUserUID = null;
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -640,74 +639,95 @@ function initGameSystem() {
     const start = document.getElementById("startBtn");
     const loginStatus = document.querySelector("#login p");
 
+    // 1. Reset UI
+    loginStatus.innerHTML = "Initializing Network...<br><span style='font-size:10px; opacity:0.7'>Checking Environment...</span>";
+    if(start) {
+        start.disabled = true;
+        start.innerText = "Waiting for Connection...";
+        start.style.background = "#555";
+    }
+
     try {
-        // 1. Check if Firebase config exists
-        const configStr = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
-        
-        if (configStr) {
-            const firebaseConfig = JSON.parse(configStr);
-            app = firebase.initializeApp(firebaseConfig);
-            auth = firebase.auth();
-            db = firebase.firestore();
-
-            // 2. Setup Auth Listener
-            auth.onAuthStateChanged((user) => {
-                if (user) {
-                    currentUserUID = user.uid;
-                    console.log("Logged in as:", currentUserUID);
-                    if(start) {
-                        start.disabled = false;
-                        start.innerText = "Start Adventure";
-                    }
-                    if(loginStatus) loginStatus.innerText = "Connected to Global Network";
-                }
-            });
-
-            // 3. Trigger Login
-            performLogin();
-        } else {
-            throw new Error("No Firebase Config");
+        // 2. SDK Check
+        if (typeof firebase === 'undefined') {
+            throw new Error("Firebase SDK failed to load from CDN.");
         }
+
+        // 3. Config Check
+        let firebaseConfig;
+        if (typeof __firebase_config !== 'undefined') {
+             if (typeof __firebase_config === 'string') {
+                 try {
+                    firebaseConfig = JSON.parse(__firebase_config);
+                 } catch(e) {
+                     console.warn("Config parse warning, using raw:", e);
+                     firebaseConfig = __firebase_config; 
+                 }
+             } else {
+                 firebaseConfig = __firebase_config;
+             }
+        } else {
+            throw new Error("System Configuration Missing (__firebase_config is undefined).");
+        }
+        
+        // 4. Initialize Firebase
+        if (!firebase.apps.length) {
+            app = firebase.initializeApp(firebaseConfig);
+        } else {
+            app = firebase.app();
+        }
+        auth = firebase.auth();
+        db = firebase.firestore();
+
+        loginStatus.innerHTML = "Network Initialized.<br><span style='font-size:10px; opacity:0.7'>Authenticating...</span>";
+
+        // 5. Setup Auth Listener
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUserUID = user.uid;
+                console.log("Logged in as:", currentUserUID);
+                if(start) {
+                    start.disabled = false;
+                    start.innerText = "Start Adventure (Online)";
+                    start.style.background = "#2ecc71";
+                }
+                if(loginStatus) loginStatus.innerHTML = "<span style='color:#2ecc71'>✅ Connected to Global Network</span>";
+            } else {
+                // If we aren't logged in yet, performLogin will handle it
+                console.log("Auth state changed: No user yet.");
+            }
+        });
+
+        // 6. Trigger Login
+        performLogin(loginStatus);
+
     } catch (e) {
-        console.warn("Firebase Initialization Failed (Offline Mode):", e);
-        if(loginStatus) loginStatus.innerText = "Offline Mode (Local Save Only)";
+        console.error("Critical Connection Error:", e);
+        loginStatus.innerHTML = `<span style="color:#ff4757; font-weight:bold;">CONNECTION FAILED</span><br><span style="font-size:11px; color:#ff6b81">${e.message}</span>`;
         if(start) {
-            start.disabled = false;
-            start.innerText = "Start Offline";
+            start.innerText = "Connection Failed";
+            start.disabled = true;
         }
     }
 }
 
-async function performLogin() {
+async function performLogin(statusEl) {
     try {
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+            console.log("Using Custom Token...");
             await auth.signInWithCustomToken(__initial_auth_token);
         } else {
+            console.log("Using Anonymous Auth...");
             await auth.signInAnonymously();
         }
     } catch (e) {
-        console.error("Auth Failed:", e);
-        // Fallback to allowing game start without network
-        const start = document.getElementById("startBtn");
-        if(start) {
-            start.disabled = false;
-            start.innerText = "Start Offline";
-        }
+        console.error("Auth Execution Failed:", e);
+        statusEl.innerHTML = `<span style="color:#ff4757">Authentication Failed:</span> <span style="font-size:11px">${e.message}</span>`;
     }
 }
 
-// Retry init if config is missing initially
-function attemptInit(retries = 5) {
-    if (typeof __firebase_config !== 'undefined') {
-        initGameSystem();
-    } else if (retries > 0) {
-        console.log("Config not found, retrying...");
-        setTimeout(() => attemptInit(retries - 1), 500);
-    } else {
-        initGameSystem(); // Run anyway to trigger offline mode handling
-    }
-}
-attemptInit();
+// Start immediately
+initGameSystem();
 
 
 // --- GAME CONFIG & LOGIC (Merged) ---
@@ -1676,7 +1696,11 @@ let currentGTSTab = 'browse';
 
 function toggleGTS(show) {
     if(show) {
-        // Allow modal to open even if offline so users can see status
+        // Strict check: Must be connected
+        if(!db || !currentUserUID) {
+            alert("Cannot connect to Global Trade Station.\nPlease check your network connection and refresh.");
+            return;
+        }
         gtsModal.style.display = "flex";
         refreshGTS();
     } else {
@@ -1700,7 +1724,7 @@ function switchGTSTab(tab) {
 
 // 1. LISTING AN ITEM
 function openGTSListing(index) {
-    if(!db || !currentUserUID) return alert("Offline Mode: Cannot list items on GTS without network connection.");
+    if(!db || !currentUserUID) return alert("Network Error: Not connected to server.");
     
     const mon = player.bag[index];
     const priceStr = prompt(`Set price for ${mon.name}:`, "500");
@@ -1730,7 +1754,7 @@ function openGTSListing(index) {
             // Refund on fail
             player.bag.push(mon);
             save();
-            alert("Network Error: Listing failed. Item returned.");
+            alert(`Listing Failed: ${err.message}`);
         });
     }
 }
@@ -1740,19 +1764,9 @@ function refreshGTS() {
     if(currentGTSTab !== 'browse') return;
     gtsGrid.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">Loading market data...</div>';
     
-    // Status Check: Config missing or not logged in
-    let offlineReason = "Connection Error";
-    if (!db) offlineReason = "Configuration Missing";
-    else if (!currentUserUID) offlineReason = "Not Logged In";
-
     if (!db || !currentUserUID) {
-         gtsGrid.innerHTML = `
-            <div style="text-align:center; padding:20px; color:#aaa;">
-                ⚠️ <b>Offline Mode</b><br>
-                Reason: ${offlineReason}<br><br>
-                <button onclick="attemptInit(1)" style="font-size:12px; background:#e67e22;">Retry Connection</button>
-            </div>`;
-         document.getElementById('gtsStatus').innerText = "Offline";
+         gtsGrid.innerHTML = '<div style="text-align:center; padding:20px; color:#e74c3c;">Disconnected from Server.</div>';
+         document.getElementById('gtsStatus').innerText = "Disconnected";
          document.getElementById('gtsStatus').style.color = "#e74c3c";
          return;
     }
@@ -1766,7 +1780,7 @@ function refreshGTS() {
         const listings = [];
         snapshot.forEach(doc => listings.push({ id: doc.id, ...doc.data() }));
         
-        // Filter out own items and sort by time
+        // Filter out own items
         const validListings = listings.filter(l => l.sellerId !== currentUserUID);
         
         if(validListings.length === 0) {
@@ -1790,13 +1804,14 @@ function refreshGTS() {
             gtsGrid.appendChild(card);
         });
     }).catch(err => {
-        gtsGrid.innerHTML = `<div style="text-align:center; padding:20px; color:#e74c3c;">Error loading market: ${err.message}</div>`;
+        console.error("GTS Fetch Error:", err);
+        gtsGrid.innerHTML = `<div style="text-align:center; padding:20px; color:#e74c3c;">Error loading market:<br>${err.message}</div>`;
     });
 }
 
 // 3. BUYING ITEM
 function buyGTSItem(docId, price, name, sellerId) {
-    if(!db) return notify("Offline mode.");
+    if(!db) return notify("Network disconnected.");
     if(player.coins < price) return notify("Not enough coins!");
     if(player.bag.length >= player.maxBag) return notify("Bag is full!");
 
@@ -1833,6 +1848,8 @@ function buyGTSItem(docId, price, name, sellerId) {
         });
         
         refreshGTS();
+    }).catch(err => {
+        alert("Transaction Failed: " + err.message);
     });
 }
 
@@ -1841,7 +1858,7 @@ function renderEarnings() {
     gtsGrid.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">Checking earnings...</div>';
     
     if(!db) {
-        gtsGrid.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">Offline Mode.</div>';
+        gtsGrid.innerHTML = '<div style="text-align:center; padding:20px; color:#e74c3c;">Disconnected.</div>';
         return;
     }
 
@@ -1879,6 +1896,8 @@ function renderEarnings() {
             `;
             gtsGrid.appendChild(div);
         });
+    }).catch(err => {
+        gtsGrid.innerHTML = `<div style="text-align:center; padding:20px; color:#e74c3c;">Error checking earnings:<br>${err.message}</div>`;
     });
 }
 
