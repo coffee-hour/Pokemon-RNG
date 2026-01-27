@@ -1666,7 +1666,7 @@ let currentGTSTab = 'browse';
 
 function toggleGTS(show) {
     if(show) {
-        if(!db || !currentUserUID) { notify("Error: No network connection."); return; }
+        // Allow modal to open even if offline so users can see status
         gtsModal.style.display = "flex";
         refreshGTS();
     } else {
@@ -1690,7 +1690,8 @@ function switchGTSTab(tab) {
 
 // 1. LISTING AN ITEM
 function openGTSListing(index) {
-    if(!db || !currentUserUID) return notify("Connecting to server...");
+    if(!db || !currentUserUID) return alert("Offline Mode: Cannot list items on GTS without network connection.");
+    
     const mon = player.bag[index];
     const priceStr = prompt(`Set price for ${mon.name}:`, "500");
     if(!priceStr) return;
@@ -1730,7 +1731,14 @@ function refreshGTS() {
     gtsGrid.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">Loading market data...</div>';
     
     if (!db) {
-         gtsGrid.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">Offline Mode active. GTS unavailable.</div>';
+         gtsGrid.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">⚠️ <b>Offline Mode</b><br>GTS is unavailable without a network connection.</div>';
+         document.getElementById('gtsStatus').innerText = "Offline";
+         document.getElementById('gtsStatus').style.color = "#e74c3c";
+         return;
+    }
+
+    if (!currentUserUID) {
+         gtsGrid.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">⌛ <b>Connecting...</b><br>Waiting for network login.</div>';
          return;
     }
 
