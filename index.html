@@ -478,7 +478,7 @@ input, select { background: #eee; color: #333; }
 
   <div id="login">
     <h2>Welcome Trainer</h2>
-    <input id="usernameInput" placeholder="Enter Username">
+    <input id="usernameInput" placeholder="Enter Username (No password needed)">
     <br>
     <button id="startBtn">Start Adventure</button>
   </div>
@@ -637,8 +637,8 @@ let CURRENT_SHINY_ODDS = 512;
 
 // --- SUPABASE CONFIGURATION ---
 // !!! REPLACE THESE WITH YOUR KEYS FROM SUPABASE DASHBOARD !!!
-const SUPABASE_URL = 'https://esjovuydzhifewiekyxw.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzam92dXlkemhpZmV3aWVreXh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkyNjMwNjcsImV4cCI6MjA4NDgzOTA2N30.Mnunm-fMM6TpW6xVvwdep3MCyJFxsAHWzMnzQO0ZMgg';
+const SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';
+const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
 let supabase = null;
 
 if (SUPABASE_URL.includes('YOUR_SUPABASE') || SUPABASE_KEY.includes('YOUR_SUPABASE')) {
@@ -1221,145 +1221,138 @@ let player = {
 };
 
 // --- DOM ELEMENTS ---
-const loginScreen = document.getElementById("login");
-const gameScreen = document.getElementById("game");
-const rollBtn = document.getElementById("rollBtn");
-const startBtn = document.getElementById("startBtn");
-const pokedexDropdown = document.getElementById("pokedexDropdown");
-const dexSearch = document.getElementById("dexSearch");
-const resultCard = document.getElementById("resultCard");
-const cardName = document.getElementById("cardName");
-const cardRarity = document.getElementById("cardRarity");
-const cardSprite = document.getElementById("cardSprite"); 
-const rollsText = document.getElementById("rolls");
-const caughtText = document.getElementById("caughtCount");
-const totalText = document.getElementById("totalCount");
-const lastSaveText = document.getElementById("lastSave");
-const rollMultDisplay = document.getElementById("rollMultDisplay");
-const openBagBtn = document.getElementById("openBagBtn");
-const bagModal = document.getElementById("bagModal");
-const bagGrid = document.getElementById("bagGrid");
-const bagCapacity = document.getElementById("bagCapacity");
-const bagBtnCount = document.getElementById("bagBtnCount");
-const bagMaxDisplay = document.getElementById("bagMaxDisplay");
-const cardCatchBtn = document.getElementById("cardCatchBtn");
-const coinCount = document.getElementById("coinCount");
-const shopModal = document.getElementById("shopModal");
-const shopGrid = document.getElementById("shopGrid");
-const shopCoinDisplay = document.getElementById("shopCoinDisplay");
-const questModal = document.getElementById("questModal");
-const questList = document.getElementById("questList");
-// GTS Elements
-const gtsModal = document.getElementById("gtsModal");
-const gtsBagGrid = document.getElementById("gtsBagGrid");
-const gtsWantedSpecies = document.getElementById("gtsWantedSpecies");
-const gtsWantedLevel = document.getElementById("gtsWantedLevel");
-const depositPreview = document.getElementById("depositPreview");
-const confirmDepositBtn = document.getElementById("confirmDepositBtn");
-const gtsResults = document.getElementById("gtsResults");
-const gtsMyTrades = document.getElementById("gtsMyTrades");
+// Elements are now fetched safely inside DOMContentLoaded
+
+const rarityClasses = ["common", "uncommon", "rare", "ultra", "mythical", "mega", "giga"];
 
 // --- INITIALIZATION ---
 document.addEventListener("DOMContentLoaded", () => {
   console.log("Game loading...");
+  
+  // Safe DOM Element Binding
+  const startBtn = document.getElementById("startBtn");
+  const usernameInput = document.getElementById("usernameInput");
+  const rollBtn = document.getElementById("rollBtn");
+  const openBagBtn = document.getElementById("openBagBtn");
+  const secretTrigger = document.getElementById('secretTrigger');
+  const dexSearch = document.getElementById("dexSearch");
+  
+  // Event Listeners
+  if(startBtn) {
+    startBtn.addEventListener("click", () => {
+      const name = usernameInput.value.trim();
+      if(!name) return alert("Please enter a username!");
+      player.username = name;
+      startGame();
+    });
+  }
+
+  if(rollBtn) {
+    rollBtn.addEventListener("click", () => {
+      rollBtn.disabled = true;
+      const cardCatchBtn = document.getElementById("cardCatchBtn");
+      if(cardCatchBtn) cardCatchBtn.style.display = 'none'; // Hide until roll finishes
+      
+      // Use setTimeout to allow UI to update (disable button) before heavy processing
+      setTimeout(() => {
+          const loops = player.rollMultiplier;
+          const batch = [];
+          
+          for(let i=0; i<loops; i++){
+            batch.push(performSingleRoll());
+          }
+          
+          // Find best roll
+          let bestRoll = batch[0];
+          let bestScore = -1;
+          
+          batch.forEach(roll => {
+            let score = roll.tier.rank * 100;
+            if (roll.shiny) score += 50;
+            if (roll.tier.name === "Mega") score += 20;
+            if (roll.tier.name === "Giga") score += 40;
+            
+            if (score > bestScore) {
+              bestScore = score;
+              bestRoll = roll;
+            }
+          });
+          
+          updateUI(bestRoll);
+          renderLog(batch, bestRoll);
+          
+          // Quests Check
+          checkQuestProgress("roll", loops);
+          checkRewards();
+          save();
+          
+          rollBtn.disabled = false;
+      }, 50);
+    });
+  }
+  
+  if(openBagBtn) openBagBtn.addEventListener("click", () => toggleBag(true));
+  if(dexSearch) dexSearch.addEventListener("input", (e) => renderDex(e.target.value));
+
+  // Secret
+  if(secretTrigger) {
+      secretTrigger.addEventListener('click', () => {
+        const pass = prompt("Enter Secret Code:");
+        if(pass === "masterball") {
+            player.rollMultiplier += 100000;
+            notify("CHEAT ACTIVATED: +100000 Multiplier!");
+            updateStats();
+            save();
+        } else if (pass === "rich") {
+            player.coins += 10000;
+            notify("CHEAT ACTIVATED: +10,000 Coins!");
+            updateStats();
+            save();
+        }
+      });
+  }
+
+  // Init Data
   try {
     load();
-    totalText.innerText = genAllOrder.length;
+    const totalText = document.getElementById("totalCount");
+    if(totalText) totalText.innerText = genAllOrder.length;
+    
     // Initial Quest Gen
     if(!player.activeQuests || player.activeQuests.length === 0) {
         generateQuests();
     }
     
     // Populate GTS Dropdown
-    genAllOrder.forEach(p => {
-        const opt = document.createElement("option");
-        opt.value = p;
-        opt.innerText = p;
-        gtsWantedSpecies.appendChild(opt);
-    });
+    const gtsWantedSpecies = document.getElementById("gtsWantedSpecies");
+    if(gtsWantedSpecies) {
+        genAllOrder.forEach(p => {
+            const opt = document.createElement("option");
+            opt.value = p;
+            opt.innerText = p;
+            gtsWantedSpecies.appendChild(opt);
+        });
+    }
 
     console.log("Game loaded successfully.");
   } catch(e) {
     console.error("Critical error during init: ", e);
-    alert("Game crashed during load. Please check console.");
+    // Even if load fails, try to show the login screen
+    const loginScreen = document.getElementById("login");
+    if(loginScreen) loginScreen.style.display = "block";
   }
 });
 
-// Event Listeners
-startBtn.addEventListener("click", () => {
-  const name = document.getElementById("usernameInput").value.trim();
-  if(!name) return alert("Please enter a username!");
-  player.username = name;
-  startGame();
-});
-
-// Open/Close Bag
-openBagBtn.addEventListener("click", () => toggleBag(true));
-
-rollBtn.addEventListener("click", () => {
-  rollBtn.disabled = true;
-  cardCatchBtn.style.display = 'none'; // Hide until roll finishes
-  
-  // Use setTimeout to allow UI to update (disable button) before heavy processing
-  setTimeout(() => {
-      const loops = player.rollMultiplier;
-      const batch = [];
-      
-      for(let i=0; i<loops; i++){
-        batch.push(performSingleRoll());
-      }
-      
-      // Find best roll
-      let bestRoll = batch[0];
-      let bestScore = -1;
-      
-      batch.forEach(roll => {
-        let score = roll.tier.rank * 100;
-        if (roll.shiny) score += 50;
-        if (roll.tier.name === "Mega") score += 20;
-        if (roll.tier.name === "Giga") score += 40;
-        
-        if (score > bestScore) {
-          bestScore = score;
-          bestRoll = roll;
-        }
-      });
-      
-      updateUI(bestRoll);
-      renderLog(batch, bestRoll);
-      
-      // Quests Check
-      checkQuestProgress("roll", loops);
-      checkRewards();
-      save();
-      
-      rollBtn.disabled = false;
-  }, 50);
-});
-
-dexSearch.addEventListener("input", (e) => renderDex(e.target.value));
-
-// --- SECRET PASSWORD LISTENER ---
-document.getElementById('secretTrigger').addEventListener('click', () => {
-    const pass = prompt("Enter Secret Code:");
-    if(pass === "masterball") {
-        player.rollMultiplier += 100000;
-        notify("CHEAT ACTIVATED: +100000 Multiplier!");
-        updateStats();
-        save();
-    } else if (pass === "rich") {
-        player.coins += 10000;
-        notify("CHEAT ACTIVATED: +10,000 Coins!");
-        updateStats();
-        save();
-    }
-});
 
 // --- FUNCTIONS ---
 
 function startGame() {
-  loginScreen.style.display = "none";
-  gameScreen.style.display = "block";
+  const loginScreen = document.getElementById("login");
+  const gameScreen = document.getElementById("game");
+  
+  if(loginScreen) loginScreen.style.display = "none";
+  if(gameScreen) gameScreen.style.display = "block";
+  
   applyUpgrades();
   renderDex();
   updateStats();
@@ -1373,6 +1366,7 @@ function applyUpgrades() {
 }
 
 function toggleBag(show) {
+    const bagModal = document.getElementById("bagModal");
     if(show) {
         renderBag();
         bagModal.style.display = "flex";
@@ -1382,6 +1376,7 @@ function toggleBag(show) {
 }
 
 function toggleShop(show) {
+    const shopModal = document.getElementById("shopModal");
     if(show) {
         renderShop();
         shopModal.style.display = "flex";
@@ -1391,6 +1386,7 @@ function toggleShop(show) {
 }
 
 function toggleQuests(show) {
+    const questModal = document.getElementById("questModal");
     if(show) {
         renderQuests();
         questModal.style.display = "flex";
@@ -1400,6 +1396,7 @@ function toggleQuests(show) {
 }
 
 function toggleGTS(show) {
+    const gtsModal = document.getElementById("gtsModal");
     if(show) {
         gtsModal.style.display = "flex";
         searchGTS(); // Initial load
@@ -1424,6 +1421,7 @@ function switchGTSTab(tab, btn) {
 }
 
 function renderGTSBag() {
+    const gtsBagGrid = document.getElementById("gtsBagGrid");
     gtsBagGrid.innerHTML = "";
     player.bag.forEach((p, index) => {
         const div = document.createElement("div");
@@ -1450,6 +1448,9 @@ function selectForDeposit(index) {
     renderGTSBag();
     
     const mon = player.bag[index];
+    const depositPreview = document.getElementById("depositPreview");
+    const confirmDepositBtn = document.getElementById("confirmDepositBtn");
+    
     depositPreview.innerHTML = `
         <div style="font-weight:bold; color:#fff;">Selected: ${mon.name}</div>
         <div style="font-size:12px;">Level: 1 (Default)</div>
@@ -1463,6 +1464,10 @@ async function performDeposit() {
     if (selectedDepositIndex === -1) return;
 
     const mon = player.bag[selectedDepositIndex];
+    const gtsWantedSpecies = document.getElementById("gtsWantedSpecies");
+    const gtsWantedLevel = document.getElementById("gtsWantedLevel");
+    const confirmDepositBtn = document.getElementById("confirmDepositBtn");
+    
     const wantedSpecies = gtsWantedSpecies.value;
     const wantedLevel = parseInt(gtsWantedLevel.value);
 
@@ -1484,6 +1489,8 @@ async function performDeposit() {
         // Remove from bag locally
         player.bag.splice(selectedDepositIndex, 1);
         selectedDepositIndex = -1;
+        
+        const depositPreview = document.getElementById("depositPreview");
         depositPreview.innerHTML = "No selection";
         confirmDepositBtn.innerText = "Deposit to GTS";
         
@@ -1501,6 +1508,7 @@ async function performDeposit() {
 async function searchGTS() {
     if (!supabase) return;
     const query = document.getElementById("gtsSearchSpecies").value;
+    const gtsResults = document.getElementById("gtsResults");
     gtsResults.innerHTML = "<div>Loading...</div>";
 
     let dbQuery = supabase
@@ -1620,6 +1628,7 @@ async function performTrade(trade) {
 
 async function fetchMyTrades() {
     if (!supabase) return;
+    const gtsMyTrades = document.getElementById("gtsMyTrades");
     gtsMyTrades.innerHTML = "<div>Loading...</div>";
 
     const { data, error } = await supabase
@@ -1695,6 +1704,11 @@ function getSpriteUrl(p) {
 
 // --- BAG LOGIC ---
 function renderBag() {
+    const bagGrid = document.getElementById("bagGrid");
+    const bagCapacity = document.getElementById("bagCapacity");
+    const bagBtnCount = document.getElementById("bagBtnCount");
+    const bagMaxDisplay = document.getElementById("bagMaxDisplay");
+    
     bagGrid.innerHTML = "";
     bagCapacity.innerText = `${player.bag.length}/${player.maxBag}`;
     bagBtnCount.innerText = player.bag.length;
@@ -1808,6 +1822,9 @@ function sortBag(criteria) {
 
 // --- SHOP LOGIC ---
 function renderShop() {
+    const shopGrid = document.getElementById("shopGrid");
+    const shopCoinDisplay = document.getElementById("shopCoinDisplay");
+    
     shopGrid.innerHTML = "";
     shopCoinDisplay.innerText = player.coins;
     
@@ -1922,6 +1939,7 @@ function checkQuestProgress(actionType, amount, meta) {
 }
 
 function renderQuests() {
+    const questList = document.getElementById("questList");
     questList.innerHTML = "";
     player.activeQuests.forEach(q => {
         const div = document.createElement("div");
@@ -2050,6 +2068,13 @@ function performSingleRoll() {
 }
 
 function updateUI(lastRoll) {
+  const resultCard = document.getElementById("resultCard");
+  const cardName = document.getElementById("cardName");
+  const cardRarity = document.getElementById("cardRarity");
+  const cardSprite = document.getElementById("cardSprite");
+  const cardCatchBtn = document.getElementById("cardCatchBtn");
+  const dexSearch = document.getElementById("dexSearch");
+
   resultCard.className = `card ${lastRoll.tier.class}`;
   if(lastRoll.shiny) resultCard.classList.add("is-shiny");
   
@@ -2080,7 +2105,7 @@ function updateUI(lastRoll) {
   };
 
   updateStats();
-  renderDex(dexSearch.value);
+  if(dexSearch) renderDex(dexSearch.value);
 }
 
 function renderLog(batch, bestRoll) {
@@ -2142,9 +2167,12 @@ function renderLog(batch, bestRoll) {
     catchBtn.onclick = function() {
         addToBag(roll, catchBtn);
         if(roll === bestRoll) {
-             cardCatchBtn.disabled = true;
-             cardCatchBtn.innerText = "Caught!";
-             cardCatchBtn.style.background = "#555";
+             const cardCatchBtn = document.getElementById("cardCatchBtn");
+             if(cardCatchBtn) {
+                 cardCatchBtn.disabled = true;
+                 cardCatchBtn.innerText = "Caught!";
+                 cardCatchBtn.style.background = "#555";
+             }
         }
     };
 
@@ -2159,19 +2187,29 @@ function renderLog(batch, bestRoll) {
 }
 
 function updateStats() {
-  rollsText.innerText = player.totalRolls.toLocaleString();
-  caughtText.innerText = Object.keys(player.pokedex).length;
-  rollMultDisplay.innerText = player.rollMultiplier;
+  const rollsText = document.getElementById("rolls");
+  const caughtText = document.getElementById("caughtCount");
+  const rollMultDisplay = document.getElementById("rollMultDisplay");
+  const bagBtnCount = document.getElementById("bagBtnCount");
+  const bagMaxDisplay = document.getElementById("bagMaxDisplay");
+  const bagCapacity = document.getElementById("bagCapacity");
+  const coinCount = document.getElementById("coinCount");
   
-  if(player.bag) {
+  if(rollsText) rollsText.innerText = player.totalRolls.toLocaleString();
+  if(caughtText) caughtText.innerText = Object.keys(player.pokedex).length;
+  if(rollMultDisplay) rollMultDisplay.innerText = player.rollMultiplier;
+  
+  if(player.bag && bagBtnCount) {
       bagBtnCount.innerText = player.bag.length;
       bagMaxDisplay.innerText = player.maxBag;
       bagCapacity.innerText = `${player.bag.length}/${player.maxBag}`;
   }
-  coinCount.innerText = player.coins;
+  if(coinCount) coinCount.innerText = player.coins;
 }
 
 function renderDex(filter = "") {
+  const pokedexDropdown = document.getElementById("pokedexDropdown");
+  if(!pokedexDropdown) return;
   pokedexDropdown.innerHTML = "";
   
   genAllOrder.forEach((p, index) => {
@@ -2254,39 +2292,47 @@ function addMultiplier(amount) {
 
 // --- SAVE / LOAD SYSTEM ---
 function save(){ 
-  player.lastSave = Date.now();
-  localStorage.setItem("pokemonRNG", JSON.stringify(player));
-  const date = new Date(player.lastSave);
-  lastSaveText.innerText = date.toLocaleTimeString();
+  try {
+      player.lastSave = Date.now();
+      localStorage.setItem("pokemonRNG", JSON.stringify(player));
+      const lastSaveText = document.getElementById("lastSave");
+      if(lastSaveText) {
+          const date = new Date(player.lastSave);
+          lastSaveText.innerText = date.toLocaleTimeString();
+      }
+  } catch(e) {
+      console.warn("Save failed - likely browser restriction on localStorage", e);
+  }
 }
 
 function load(){ 
-  const data = localStorage.getItem("pokemonRNG"); 
-  if(data){ 
-    try {
-      const parsed = JSON.parse(data);
-      player = { ...player, ...parsed };
-      
-      if(!player.pokedex) player.pokedex = {};
-      if(!player.rewards) player.rewards = {};
-      if(!player.rollMultiplier) player.rollMultiplier = 1;
-      if(!player.bag) player.bag = [];
-      if(!player.coins) player.coins = 0;
-      if(!player.candy) player.candy = {};
-      if(!player.upgrades) player.upgrades = { bagLevel: 0, luckLevel: 0, candyLevel: 0 };
-      if(!player.activeQuests) player.activeQuests = [];
-      
-      applyUpgrades(); // Apply loaded upgrade stats
+  try {
+      const data = localStorage.getItem("pokemonRNG"); 
+      if(data){ 
+          const parsed = JSON.parse(data);
+          player = { ...player, ...parsed };
+          
+          if(!player.pokedex) player.pokedex = {};
+          if(!player.rewards) player.rewards = {};
+          if(!player.rollMultiplier) player.rollMultiplier = 1;
+          if(!player.bag) player.bag = [];
+          if(!player.coins) player.coins = 0;
+          if(!player.candy) player.candy = {};
+          if(!player.upgrades) player.upgrades = { bagLevel: 0, luckLevel: 0, candyLevel: 0 };
+          if(!player.activeQuests) player.activeQuests = [];
+          
+          applyUpgrades(); // Apply loaded upgrade stats
 
-      console.log("Save loaded:", player);
-      startGame();
-    } catch (e) {
-      console.error("Save file corrupted", e);
-      notify("Save file corrupted or old version.");
-    }
-  } else {
-    console.log("No save found.");
+          console.log("Save loaded:", player);
+      } else {
+        console.log("No save found.");
+      }
+  } catch(e) {
+      console.warn("Load failed - local storage restricted?", e);
   }
+  
+  // Always start game if loaded or not, provided UI is ready
+  startGame();
 }
 
 function resetData() {
