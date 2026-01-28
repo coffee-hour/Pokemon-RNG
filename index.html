@@ -605,15 +605,8 @@ window.onerror = function(msg, url, line) {
 };
 
 // --- SUPABASE CONFIGURATION ---
-// TODO: PASTE YOUR KEYS HERE!
 const SUPABASE_URL = 'https://esjovuydzhifewiekyxw.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzam92dXlkemhpZmV3aWVreXh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkyNjMwNjcsImV4cCI6MjA4NDgzOTA2N30.Mnunm-fMM6TpW6xVvwdep3MCyJFxsAHWzMnzQO0ZMgg';
-
-// Check if keys are set
-if (SUPABASE_URL === 'YOUR_SUPABASE_URL') {
-    console.error("SUPABASE KEYS MISSING: Please edit lines 628-629 in the HTML file.");
-    alert("Setup Error: You need to paste your Supabase URL and Key into the code (Lines 628-629) for Login to work!");
-}
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
