@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>Pokemon RNG + GTS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- IMPORT SUPABASE (Fixed Link) -->
+<!-- IMPORT SUPABASE -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -608,7 +608,14 @@ window.onerror = function(msg, url, line) {
 const SUPABASE_URL = 'https://esjovuydzhifewiekyxw.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzam92dXlkemhpZmV3aWVreXh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkyNjMwNjcsImV4cCI6MjA4NDgzOTA2N30.Mnunm-fMM6TpW6xVvwdep3MCyJFxsAHWzMnzQO0ZMgg';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Safety check for library load
+let supabase;
+if (window.supabase) {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log("Supabase Client Initialized");
+} else {
+    alert("Supabase library not loaded. Please disable ad-blockers or check connection.");
+}
 
 // --- CONFIGURATION ---
 const BASE_SHINY_ODDS = 512; 
@@ -741,29 +748,81 @@ document.addEventListener("DOMContentLoaded", async () => {
   totalText.innerText = genAllOrder.length;
   
   // Check Supabase Session
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session) {
-      handleLoginSuccess(session.user);
+  if (supabase) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+          handleLoginSuccess(session.user);
+      }
   }
 });
 
 // AUTH LOGIC
 document.getElementById("loginBtn").addEventListener("click", async () => {
+    const btn = document.getElementById("loginBtn");
     const email = document.getElementById("emailInput").value;
     const pass = document.getElementById("passwordInput").value;
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
     
-    if(error) notify(error.message); // Changed to notify
-    else handleLoginSuccess(data.user);
+    if (!email || !pass) return alert("Please enter both email and password.");
+    
+    btn.innerText = "Logging in...";
+    btn.disabled = true;
+    
+    try {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+        
+        if(error) {
+            alert("Login Failed: " + error.message);
+        } else {
+            handleLoginSuccess(data.user);
+        }
+    } catch(e) {
+        alert("Unexpected Login Error: " + e);
+    } finally {
+        btn.innerText = "Log In";
+        btn.disabled = false;
+    }
 });
 
 document.getElementById("signupBtn").addEventListener("click", async () => {
+    const btn = document.getElementById("signupBtn");
     const email = document.getElementById("emailInput").value;
     const pass = document.getElementById("passwordInput").value;
-    const { data, error } = await supabase.auth.signUp({ email, password: pass });
     
-    if(error) notify(error.message); // Changed to notify
-    else notify("Check email for confirmation link!");
+    console.log("Signup Clicked"); // Debug log
+
+    if (!email || !pass) {
+        alert("Please enter both email and password.");
+        return;
+    }
+    
+    if(!supabase) {
+        alert("Supabase library missing! Please refresh or check connection.");
+        return;
+    }
+    
+    btn.innerText = "Processing...";
+    btn.disabled = true;
+    
+    try {
+        const { data, error } = await supabase.auth.signUp({ 
+            email: email, 
+            password: pass 
+        });
+        
+        if (error) {
+            console.error("Signup Error:", error);
+            alert("Signup Error: " + error.message);
+        } else {
+            console.log("Signup Data:", data);
+            alert("Success! Please check your email inbox (and spam) for the confirmation link before logging in.");
+        }
+    } catch (err) {
+        console.error("Unexpected Error:", err);
+        alert("Unexpected Error: " + err.message);
+    } finally {
+        btn.innerText = "Sign Up";
+        btn.disabled = false;
+    }
 });
 
 async function handleLoginSuccess(user) {
