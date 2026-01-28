@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <title>Pokemon RNG + GTS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- IMPORT SUPABASE -->
-<script src="[https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2](https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2)"></script>
+<!-- IMPORT SUPABASE (Fixed Link) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 /* --- CSS STYLES --- */
@@ -499,7 +499,7 @@ input { background: #eee; color: #333; }
       <div id="resultCard" class="card common">
         <span id="cardName">Roll to Begin</span>
         <!-- Sprite Image Element -->
-        <img id="cardSprite" src="[https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png](https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png)" alt="Pokemon Sprite">
+        <img id="cardSprite" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" alt="Pokemon Sprite">
         <span id="cardRarity" style="font-size:12px; margin-top:5px; opacity:0.7;">Common</span>
       </div>
     </div>
@@ -608,6 +608,12 @@ window.onerror = function(msg, url, line) {
 // TODO: PASTE YOUR KEYS HERE!
 const SUPABASE_URL = 'https://esjovuydzhifewiekyxw.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzam92dXlkemhpZmV3aWVreXh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkyNjMwNjcsImV4cCI6MjA4NDgzOTA2N30.Mnunm-fMM6TpW6xVvwdep3MCyJFxsAHWzMnzQO0ZMgg';
+
+// Check if keys are set
+if (SUPABASE_URL === 'YOUR_SUPABASE_URL') {
+    console.error("SUPABASE KEYS MISSING: Please edit lines 628-629 in the HTML file.");
+    alert("Setup Error: You need to paste your Supabase URL and Key into the code (Lines 628-629) for Login to work!");
+}
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -754,7 +760,7 @@ document.getElementById("loginBtn").addEventListener("click", async () => {
     const pass = document.getElementById("passwordInput").value;
     const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
     
-    if(error) alert(error.message);
+    if(error) notify(error.message); // Changed to notify
     else handleLoginSuccess(data.user);
 });
 
@@ -763,8 +769,8 @@ document.getElementById("signupBtn").addEventListener("click", async () => {
     const pass = document.getElementById("passwordInput").value;
     const { data, error } = await supabase.auth.signUp({ email, password: pass });
     
-    if(error) alert(error.message);
-    else alert("Check email for confirmation link!");
+    if(error) notify(error.message); // Changed to notify
+    else notify("Check email for confirmation link!");
 });
 
 async function handleLoginSuccess(user) {
@@ -902,7 +908,7 @@ function renderBag() {
         const dexId = genAllOrder.indexOf(p.base) + 1;
         // Simple sprite logic for demo (replace with your robust logic)
         let spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${dexId}.png`;
-        if (dexId <= 0) spriteUrl = "[https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png](https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png)";
+        if (dexId <= 0) spriteUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png";
 
         img.src = spriteUrl;
         
@@ -1021,7 +1027,7 @@ async function refreshGTS() {
         
         let html = `
             <div style="display:flex; align-items:center; gap:10px;">
-                <img src="[https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png](https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png)" style="width:30px;">
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" style="width:30px;">
                 <div>
                     <div style="font-weight:bold; ${mon.shiny ? 'color:#f39c12':''}">${mon.name} ${mon.shiny ? '✨':''}</div>
                     <div style="font-size:10px; color:#aaa;">Seller: ${item.seller_name || "Unknown"}</div>
@@ -1170,7 +1176,7 @@ function updateUI(lastRoll) {
   
   const dexId = genAllOrder.indexOf(lastRoll.base) + 1;
   let spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${dexId}.png`;
-  if(dexId <= 0) spriteUrl = "[https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png](https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png)";
+  if(dexId <= 0) spriteUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png";
 
   cardSprite.src = spriteUrl;
   cardSprite.style.display = "block";
