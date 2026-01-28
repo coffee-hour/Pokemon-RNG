@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>Pokemon RNG + GTS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- IMPORT SUPABASE -->
+<!-- Supabase Client -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -146,16 +146,6 @@ h1 { margin-top: 0; text-shadow: 0 0 10px #7b2cbf; }
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
   border: 1px solid #333;
 }
-.auth-input {
-  display: block;
-  width: 100%;
-  margin: 10px 0;
-  padding: 10px;
-  border-radius: 5px;
-  border: none;
-  background: #eee;
-  color: #333;
-}
 
 /* Game Area */
 #game {
@@ -241,11 +231,11 @@ h1 { margin-top: 0; text-shadow: 0 0 10px #7b2cbf; }
 @keyframes shinyBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
 /* Buttons */
-button, input { padding: 12px 20px; margin: 8px; border-radius: 8px; border: none; font-size: 16px; outline: none; }
+button, input, select { padding: 12px 20px; margin: 8px; border-radius: 8px; border: none; font-size: 16px; outline: none; }
 button { background: #ff4757; color: white; cursor: pointer; transition: 0.2s; font-weight: bold; }
 button:hover { background: #ff6b81; transform: translateY(-2px); }
 button:disabled { background: #555; cursor: not-allowed; transform: none; }
-input { background: #eee; color: #333; }
+input, select { background: #eee; color: #333; }
 
 .stats-box {
   background: rgba(0,0,0,0.4);
@@ -367,6 +357,7 @@ input { background: #eee; color: #333; }
   position: relative; border: 2px solid #444;
   cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
+.bag-item.selected { border-color: #f1c40f; box-shadow: 0 0 10px #f1c40f; }
 .bag-item:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.5); }
 .bag-item img { width: 50px; height: 50px; object-fit: contain; }
 .bag-item .name { font-size: 10px; text-align: center; margin-top: 5px; font-weight: bold; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -425,14 +416,20 @@ input { background: #eee; color: #333; }
 .quest-progress { font-size: 12px; background: #444; padding: 2px 6px; border-radius: 4px; margin-left: 10px; }
 .quest-complete { border-color: #27ae60; background: #222; opacity: 0.7; }
 
-/* GTS Styles */
-.gts-list {
-  display: flex; flex-direction: column; gap: 10px; overflow-y: auto;
+/* --- GTS STYLES --- */
+.gts-tabs { display: flex; border-bottom: 1px solid #444; margin-bottom: 15px; }
+.gts-tab { flex: 1; padding: 10px; text-align: center; background: #222; cursor: pointer; border-bottom: 3px solid transparent; transition:0.2s; }
+.gts-tab.active { background: #333; border-bottom-color: #3498db; font-weight: bold; color: #3498db; }
+.gts-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex:1; }
+
+.gts-trade-card {
+  background: #1e272e; padding: 10px; border-radius: 8px; border: 1px solid #444; display: flex; justify-content: space-between; align-items: center;
 }
-.gts-item {
-  background: #2c3e50; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #444;
-}
-.gts-price { color: #f1c40f; font-weight: bold; }
+.gts-side { display: flex; align-items: center; gap: 10px; flex:1; }
+.gts-arrow { color: #aaa; margin: 0 10px; font-weight: bold; font-size: 20px; }
+.gts-info h4 { margin: 0; font-size: 14px; }
+.gts-info span { font-size: 11px; color: #888; }
+.gts-img { width: 40px; height: 40px; }
 
 /* --- SECRET BUTTON STYLE --- */
 #secretTrigger {
@@ -468,7 +465,7 @@ input { background: #eee; color: #333; }
 
   <!-- Right Menu Bar: Quests, Shop, Coins -->
   <div style="position: absolute; top: 10px; right: 10px; z-index: 100; display: flex; gap: 10px; align-items: center;">
-    <button onclick="toggleGTS(true)" class="menu-btn" style="background:#2ecc71;">🌐 GTS</button>
+    <button onclick="toggleGTS(true)" class="menu-btn" style="background:#3498db;">🌐 GTS</button>
     <button onclick="toggleQuests(true)" class="menu-btn" style="background:#2980b9;">📜 Quests</button>
     <button onclick="toggleShop(true)" class="menu-btn" style="background:#f39c12;">🏪 Shop</button>
     <div class="coin-display">
@@ -479,19 +476,11 @@ input { background: #eee; color: #333; }
   <h1>🎲 Pokemon RNG</h1>
   <div id="notificationArea"></div>
 
-  <!-- AUTH / LOGIN -->
   <div id="login">
-    <h2>Supabase Cloud Save</h2>
-    <p style="font-size: 12px; color: #aaa; margin-bottom: 20px;">Log in to save your progress and trade on GTS.</p>
-    
-    <input id="emailInput" class="auth-input" type="email" placeholder="Email Address">
-    <input id="passwordInput" class="auth-input" type="password" placeholder="Password">
+    <h2>Welcome Trainer</h2>
+    <input id="usernameInput" placeholder="Enter Username">
     <br>
-    <div style="display:flex; gap:10px; justify-content: center;">
-        <button id="loginBtn" style="background:#3498db;">Log In</button>
-        <button id="signupBtn" style="background:#2ecc71;">Sign Up</button>
-    </div>
-    <p id="authStatus" style="font-size:12px; margin-top:10px; min-height:15px;"></p>
+    <button id="startBtn">Start Adventure</button>
   </div>
 
   <div id="game" style="display:none;">
@@ -512,7 +501,7 @@ input { background: #eee; color: #333; }
     <div class="stats-box">
       <p>Total Rolls: <span id="rolls">0</span></p>
       <p>Dex Entries: <span id="caughtCount">0</span> / <span id="totalCount">...</span></p>
-      <p style="font-size: 12px; color: #aaa;">Last Cloud Save: <span id="lastSave">Unsaved</span></p>
+      <p style="font-size: 12px; color: #aaa;">Last Save: <span id="lastSave">Not saved yet</span></p>
     </div>
     
     <div id="logContainer">
@@ -521,8 +510,7 @@ input { background: #eee; color: #333; }
     </div>
 
     <br>
-    <button onclick="manualSave()" style="background:#3498db; font-size:12px; padding:8px;">☁️ Force Cloud Save</button>
-    <button onclick="logout()" style="background:#555; font-size:12px; padding:8px;">Log Out</button>
+    <button onclick="resetData()" style="background:#555; font-size:12px; padding:8px;">Reset Data</button>
   </div>
 </div>
 
@@ -546,7 +534,7 @@ input { background: #eee; color: #333; }
       <!-- Items injected here -->
     </div>
     <div style="text-align: center; margin-top: 10px; font-size: 12px; color: #777;">
-        Hover to Release (X) or GTS (🌐). Collect candy to Evolve!
+        Hover to Release (X). Collect candy to Evolve!
     </div>
   </div>
 </div>
@@ -582,17 +570,56 @@ input { background: #eee; color: #333; }
 
 <!-- GTS MODAL -->
 <div id="gtsModal" class="modal-overlay" style="display:none;">
-  <div class="modal-content" style="max-width: 700px; height: 80%;">
+  <div class="modal-content">
     <h2>Global Trade Station</h2>
     <button class="close-btn" style="position: absolute; top: 15px; right: 15px;" onclick="toggleGTS(false)">X</button>
     
-    <div style="display:flex; gap:10px; margin-bottom:10px; border-bottom:1px solid #444; padding-bottom:10px;">
-        <button onclick="refreshGTS()" style="font-size:12px; background:#2980b9;">Refresh Listings</button>
-        <button onclick="toggleBag(true)" style="font-size:12px; background:#27ae60;">Sell Pokemon</button>
+    <div class="gts-tabs">
+        <div class="gts-tab active" onclick="switchGTSTab('seek', this)">Seek Pokemon</div>
+        <div class="gts-tab" onclick="switchGTSTab('deposit', this)">Deposit</div>
+        <div class="gts-tab" onclick="switchGTSTab('status', this)">My Trades</div>
     </div>
 
-    <div id="gtsList" class="gts-list">
-        <div style="text-align:center; padding:20px; color:#aaa;">Loading market data...</div>
+    <!-- SEEK TAB -->
+    <div id="gtsSeek" class="gts-content" style="display:flex; flex-direction:column; height:100%;">
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
+            <input id="gtsSearchSpecies" placeholder="Filter by species (e.g. Pikachu)..." style="flex:1; margin:0;">
+            <button onclick="searchGTS()" style="margin:0; font-size:12px;">Search</button>
+        </div>
+        <div id="gtsResults" class="gts-list">
+            <div style="text-align:center; color:#777; margin-top:20px;">Loading trades...</div>
+        </div>
+    </div>
+
+    <!-- DEPOSIT TAB -->
+    <div id="gtsDeposit" class="gts-content" style="display:none; flex-direction:column; height:100%;">
+        <div style="display:flex; gap:20px; height:100%;">
+            <!-- Left: Select from Bag -->
+            <div style="flex:1; display:flex; flex-direction:column; border-right:1px solid #444; padding-right:10px;">
+                <h4>1. Select Pokemon</h4>
+                <div id="gtsBagGrid" class="bag-grid" style="max-height:300px;"></div>
+            </div>
+            <!-- Right: Setup Trade -->
+            <div style="flex:1; display:flex; flex-direction:column; padding-left:10px;">
+                <h4>2. What do you want?</h4>
+                <div id="depositPreview" style="text-align:center; margin-bottom:10px; font-style:italic; color:#aaa;">No selection</div>
+                
+                <label>Wanted Species:</label>
+                <select id="gtsWantedSpecies" style="margin:0 0 10px 0;">
+                    <!-- Populated by JS -->
+                </select>
+                
+                <label>Min Level:</label>
+                <input type="number" id="gtsWantedLevel" value="1" min="1" max="100" style="margin:0 0 20px 0;">
+                
+                <button id="confirmDepositBtn" onclick="performDeposit()" disabled style="margin:0;">Deposit to GTS</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATUS TAB -->
+    <div id="gtsStatus" class="gts-content" style="display:none; flex-direction:column; height:100%;">
+         <div id="gtsMyTrades" class="gts-list"></div>
     </div>
   </div>
 </div>
@@ -604,25 +631,28 @@ window.onerror = function(msg, url, line) {
   console.error("Game Error: " + msg);
 };
 
-// --- SUPABASE CONFIGURATION ---
-const SUPABASE_URL = 'https://esjovuydzhifewiekyxw.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzam92dXlkemhpZmV3aWVreXh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkyNjMwNjcsImV4cCI6MjA4NDgzOTA2N30.Mnunm-fMM6TpW6xVvwdep3MCyJFxsAHWzMnzQO0ZMgg';
-
-// Safety check for library load
-let supabase;
-if (window.supabase) {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    console.log("Supabase Client Initialized");
-} else {
-    alert("Supabase library not loaded. Please disable ad-blockers or check connection.");
-}
-
 // --- CONFIGURATION ---
 const BASE_SHINY_ODDS = 512; 
 let CURRENT_SHINY_ODDS = 512;
 
-// --- DATA LISTS (Truncated for brevity, assuming standard Gen1-8 lists exist in context) ---
-// (We keep the critical data needed for the game to run)
+// --- SUPABASE CONFIGURATION ---
+// !!! REPLACE THESE WITH YOUR KEYS FROM SUPABASE DASHBOARD !!!
+const SUPABASE_URL = 'https://esjovuydzhifewiekyxw.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzam92dXlkemhpZmV3aWVreXh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkyNjMwNjcsImV4cCI6MjA4NDgzOTA2N30.Mnunm-fMM6TpW6xVvwdep3MCyJFxsAHWzMnzQO0ZMgg';
+let supabase = null;
+
+if (SUPABASE_URL.includes('YOUR_SUPABASE') || SUPABASE_KEY.includes('YOUR_SUPABASE')) {
+    console.warn("Supabase keys not configured. GTS will not work.");
+} else {
+    try {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        console.log("Supabase initialized");
+    } catch (e) {
+        console.error("Supabase init failed:", e);
+    }
+}
+
+// --- EVOLUTION DATA (Partial Implementation for Demo) ---
 const evolutionMap = {
     "Bulbasaur": { into: "Ivysaur", cost: 3 }, "Ivysaur": { into: "Venusaur", cost: 5 },
     "Charmander": { into: "Charmeleon", cost: 3 }, "Charmeleon": { into: "Charizard", cost: 5 },
@@ -664,6 +694,7 @@ const evolutionMap = {
     "Dragonair": { into: "Dragonite", cost: 5 }
 };
 
+// --- SHOP ITEMS ---
 const shopItems = [
     { id: "bagUp", name: "Bag Upgrade", desc: "+10 Bag Slots", cost: 500, type: "upgrade", max: 100000 },
     { id: "luck", name: "Shiny Charm", desc: "Improves Shiny Odds", cost: 2000, type: "passive", max: 100000 },
@@ -671,28 +702,506 @@ const shopItems = [
 ];
 
 const rarityTable = [
-  { name: "Common", class: "common", chance: 60, rank: 1, coinValue: 10, pool: ["Bulbasaur", "Charmander", "Squirtle", "Pikachu", "Pidgey", "Rattata", "Caterpie", "Weedle"] },
-  { name: "Uncommon", class: "uncommon", chance: 20, rank: 2, coinValue: 25, pool: ["Ivysaur", "Charmeleon", "Wartortle", "Pidgeotto", "Raticate", "Metapod", "Kakuna"] },
-  { name: "Rare", class: "rare", chance: 10, rank: 3, coinValue: 100, pool: ["Venusaur", "Charizard", "Blastoise", "Raichu", "Pidgeot", "Butterfree", "Beedrill"] },
-  { name: "Ultra", class: "ultra", chance: 7.5, rank: 4, coinValue: 500, pool: ["Dragonite", "Mewtwo", "Snorlax", "Gengar", "Lapras", "Gyarados"] },
-  { name: "Mythical", class: "mythical", chance: 2.4, rank: 4, coinValue: 2000, pool: ["Mew", "Celebi", "Jirachi", "Deoxys", "Arceus"] },
-  { name: "Mega", class: "mega", chance: 1, rank: 5, coinValue: 3000, pool: ["Mega Charizard X", "Mega Mewtwo Y", "Mega Rayquaza"] },
-  { name: "Giga", class: "giga", chance: 0.1, rank: 6, coinValue: 5000, pool: ["Giga Charizard", "Giga Pikachu", "Giga Snorlax"] }
+  { 
+    name: "Common", 
+    class: "common", 
+    chance: 60, 
+    rank: 1, 
+    coinValue: 10,
+    pool: [
+      "Bulbasaur", "Charmander", "Squirtle", "Caterpie", "Weedle", "Pidgey", "Rattata", "Spearow",
+      "Ekans", "Sandshrew", "Nidoran♀", "Nidoran♂", "Zubat", "Oddish", "Paras", "Venonat",
+      "Diglett", "Meowth", "Psyduck", "Mankey", "Poliwag", "Bellsprout", "Geodude", "Magnemite",
+      "Shellder", "Krabby", "Voltorb", "Exeggcute", "Koffing", "Horsea", "Goldeen", "Magikarp",
+      "Abra", "Machop", "Tentacool", "Ponyta", "Slowpoke", "Doduo", "Seel", "Grimer", "Gastly",
+      "Drowzee", "Cubone", "Rhyhorn", "Staryu", "Eevee", "Omanyte", "Kabuto", "Dratini",
+      "Chikorita", "Cyndaquil", "Totodile", "Sentret", "Hoothoot", "Ledyba", "Spinarak", "Chinchou",
+      "Pichu", "Cleffa", "Igglybuff", "Togepi", "Natu", "Mareep", "Marill", "Hoppip", "Sunkern",
+      "Wooper", "Murkrow", "Gligar", "Snubbull", "Swinub", "Remoraid", "Phanpy", "Tyrogue",
+      "Pineco", "Teddiursa", "Slugma", "Treecko", "Torchic", "Mudkip", "Poochyena", "Zigzagoon", 
+      "Wurmple", "Lotad", "Seedot", "Ralts", "Surskit", "Shroomish", "Slakoth", "Nincada", "Whismur", 
+      "Makuhita", "Azurill", "Meditite", "Electrike", "Numel", "Spoink", "Aron", "Taillow", "Wingull",
+      "Nosepass", "Skitty", "Carvanha", "Wailmer", "Trapinch", "Snorunt", "Spheal", "Clamperl", "Bagon", "Beldum",
+      "Turtwig", "Chimchar", "Piplup", "Starly", "Bidoof", "Kricketot", "Shinx", "Budew",
+      "Cranidos", "Shieldon", "Burmy", "Combee", "Cherubi", "Bonsly", "Happiny", "Buneary",
+      "Buizel", "Shellos", "Drifloon", "Glameow", "Chingling", "Stunky", "Bronzor",
+      "Snivy", "Tepig", "Oshawott", "Patrat", "Lillipup", "Purrloin", "Pidove",
+      "Blitzle", "Roggenrola", "Woobat", "Drilbur", "Audino", "Timburr", "Tympole", "Sewaddle",
+      "Venipede", "Cottonee", "Petilil", "Sandile", "Darumaka", "Scraggy", "Yamask", "Tirtouga",
+      "Ferroseed", "Klink", "Litwick", "Axew", "Cubchoo", "Cryogonal", "Shelmet", "Stunfisk",
+      "Pansage", "Pansear", "Panpour", "Munna", "Chespin", "Fennekin", "Froakie", "Bunnelby", 
+      "Fletchling", "Scatterbug", "Litleo", "Flabébé", "Skiddo", "Pancham", "Furfrou", "Espurr", 
+      "Honedge", "Spritzee", "Swirlix", "Inkay", "Binacle", "Skrelp", "Clauncher", "Helioptile", 
+      "Tyrunt", "Amaura", "Hawlucha", "Spewpa", "Rowlet", "Litten", "Popplio", "Pikipek", "Yungoos", 
+      "Grubbin", "Crabrawler", "Oricorio", "Cutiefly", "Rockruff", "Wishiwashi", "Morelull", 
+      "Fomantis", "Comfey", "Bounsweet", "Steenee", "Sandygast", "Stufful", "Dewpider",
+      "Mareanie", "Mudbray", "Salandit", "Wimpod", "Jangmo-o", "Grookey", "Scorbunny", "Sobble", 
+      "Rookidee", "Nickit", "Gossifleur", "Wooloo", "Chewtle", "Yamper", "Rolycoly", "Applin", 
+      "Silicobra", "Cufant", "Sinistea", "Hatenna", "Impidimp", "Morpeko", "Skwovet", "Blipbug", "Wynaut", "Basculin",
+    ]
+  },
+  { 
+    name: "Uncommon", 
+    class: "uncommon", 
+    chance: 20, 
+    rank: 2, 
+    coinValue: 25,
+    pool: [
+      "Ivysaur", "Charmeleon", "Wartortle", "Metapod", "Kakuna", "Pidgeotto", "Raticate", "Fearow",
+      "Arbok", "Sandslash", "Nidorina", "Nidorino", "Clefairy", "Vulpix", "Jigglypuff", "Golbat", "Gloom", "Parasect", "Venomoth",
+      "Dugtrio", "Persian", "Golduck", "Primeape", "Growlithe", "Poliwhirl", "Weepinbell", "Graveler",
+      "Magneton", "Cloyster", "Hypno", "Kingler", "Electrode", "Exeggutor", "Lickitung", "Weezing",
+      "Seadra", "Seaking", "Gyarados", "Kadabra", "Machoke", "Tentacruel", "Haunter", "Onix", "Dragonair",
+      "Bayleef", "Quilava", "Croconaw", "Furret", "Noctowl", "Ledian", "Ariados", "Crobat",
+      "Lanturn", "Togetic", "Xatu", "Flaaffy", "Bellossom", "Azumarill", "Sudowoodo", "Politoed",
+      "Skiploom", "Jumpluff", "Aipom", "Sunflora", "Yanma", "Quagsire", "Espeon", "Umbreon",
+      "Slowking", "Misdreavus", "Unown", "Wobbuffet", "Girafarig", "Forretress", "Dunsparce",
+      "Steelix", "Granbull", "Qwilfish", "Scizor", "Shuckle", "Heracross", "Sneasel", "Ursaring",
+      "Magcargo", "Piloswine", "Corsola", "Octillery", "Mantine", "Skarmory", "Houndour", "Kingdra",
+      "Porygon2", "Stantler", "Smeargle", "Hitmontop", "Smoochum", "Elekid", "Magby", "Miltank",
+      "Donphan", "Grovyle", "Combusken", "Marshtomp", "Silcoon", "Cascoon", "Beautifly", "Dustox", 
+      "Lombre", "Nuzleaf", "Shiftry", "Masquerain", "Ludicolo", "Gulpin", "Swalot", "Vibrava", 
+      "Flygon", "Cacnea", "Cacturne", "Swablu", "Altaria", "Zangoose", "Seviper", "Lunatone", 
+      "Solrock", "Barboach", "Whiscash", "Corphish", "Crawdaunt", "Baltoy", "Claydol", "Lileep", 
+      "Cradily", "Anorith", "Armaldo", "Feebas", "Milotic", "Castform", "Kecleon", "Shuppet", 
+      "Banette", "Duskull", "Dusclops", "Tropius", "Chimecho", "Mightyena", "Linoone", "Swellow", 
+      "Pelipper", "Kirlia", "Vigoroth", "Ninjask", "Loudred", "Lairon", "Sharpedo", "Metang", "Shelgon",
+      "Grotle", "Monferno", "Prinplup", "Staravia", "Bibarel", "Kricketune", "Luxio", "Roserade",
+      "Rampardos", "Bastiodon", "Wormadam", "Mothim", "Cherrim", "Mime Jr.",
+      "Chatot", "Spiritomb", "Gible", "Gabite", "Munchlax", "Riolu", "Lucario", "Hippopotas", 
+      "Hippowdon", "Skorupi", "Drapion", "Croagunk", "Toxicroak", "Carnivine", "Finneon", 
+      "Lumineon", "Mantyke", "Snover", "Abomasnow", "Floatzel", "Gastrodon", "Drifblim", 
+      "Purugly", "Skuntank", "Bronzong", "Servine", "Pignite", "Dewott", "Watchog", "Liepard", 
+      "Tranquill", "Gurdurr", "Palpitoad", "Boldore", "Gigalith", "Krokorok", "Sigilyph", "Darmanitan",
+      "Maractus", "Dwebble", "Crustle", "Joltik", "Galvantula", "Swoobat", "Excadrill", "Conkeldurr", 
+      "Seismitoad", "Lilligant", "Whimsicott", "Whirlipede", "Scolipede", "Scrafty", "Cofagrigus", 
+      "Carracosta", "Archen", "Archeops", "Trubbish", "Garbodor", "Zorua", "Zoroark", "Minccino", 
+      "Cinccino", "Gothita", "Gothorita", "Gothitelle", "Solosis", "Duosion", "Reuniclus", "Ducklett", 
+      "Swanna", "Vanillite", "Vanillish", "Vanilluxe", "Deerling", "Sawsbuck", "Emolga", "Karrablast", 
+      "Escavalier", "Foongus", "Amoonguss", "Frillish", "Jellicent", "Alomomola", "Ferrothorn", 
+      "Klang", "Klinklang", "Tynamo", "Eelektrik", "Eelektross", "Elgyem", "Beheeyem", "Lampent", 
+      "Chandelure", "Fraxure", "Haxorus", "Beartic", "Accelgor", "Mienfoo", "Mienshao", "Druddigon", 
+      "Golett", "Golurk", "Pawniard", "Bisharp", "Bouffalant", "Rufflet", "Braviary", "Vullaby", 
+      "Mandibuzz", "Heatmor", "Durant", "Deino", "Zweilous", "Hydreigon", "Larvesta", "Volcarona",
+      "Simisage", "Simisear", "Simipour", "Musharna", "Zebstrika", "Swadloon", "Quilladin", 
+      "Braixen", "Frogadier", "Fletchinder", "Florges", "Gogoat", "Meowstic", "Doublade", 
+      "Aromatisse", "Slurpuff", "Malamar", "Barbaracle", "Dragalge", "Clawitzer", "Heliolisk", 
+      "Tyrantrum", "Aurorus", "Goomy", "Sliggoo", "Goodra", "Phantump", "Trevenant", "Pumpkaboo", 
+      "Gourgeist", "Bergmite", "Avalugg", "Noibat", "Noivern", "Floette", "Dartrix", "Torracat", 
+      "Brionne", "Trumbeak", "Crabominable", "Ribombee", "Lycanroc", "Shiinotic", "Lurantis", 
+      "Tsareena", "Oranguru", "Passimian", "Sandaconda", "Cramorant", "Arrokuda", "Barraskewda", 
+      "Toxel", "Toxtricity", "Sizzlipede", "Centiskorch", "Clobbopus", "Grapploct", "Polteageist", 
+      "Hattrem", "Hatterene", "Morgrem", "Grimmsnarl", "Obstagoon", "Perrserker", "Cursola", 
+      "Sirfetch'd", "Mr. Rime", "Runerigus", "Milcery", "Alcremie", "Falinks", "Pincurchin", 
+      "Snom", "Frosmoth", "Stonjourner", "Eiscue", "Indeedee", "Thwackey", "Raboot", "Drizzile", 
+      "Corviknight", "Dottler", "Orbeetle", "Thievul", "Eldegoss", "Dubwool", "Drednaw", "Boltund", 
+      "Carkol", "Coalossal", "Flapple", "Appletun", "Copperajah", "Dracozolt", "Arctozolt", 
+      "Dracovish", "Arctovish", "Duraludon", "Dreepy", "Drakloak", "Dragapult", "Charjabug", 
+      "Araquanid", "Hakamo-o", "Corvisquire", "Roselia", "Grumpig", "Sealeo",
+    ]
+  },
+  { 
+    name: "Rare", 
+    class: "rare", 
+    chance: 10, 
+    rank: 3, 
+    coinValue: 100,
+    pool: [
+      "Venusaur", "Charizard", "Blastoise", "Butterfree", "Beedrill", "Pidgeot", "Pikachu", "Raichu",
+      "Nidoqueen", "Nidoking", "Clefable", "Ninetales", "Wigglytuff", "Vileplume", "Arcanine",
+      "Poliwrath", "Alakazam", "Machamp", "Golem", "Rapidash", "Slowbro", "Dodrio", "Dewgong",
+      "Muk", "Gengar", "Marowak", "Hitmonlee", "Hitmonchan", "Rhydon", "Tangela", "Kangaskhan",
+      "Scyther", "Jynx", "Electabuzz", "Magmar", "Pinsir", "Tauros", "Lapras", "Ditto",
+      "Vaporeon", "Jolteon", "Flareon", "Porygon", "Omastar", "Kabutops", "Snorlax", "Victreebel", "Starmie",
+      "Meganium", "Typhlosion", "Feraligatr", "Crobat", "Lanturn", "Xatu", "Bellossom", "Azumarill", 
+      "Sudowoodo", "Politoed", "Jumpluff", "Sunflora", "Yanma", "Quagsire", "Espeon", "Umbreon",
+      "Slowking", "Misdreavus", "Unown", "Wobbuffet", "Girafarig", "Forretress", "Dunsparce",
+      "Steelix", "Granbull", "Qwilfish", "Scizor", "Shuckle", "Heracross", "Sneasel", "Ursaring",
+      "Magcargo", "Piloswine", "Corsola", "Octillery", "Mantine", "Skarmory", "Houndour", "Kingdra",
+      "Porygon2", "Stantler", "Smeargle", "Hitmontop", "Miltank", "Blissey", "Delibird",
+      "Sceptile", "Blaziken", "Swampert", "Beautifly", "Dustox", "Ludicolo", "Shiftry", "Masquerain", "Slaking", 
+      "Camerupt", "Altaria", "Zangoose", "Seviper", "Lunatone", "Solrock", "Claydol", "Cradily",
+      "Armaldo", "Milotic", "Castform", "Kecleon", "Banette", "Dusclops", "Tropius", "Chimecho",
+      "Shedinja", "Exploud", "Hariyama", "Delcatty", "Sableye", "Torkoal", "Spinda", "Glalie", 
+      "Huntail", "Gorebyss", "Relicanth", "Luvdisc", "Plusle", "Minun", "Volbeat", "Illumise", 
+      "Torterra", "Infernape", "Empoleon", "Staraptor", "Luxray", "Roserade", "Rampardos", "Bastiodon",
+      "Mismagius", "Honchkrow", "Abomasnow", "Magnezone", "Lopunny", "Garchomp", "Lucario", "Hippowdon",
+      "Drapion", "Toxicroak", "Carnivine", "Mantyke", "Electivire", "Magmortar", "Togekiss", "Yanmega",
+      "Leafeon", "Glaceon", "Gallade", "Probopass", "Dusknoir", "Froslass", "Rotom", "Uxie", "Mesprit", "Azelf",
+      "Dialga", "Palkia", "Heatran", "Regigigas", "Giratina", "Cresselia", "Phione", "Manaphy",
+      "Darkrai", "Shaymin", "Arceus", "Vespiquen", "Pachirisu", "Ambipom", "Weavile", "Lickilicky", 
+      "Rhyperior", "Tangrowth", "Mamoswine", "Porygon-Z",
+      "Serperior", "Emboar", "Samurott", "Stoutland", "Watchog", "Liepard", "Unfezant",
+      "Gigalith", "Krookodile", "Scraggy", "Scrafty", "Sigilyph", "Leavanny",
+      "Darmanitan", "Maractus", "Crustle", "Galvantula", "Swoobat", "Excadrill", "Audino", "Conkeldurr",
+      "Seismitoad", "Lilligant", "Whimsicott", "Scolipede", "Garbodor", "Zoroark", "Cinccino", "Gothitelle",
+      "Reuniclus", "Vanilluxe", "Sawsbuck", "Emolga", "Krookodile", "Ferrothorn", "Hydreigon", "Volcarona",
+      "Delphox", "Greninja", "Talonflame", "Vivillon", "Florges", "Gogoat", "Pangoro", "Meowstic",
+      "Aegislash", "Trevenant", "Gourgeist", "Avalugg", "Dragalge", "Clawitzer", "Goodra",
+      "Tyrantrum", "Aurorus", "Hawlucha", "Noivern", "Chesnaught", "Diggersby", "Pyroar", "Sylveon", 
+      "Dedenne", "Carbink", "Klefki",
+      "Decidueye", "Incineroar", "Primarina", "Toucannon", "Gumshoos", "Oricorio", "Lycanroc",
+      "Vikavolt", "Togedemaru", "Golisopod", "Kommo-o", "Tapu Koko", "Tapu Lele", "Tapu Bulu", "Tapu Fini",
+      "Drampa", "Dhelmise", "Salazzle", "Bewear", "Tsareena", "Oranguru", "Passimian",
+      "Naganadel", "Stakataka", "Blacephalon", "Zeraora", "Toxapex", "Palossand", "Minior", 
+      "Komala", "Turtonator", "Mimikyu", "Bruxish", "Poipole",
+      "Rillaboom", "Cinderace", "Inteleon", "Corviknight", "Toxtricity", "Duraludon", "Centiskorch", "Dragapult",
+      "Coalossal", "Flapple", "Appletun", "Copperajah", "Sandaconda", "Barraskewda", "Cramorant", "Eiscue",
+      "Indeedee", "Cufant", "Dracozolt", "Arctozolt", "Dracovish", "Arctovish", "Greedent", "Wailord",
+    ]
+  },
+  { 
+    name: "Ultra", 
+    class: "ultra", 
+    chance: 7.5, 
+    rank: 4, 
+    coinValue: 500,
+    pool: [
+      "Farfetch'd", "Chansey", "Mr. Mime", "Aerodactyl", "Dragonite", "Snorlax", "Lapras",
+      "Steelix", "Tyranitar", "Hitmontop", "Kingdra", "Misdreavus", "Murkrow", "Espeon", "Umbreon",
+      "Larvitar", "Pupitar", "Shiftry", "Breloom", "Aggron", "Medicham", "Manectric", "Mawile", 
+      "Gardevoir", "Flygon", "Camerupt", "Altaria", "Walrein", "Salamence", "Metagross", 
+      "Dusclops", "Claydol", "Milotic", "Roserade", "Spiritomb", "Electivire", "Magmortar", 
+      "Togekiss", "Gliscor", "Lucario", "Abomasnow", "Gallade", "Dusknoir", "Froslass",
+      "Carracosta", "Archeops", "Sawk", "Throh", "Boldore", "Gigalith", "Excadrill", "Audino", "Scolipede",
+      "Krookodile", "Darumaka", "Darmanitan", "Escavalier", "Vanilluxe", "Sawsbuck", "Leavanny", "Whimsicott",
+      "Lilligant", "Galvantula", "Beheeyem", "Chandelure", "Cryogonal", "Golurk", "Seismitoad", "Stoutland",
+      "Pangoro", "Goodra", "Noivern", "Talonflame", "Meowstic", "Trevenant", "Gogoat", "Aurorus", "Clawitzer",
+      "Toucannon", "Gumshoos", "Bewear", "Kommo-o", "Drampa", "Dhelmise", "Pyukumuku", "Mudsdale", "Golisopod",
+      "Type: Null", "Silvally", "Copperajah", "Duraludon", "Corviknight", "Hatterene", "Grimmsnarl", 
+      "Alcremie", "Polteageist", "Toxtricity", "Centiskorch", "Eiscue", "Indeedee"
+    ]
+  },
+  { 
+    name: "Mythical", 
+    class: "mythical", 
+    chance: 2.4, 
+    rank: 4, 
+    coinValue: 2000,
+    pool: [
+      "Mew", "Mewtwo", "Articuno", "Zapdos", "Moltres",
+      "Celebi", "Raikou", "Entei", "Suicune", "Lugia", "Ho-Oh",
+      "Jirachi", "Deoxys", "Regirock", "Regice", "Registeel", "Kyogre", "Groudon", "Rayquaza",
+      "Manaphy", "Phione", "Darkrai", "Shaymin", "Arceus",
+      "Victini", "Cobalion", "Terrakion", "Virizion", "Keldeo",
+      "Tornadus", "Thundurus", "Landorus", "Meloetta", "Genesect", "Reshiram", "Zekrom", "Kyurem",
+      "Xerneas", "Yveltal", "Zygarde", "Diancie", "Hoopa", "Volcanion",
+      "Tapu Koko", "Tapu Lele", "Tapu Bulu", "Tapu Fini", "Cosmog", "Cosmoem", "Solgaleo", "Lunala", 
+      "Necrozma", "Magearna", "Marshadow", "Zeraora", "Nihilego", "Buzzwole", "Pheromosa", "Xurkitree", 
+      "Celesteela", "Kartana", "Guzzlord", "Meltan", "Melmetal",
+      "Kubfu", "Urshifu", "Zarude", "Regieleki", "Regidrago", "Glastrier", "Spectrier", "Calyrex", 
+      "Zacian", "Zamazenta", "Eternatus"
+    ]
+  },
+  { 
+    name: "Mega", 
+    class: "mega", 
+    chance: 1, 
+    rank: 5, 
+    coinValue: 3000,
+    pool: [
+      "Mega Venusaur", "Mega Charizard X", "Mega Charizard Y", "Mega Blastoise", "Mega Beedrill", "Mega Pidgeot",
+      "Mega Alakazam", "Mega Slowbro", "Mega Gengar", "Mega Kangaskhan", "Mega Pinsir", "Mega Gyarados", "Mega Aerodactyl",
+      "Mega Mewtwo X", "Mega Mewtwo Y",
+      "Mega Ampharos", "Mega Scizor", "Mega Heracross", "Mega Houndoom", "Mega Tyranitar",
+      "Mega Blaziken", "Mega Gardevoir", "Mega Mawile", "Mega Aggron", "Mega Medicham", "Mega Manectric",
+      "Mega Sharpedo", "Mega Camerupt", "Mega Altaria", "Mega Banette", "Mega Absol", "Mega Glalie", "Mega Salamence",
+      "Mega Metagross", "Mega Latias", "Mega Latios",
+      "Mega Rayquaza", "Mega Lopunny", "Mega Gallade", "Mega Audino",
+      "Mega Diancie", "Mega Sceptile", "Mega Swampert"
+    ]
+  },
+  { 
+    name: "Giga", 
+    class: "giga", 
+    chance: 0.1, 
+    rank: 6, 
+    coinValue: 5000,
+    pool: [
+      "Giga Venusaur", "Giga Charizard", "Giga Blastoise", "Giga Butterfree", "Giga Pikachu", 
+      "Giga Meowth", "Giga Machamp", "Giga Gengar", "Giga Kingler", "Giga Lapras", 
+      "Giga Eevee", "Giga Snorlax", "Giga Garbodor", "Giga Melmetal", "Giga Rillaboom", 
+      "Giga Cinderace", "Giga Inteleon", "Giga Corviknight", "Giga Orbeetle", "Giga Drednaw", 
+      "Giga Coalossal", "Giga Flapple", "Giga Appletun", "Giga Sandaconda", "Giga Toxtricity", 
+      "Giga Centiskorch", "Giga Hatterene", "Giga Grimmsnarl", "Giga Alcremie", "Giga Copperajah", 
+      "Giga Duraludon", "Giga Urshifu", "Sacred Sword Zacian", "Sacred Shield Zamazenta"
+    ]
+  }
 ];
 
-// Simplified Gen Order for Demo (The full list from your previous code is too long for this snippet, but logic works the same)
+// Master list for Pokédex ordering - Verified 1-898 National Dex
 const genAllOrder = [
-    "Bulbasaur", "Ivysaur", "Venusaur", "Charmander", "Charmeleon", "Charizard", "Squirtle", "Wartortle", "Blastoise",
-    "Caterpie", "Metapod", "Butterfree", "Weedle", "Kakuna", "Beedrill", "Pidgey", "Pidgeotto", "Pidgeot", "Rattata", "Raticate",
-    "Pikachu", "Raichu", "Dragonite", "Mewtwo", "Mew", "Celebi", "Jirachi", "Deoxys", "Arceus", "Snorlax", "Gengar", "Lapras", "Gyarados"
+    // Gen 1
+    "Bulbasaur", "Ivysaur", "Venusaur", "Charmander", "Charmeleon", "Charizard", "Squirtle", "Wartortle", "Blastoise", 
+    "Caterpie", "Metapod", "Butterfree", "Weedle", "Kakuna", "Beedrill", "Pidgey", "Pidgeotto", "Pidgeot", 
+    "Rattata", "Raticate", "Spearow", "Fearow", "Ekans", "Arbok", "Pikachu", "Raichu", "Sandshrew", "Sandslash", 
+    "Nidoran♀", "Nidorina", "Nidoqueen", "Nidoran♂", "Nidorino", "Nidoking", "Clefairy", "Clefable", "Vulpix", "Ninetales", 
+    "Jigglypuff", "Wigglytuff", "Zubat", "Golbat", "Oddish", "Gloom", "Vileplume", "Paras", "Parasect", "Venonat", "Venomoth", 
+    "Diglett", "Dugtrio", "Meowth", "Persian", "Psyduck", "Golduck", "Mankey", "Primeape", "Growlithe", "Arcanine", 
+    "Poliwag", "Poliwhirl", "Poliwrath", "Abra", "Kadabra", "Alakazam", "Machop", "Machoke", "Machamp", "Bellsprout", 
+    "Weepinbell", "Victreebel", "Tentacool", "Tentacruel", "Geodude", "Graveler", "Golem", "Ponyta", "Rapidash", "Slowpoke", 
+    "Slowbro", "Magnemite", "Magneton", "Farfetch'd", "Doduo", "Dodrio", "Seel", "Dewgong", "Grimer", "Muk", "Shellder", 
+    "Cloyster", "Gastly", "Haunter", "Gengar", "Onix", "Drowzee", "Hypno", "Krabby", "Kingler", "Voltorb", "Electrode", 
+    "Exeggcute", "Exeggutor", "Cubone", "Marowak", "Hitmonlee", "Hitmonchan", "Lickitung", "Koffing", "Weezing", "Rhyhorn", 
+    "Rhydon", "Chansey", "Tangela", "Kangaskhan", "Horsea", "Seadra", "Goldeen", "Seaking", "Staryu", "Starmie", "Mr. Mime", 
+    "Scyther", "Jynx", "Electabuzz", "Magmar", "Pinsir", "Tauros", "Magikarp", "Gyarados", "Lapras", "Ditto", "Eevee", 
+    "Vaporeon", "Jolteon", "Flareon", "Porygon", "Omanyte", "Omastar", "Kabuto", "Kabutops", "Aerodactyl", "Snorlax", 
+    "Articuno", "Zapdos", "Moltres", "Dratini", "Dragonair", "Dragonite", "Mewtwo", "Mew",
+    // Gen 2
+    "Chikorita", "Bayleef", "Meganium", "Cyndaquil", "Quilava", "Typhlosion", "Totodile", "Croconaw", "Feraligatr", 
+    "Sentret", "Furret", "Hoothoot", "Noctowl", "Ledyba", "Ledian", "Spinarak", "Ariados", "Crobat", "Chinchou", 
+    "Lanturn", "Pichu", "Cleffa", "Igglybuff", "Togepi", "Togetic", "Natu", "Xatu", "Mareep", "Flaaffy", "Ampharos", 
+    "Bellossom", "Marill", "Azumarill", "Sudowoodo", "Politoed", "Hoppip", "Skiploom", "Jumpluff", "Aipom", "Sunkern", 
+    "Sunflora", "Yanma", "Wooper", "Quagsire", "Espeon", "Umbreon", "Murkrow", "Slowking", "Misdreavus", "Unown", 
+    "Wobbuffet", "Girafarig", "Pineco", "Forretress", "Dunsparce", "Gligar", "Steelix", "Snubbull", "Granbull", "Qwilfish", 
+    "Scizor", "Shuckle", "Heracross", "Sneasel", "Teddiursa", "Ursaring", "Slugma", "Magcargo", "Swinub", "Piloswine", 
+    "Corsola", "Remoraid", "Octillery", "Delibird", "Mantine", "Skarmory", "Houndour", "Houndoom", "Kingdra", "Phanpy", 
+    "Donphan", "Porygon2", "Stantler", "Smeargle", "Tyrogue", "Hitmontop", "Smoochum", "Elekid", "Magby", "Miltank", 
+    "Blissey", "Raikou", "Entei", "Suicune", "Larvitar", "Pupitar", "Tyranitar", "Lugia", "Ho-Oh", "Celebi",
+    // Gen 3
+    "Treecko", "Grovyle", "Sceptile", "Torchic", "Combusken", "Blaziken", "Mudkip", "Marshtomp", "Swampert", "Poochyena", 
+    "Mightyena", "Zigzagoon", "Linoone", "Wurmple", "Silcoon", "Beautifly", "Cascoon", "Dustox", "Lotad", "Lombre", 
+    "Ludicolo", "Seedot", "Nuzleaf", "Shiftry", "Taillow", "Swellow", "Wingull", "Pelipper", "Ralts", "Kirlia", "Gardevoir", 
+    "Surskit", "Masquerain", "Shroomish", "Breloom", "Slakoth", "Vigoroth", "Slaking", "Nincada", "Ninjask", "Shedinja", 
+    "Whismur", "Loudred", "Exploud", "Makuhita", "Hariyama", "Azurill", "Nosepass", "Skitty", "Delcatty", "Sableye", 
+    "Mawile", "Aron", "Lairon", "Aggron", "Meditite", "Medicham", "Electrike", "Manectric", "Plusle", "Minun", "Volbeat", 
+    "Illumise", "Roselia", "Gulpin", "Swalot", "Carvanha", "Sharpedo", "Wailmer", "Wailord", "Numel", "Camerupt", "Torkoal", 
+    "Spoink", "Grumpig", "Spinda", "Trapinch", "Vibrava", "Flygon", "Cacnea", "Cacturne", "Swablu", "Altaria", "Zangoose", 
+    "Seviper", "Lunatone", "Solrock", "Barboach", "Whiscash", "Corphish", "Crawdaunt", "Baltoy", "Claydol", "Lileep", 
+    "Cradily", "Anorith", "Armaldo", "Feebas", "Milotic", "Castform", "Kecleon", "Shuppet", "Banette", "Duskull", "Dusclops", 
+    "Tropius", "Chimecho", "Absol", "Wynaut", "Snorunt", "Glalie", "Spheal", "Sealeo", "Walrein", "Clamperl", "Huntail", 
+    "Gorebyss", "Relicanth", "Luvdisc", "Bagon", "Shelgon", "Salamence", "Beldum", "Metang", "Metagross", "Regirock", 
+    "Regice", "Registeel", "Latias", "Latios", "Kyogre", "Groudon", "Rayquaza", "Jirachi", "Deoxys",
+    // Gen 4
+    "Turtwig", "Grotle", "Torterra", "Chimchar", "Monferno", "Infernape", "Piplup", "Prinplup", "Empoleon", "Starly", 
+    "Staravia", "Staraptor", "Bidoof", "Bibarel", "Kricketot", "Kricketune", "Shinx", "Luxio", "Luxray", "Budew", 
+    "Roserade", "Cranidos", "Rampardos", "Shieldon", "Bastiodon", "Burmy", "Wormadam", "Mothim", "Combee", "Vespiquen", 
+    "Pachirisu", "Buizel", "Floatzel", "Cherubi", "Cherrim", "Shellos", "Gastrodon", "Ambipom", "Drifloon", "Drifblim", 
+    "Buneary", "Lopunny", "Mismagius", "Honchkrow", "Glameow", "Purugly", "Chingling", "Stunky", "Skuntank", "Bronzor", 
+    "Bronzong", "Bonsly", "Mime Jr.", "Happiny", "Chatot", "Spiritomb", "Gible", "Gabite", "Garchomp", "Munchlax", "Riolu", 
+    "Lucario", "Hippopotas", "Hippowdon", "Skorupi", "Drapion", "Croagunk", "Toxicroak", "Carnivine", "Finneon", "Lumineon", 
+    "Mantyke", "Snover", "Abomasnow", "Weavile", "Magnezone", "Lickilicky", "Rhyperior", "Tangrowth", "Electivire", 
+    "Magmortar", "Togekiss", "Yanmega", "Leafeon", "Glaceon", "Gliscor", "Mamoswine", "Porygon-Z", "Gallade", "Probopass", 
+    "Dusknoir", "Froslass", "Rotom", "Uxie", "Mesprit", "Azelf", "Dialga", "Palkia", "Heatran", "Regigigas", "Giratina", 
+    "Cresselia", "Phione", "Manaphy", "Darkrai", "Shaymin", "Arceus",
+    // Gen 5
+    "Victini", "Snivy", "Servine", "Serperior", "Tepig", "Pignite", "Emboar", "Oshawott", "Dewott", "Samurott", "Patrat", 
+    "Watchog", "Lillipup", "Herdier", "Stoutland", "Purrloin", "Liepard", "Pansage", "Simisage", "Pansear", "Simisear", 
+    "Panpour", "Simipour", "Munna", "Musharna", "Pidove", "Tranquill", "Unfezant", "Blitzle", "Zebstrika", "Roggenrola", 
+    "Boldore", "Gigalith", "Woobat", "Swoobat", "Drilbur", "Excadrill", "Audino", "Timburr", "Gurdurr", "Conkeldurr", 
+    "Tympole", "Palpitoad", "Seismitoad", "Throh", "Sawk", "Sewaddle", "Swadloon", "Leavanny", "Venipede", "Whirlipede", 
+    "Scolipede", "Cottonee", "Whimsicott", "Petilil", "Lilligant", "Basculin", "Sandile", "Krokorok", "Krookodile", 
+    "Darumaka", "Darmanitan", "Maractus", "Dwebble", "Crustle", "Scraggy", "Scrafty", "Sigilyph", "Yamask", "Cofagrigus", 
+    "Tirtouga", "Carracosta", "Archen", "Archeops", "Trubbish", "Garbodor", "Zorua", "Zoroark", "Minccino", "Cinccino", 
+    "Gothita", "Gothorita", "Gothitelle", "Solosis", "Duosion", "Reuniclus", "Ducklett", "Swanna", "Vanillite", "Vanillish", 
+    "Vanilluxe", "Deerling", "Sawsbuck", "Emolga", "Karrablast", "Escavalier", "Foongus", "Amoonguss", "Frillish", "Jellicent", 
+    "Alomomola", "Joltik", "Galvantula", "Ferroseed", "Ferrothorn", "Klink", "Klang", "Klinklang", "Tynamo", "Eelektrik", 
+    "Eelektross", "Elgyem", "Beheeyem", "Litwick", "Lampent", "Chandelure", "Axew", "Fraxure", "Haxorus", "Cubchoo", "Beartic", 
+    "Cryogonal", "Shelmet", "Accelgor", "Stunfisk", "Mienfoo", "Mienshao", "Druddigon", "Golett", "Golurk", "Pawniard", 
+    "Bisharp", "Bouffalant", "Rufflet", "Braviary", "Vullaby", "Mandibuzz", "Heatmor", "Durant", "Deino", "Zweilous", 
+    "Hydreigon", "Larvesta", "Volcarona", "Cobalion", "Terrakion", "Virizion", "Tornadus", "Thundurus", "Reshiram", "Zekrom", 
+    "Landorus", "Kyurem", "Keldeo", "Meloetta", "Genesect",
+    // Gen 6
+    "Chespin", "Quilladin", "Chesnaught", "Fennekin", "Braixen", "Delphox", "Froakie", "Frogadier", "Greninja", "Bunnelby", 
+    "Diggersby", "Fletchling", "Fletchinder", "Talonflame", "Scatterbug", "Spewpa", "Vivillon", "Litleo", "Pyroar", "Flabébé", 
+    "Floette", "Florges", "Skiddo", "Gogoat", "Pancham", "Pangoro", "Furfrou", "Espurr", "Meowstic", "Honedge", "Doublade", 
+    "Aegislash", "Spritzee", "Aromatisse", "Swirlix", "Slurpuff", "Inkay", "Malamar", "Binacle", "Barbaracle", "Skrelp", 
+    "Dragalge", "Clauncher", "Clawitzer", "Helioptile", "Heliolisk", "Tyrunt", "Tyrantrum", "Amaura", "Aurorus", "Sylveon", 
+    "Hawlucha", "Dedenne", "Carbink", "Goomy", "Sliggoo", "Goodra", "Klefki", "Phantump", "Trevenant", "Pumpkaboo", "Gourgeist", 
+    "Bergmite", "Avalugg", "Noibat", "Noivern", "Xerneas", "Yveltal", "Zygarde", "Diancie", "Hoopa", "Volcanion",
+    // Gen 7
+    "Rowlet", "Dartrix", "Decidueye", "Litten", "Torracat", "Incineroar", "Popplio", "Brionne", "Primarina", "Pikipek", 
+    "Trumbeak", "Toucannon", "Yungoos", "Gumshoos", "Grubbin", "Charjabug", "Vikavolt", "Crabrawler", "Crabominable", 
+    "Oricorio", "Cutiefly", "Ribombee", "Rockruff", "Lycanroc", "Wishiwashi", "Mareanie", "Toxapex", "Mudbray", "Mudsdale", 
+    "Dewpider", "Araquanid", "Fomantis", "Lurantis", "Morelull", "Shiinotic", "Salandit", "Salazzle", "Stufful", "Bewear", 
+    "Bounsweet", "Steenee", "Tsareena", "Comfey", "Oranguru", "Passimian", "Wimpod", "Golisopod", "Sandygast", "Palossand", 
+    "Pyukumuku", "Type: Null", "Silvally", "Minior", "Komala", "Turtonator", "Togedemaru", "Mimikyu", "Bruxish", "Drampa", 
+    "Dhelmise", "Jangmo-o", "Hakamo-o", "Kommo-o", "Tapu Koko", "Tapu Lele", "Tapu Bulu", "Tapu Fini", "Cosmog", "Cosmoem", 
+    "Solgaleo", "Lunala", "Nihilego", "Buzzwole", "Pheromosa", "Xurkitree", "Celesteela", "Kartana", "Guzzlord", "Necrozma", 
+    "Magearna", "Marshadow", "Poipole", "Naganadel", "Stakataka", "Blacephalon", "Zeraora", "Meltan", "Melmetal",
+    // Gen 8
+    "Grookey", "Thwackey", "Rillaboom", "Scorbunny", "Raboot", "Cinderace", "Sobble", "Drizzile", "Inteleon", "Skwovet", 
+    "Greedent", "Rookidee", "Corvisquire", "Corviknight", "Blipbug", "Dottler", "Orbeetle", "Nickit", "Thievul", "Gossifleur", 
+    "Eldegoss", "Wooloo", "Dubwool", "Chewtle", "Drednaw", "Yamper", "Boltund", "Rolycoly", "Carkol", "Coalossal", "Applin", 
+    "Flapple", "Appletun", "Silicobra", "Sandaconda", "Cramorant", "Arrokuda", "Barraskewda", "Toxel", "Toxtricity", 
+    "Sizzlipede", "Centiskorch", "Clobbopus", "Grapploct", "Sinistea", "Polteageist", "Hatenna", "Hattrem", "Hatterene", 
+    "Impidimp", "Morgrem", "Grimmsnarl", "Obstagoon", "Perrserker", "Cursola", "Sirfetch'd", "Mr. Rime", "Runerigus", 
+    "Milcery", "Alcremie", "Falinks", "Pincurchin", "Snom", "Frosmoth", "Stonjourner", "Eiscue", "Indeedee", "Morpeko", 
+    "Cufant", "Copperajah", "Dracozolt", "Arctozolt", "Dracovish", "Arctovish", "Duraludon", "Dreepy", "Drakloak", 
+    "Dragapult", "Zacian", "Zamazenta", "Eternatus", "Kubfu", "Urshifu", "Zarude", "Regieleki", "Regidrago", "Glastrier", 
+    "Spectrier", "Calyrex"
 ];
 
-const megaMap = { "Mega Charizard X":"Charizard", "Mega Mewtwo Y":"Mewtwo", "Mega Rayquaza":"Rayquaza" };
-const gigaMap = { "Giga Charizard":"Charizard", "Giga Pikachu":"Pikachu", "Giga Snorlax":"Snorlax" };
+const megaMap = {
+  "Mega Venusaur":"Venusaur",
+  "Mega Charizard X":"Charizard",
+  "Mega Charizard Y":"Charizard",
+  "Mega Blastoise":"Blastoise",
+  "Mega Beedrill":"Beedrill",
+  "Mega Pidgeot":"Pidgeot",
+  "Mega Alakazam":"Alakazam",
+  "Mega Slowbro":"Slowbro",
+  "Mega Gengar":"Gengar",
+  "Mega Kangaskhan":"Kangaskhan",
+  "Mega Pinsir":"Pinsir",
+  "Mega Gyarados":"Gyarados",
+  "Mega Aerodactyl":"Aerodactyl",
+  "Mega Mewtwo X":"Mewtwo",
+  "Mega Mewtwo Y":"Mewtwo",
+  "Mega Ampharos":"Ampharos",
+  "Mega Scizor":"Scizor",
+  "Mega Heracross":"Heracross",
+  "Mega Houndoom":"Houndoom",
+  "Mega Tyranitar":"Tyranitar",
+  "Mega Blaziken":"Blaziken",
+  "Mega Gardevoir":"Gardevoir",
+  "Mega Mawile":"Mawile",
+  "Mega Aggron":"Aggron",
+  "Mega Medicham":"Medicham",
+  "Mega Manectric":"Manectric",
+  "Mega Banette":"Banette",
+  "Mega Absol":"Absol",
+  "Mega Salamence":"Salamence",
+  "Mega Metagross":"Metagross",
+  "Mega Latias":"Latias",
+  "Mega Latios":"Latios",
+  "Mega Rayquaza":"Rayquaza",
+  "Mega Lopunny":"Lopunny",
+  "Mega Gallade":"Gallade",
+  "Mega Audino":"Audino",
+  "Mega Diancie":"Diancie",
+  "Mega Sharpedo":"Sharpedo",
+  "Mega Camerupt":"Camerupt",
+  "Mega Altaria":"Altaria",
+  "Mega Glalie":"Glalie",
+  "Mega Sceptile": "Sceptile",
+  "Mega Swampert": "Swampert"
+};
+
+const megaSpriteIdMap = {
+  "Mega Venusaur": 10033,
+  "Mega Charizard X": 10034,
+  "Mega Charizard Y": 10035,
+  "Mega Blastoise": 10036,
+  "Mega Beedrill": 10090,
+  "Mega Pidgeot": 10073,
+  "Mega Alakazam": 10037,
+  "Mega Slowbro": 10071,
+  "Mega Gengar": 10038,
+  "Mega Kangaskhan": 10039,
+  "Mega Pinsir": 10040,
+  "Mega Gyarados": 10041,
+  "Mega Aerodactyl": 10042,
+  "Mega Mewtwo X": 10043,
+  "Mega Mewtwo Y": 10044,
+  "Mega Ampharos": 10045,
+  "Mega Scizor": 10046,
+  "Mega Heracross": 10047,
+  "Mega Houndoom": 10048,
+  "Mega Tyranitar": 10049,
+  "Mega Blaziken": 10050,
+  "Mega Gardevoir": 10051,
+  "Mega Mawile": 10052,
+  "Mega Aggron": 10053,
+  "Mega Medicham": 10054,
+  "Mega Manectric": 10055,
+  "Mega Banette": 10056,
+  "Mega Absol": 10057,
+  "Mega Salamence": 10089,
+  "Mega Metagross": 10076,
+  "Mega Latias": 10062,
+  "Mega Latios": 10063,
+  "Mega Rayquaza": 10079,
+  "Mega Lopunny": 10088,
+  "Mega Gallade": 10068,
+  "Mega Audino": 10069,
+  "Mega Diancie": 10075,
+  "Mega Sharpedo": 10066,
+  "Mega Camerupt": 10087,
+  "Mega Altaria": 10067,
+  "Mega Glalie": 10074,
+  "Mega Sceptile": 10065,
+  "Mega Swampert": 10064
+};
+
+const gigaMap = {
+  "Giga Venusaur": "Venusaur",
+  "Giga Charizard": "Charizard",
+  "Giga Blastoise": "Blastoise",
+  "Giga Butterfree": "Butterfree",
+  "Giga Pikachu": "Pikachu",
+  "Giga Meowth": "Meowth",
+  "Giga Machamp": "Machamp",
+  "Giga Gengar": "Gengar",
+  "Giga Kingler": "Kingler",
+  "Giga Lapras": "Lapras",
+  "Giga Eevee": "Eevee",
+  "Giga Snorlax": "Snorlax",
+  "Giga Garbodor": "Garbodor",
+  "Giga Melmetal": "Melmetal",
+  "Giga Rillaboom": "Rillaboom",
+  "Giga Cinderace": "Cinderace",
+  "Giga Inteleon": "Inteleon",
+  "Giga Corviknight": "Corviknight",
+  "Giga Orbeetle": "Orbeetle",
+  "Giga Drednaw": "Drednaw",
+  "Giga Coalossal": "Coalossal",
+  "Giga Flapple": "Flapple",
+  "Giga Appletun": "Appletun",
+  "Giga Sandaconda": "Sandaconda",
+  "Giga Toxtricity": "Toxtricity",
+  "Giga Centiskorch": "Centiskorch",
+  "Giga Hatterene": "Hatterene",
+  "Giga Grimmsnarl": "Grimmsnarl",
+  "Giga Alcremie": "Alcremie",
+  "Giga Copperajah": "Copperajah",
+  "Giga Duraludon": "Duraludon",
+  "Giga Urshifu": "Urshifu",
+  "Sacred Sword Zacian": "Zacian",
+  "Sacred Shield Zamazenta": "Zamazenta"
+};
+
+const gigaSpriteIdMap = {
+  "Giga Venusaur": 10186,
+  "Giga Charizard": 10196,
+  "Giga Blastoise": 10197,
+  "Giga Butterfree": 10198,
+  "Giga Pikachu": 10199,
+  "Giga Meowth": 10200,
+  "Giga Machamp": 10201,
+  "Giga Gengar": 10202,
+  "Giga Kingler": 10203,
+  "Giga Lapras": 10204,
+  "Giga Eevee": 10205,
+  "Giga Snorlax": 10206,
+  "Giga Garbodor": 10207,
+  "Giga Melmetal": 10208,
+  "Giga Rillaboom": 10209,
+  "Giga Cinderace": 10210,
+  "Giga Inteleon": 10211,
+  "Giga Corviknight": 10212,
+  "Giga Orbeetle": 10213,
+  "Giga Drednaw": 10214,
+  "Giga Coalossal": 10215,
+  "Giga Flapple": 10216,
+  "Giga Appletun": 10217,
+  "Giga Sandaconda": 10218,
+  "Giga Toxtricity": 10219,
+  "Giga Centiskorch": 10220,
+  "Giga Hatterene": 10221,
+  "Giga Grimmsnarl": 10222,
+  "Giga Alcremie": 10223,
+  "Giga Copperajah": 10224,
+  "Giga Duraludon": 10225,
+  "Giga Urshifu": 10226,
+  "Sacred Sword Zacian": 10188,
+  "Sacred Shield Zamazenta": 10189
+};
+
 const megaEligible = new Set(Object.values(megaMap));
 const gigaEligible = new Set(Object.values(gigaMap));
 
-// Map rarity
+// Map rarity by Pokémon
 const rarityMap = {};
 rarityTable.forEach(tier => tier.pool.forEach(p => rarityMap[p] = tier.class));
 
@@ -715,6 +1224,7 @@ let player = {
 const loginScreen = document.getElementById("login");
 const gameScreen = document.getElementById("game");
 const rollBtn = document.getElementById("rollBtn");
+const startBtn = document.getElementById("startBtn");
 const pokedexDropdown = document.getElementById("pokedexDropdown");
 const dexSearch = document.getElementById("dexSearch");
 const resultCard = document.getElementById("resultCard");
@@ -739,128 +1249,58 @@ const shopGrid = document.getElementById("shopGrid");
 const shopCoinDisplay = document.getElementById("shopCoinDisplay");
 const questModal = document.getElementById("questModal");
 const questList = document.getElementById("questList");
+// GTS Elements
 const gtsModal = document.getElementById("gtsModal");
-const gtsList = document.getElementById("gtsList");
+const gtsBagGrid = document.getElementById("gtsBagGrid");
+const gtsWantedSpecies = document.getElementById("gtsWantedSpecies");
+const gtsWantedLevel = document.getElementById("gtsWantedLevel");
+const depositPreview = document.getElementById("depositPreview");
+const confirmDepositBtn = document.getElementById("confirmDepositBtn");
+const gtsResults = document.getElementById("gtsResults");
+const gtsMyTrades = document.getElementById("gtsMyTrades");
 
 // --- INITIALIZATION ---
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
   console.log("Game loading...");
-  totalText.innerText = genAllOrder.length;
-  
-  // Check Supabase Session
-  if (supabase) {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-          handleLoginSuccess(session.user);
-      }
+  try {
+    load();
+    totalText.innerText = genAllOrder.length;
+    // Initial Quest Gen
+    if(!player.activeQuests || player.activeQuests.length === 0) {
+        generateQuests();
+    }
+    
+    // Populate GTS Dropdown
+    genAllOrder.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p;
+        opt.innerText = p;
+        gtsWantedSpecies.appendChild(opt);
+    });
+
+    console.log("Game loaded successfully.");
+  } catch(e) {
+    console.error("Critical error during init: ", e);
+    alert("Game crashed during load. Please check console.");
   }
 });
 
-// AUTH LOGIC
-document.getElementById("loginBtn").addEventListener("click", async () => {
-    const btn = document.getElementById("loginBtn");
-    const email = document.getElementById("emailInput").value;
-    const pass = document.getElementById("passwordInput").value;
-    
-    if (!email || !pass) return alert("Please enter both email and password.");
-    
-    btn.innerText = "Logging in...";
-    btn.disabled = true;
-    
-    try {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
-        
-        if(error) {
-            alert("Login Failed: " + error.message);
-        } else {
-            handleLoginSuccess(data.user);
-        }
-    } catch(e) {
-        alert("Unexpected Login Error: " + e);
-    } finally {
-        btn.innerText = "Log In";
-        btn.disabled = false;
-    }
+// Event Listeners
+startBtn.addEventListener("click", () => {
+  const name = document.getElementById("usernameInput").value.trim();
+  if(!name) return alert("Please enter a username!");
+  player.username = name;
+  startGame();
 });
-
-document.getElementById("signupBtn").addEventListener("click", async () => {
-    const btn = document.getElementById("signupBtn");
-    const email = document.getElementById("emailInput").value;
-    const pass = document.getElementById("passwordInput").value;
-    
-    console.log("Signup Clicked"); // Debug log
-
-    if (!email || !pass) {
-        alert("Please enter both email and password.");
-        return;
-    }
-    
-    if(!supabase) {
-        alert("Supabase library missing! Please refresh or check connection.");
-        return;
-    }
-    
-    btn.innerText = "Processing...";
-    btn.disabled = true;
-    
-    try {
-        const { data, error } = await supabase.auth.signUp({ 
-            email: email, 
-            password: pass 
-        });
-        
-        if (error) {
-            console.error("Signup Error:", error);
-            alert("Signup Error: " + error.message);
-        } else {
-            console.log("Signup Data:", data);
-            alert("Success! Please check your email inbox (and spam) for the confirmation link before logging in.");
-        }
-    } catch (err) {
-        console.error("Unexpected Error:", err);
-        alert("Unexpected Error: " + err.message);
-    } finally {
-        btn.innerText = "Sign Up";
-        btn.disabled = false;
-    }
-});
-
-async function handleLoginSuccess(user) {
-    loginScreen.style.display = "none";
-    gameScreen.style.display = "block";
-    
-    // Load data from Cloud
-    const { data, error } = await supabase
-        .from('profiles')
-        .select('save_data')
-        .eq('id', user.id)
-        .single();
-
-    if(data && data.save_data) {
-        player = { ...player, ...data.save_data };
-        notify("Cloud Save Loaded!");
-    } else {
-        // New user
-        notify("Welcome! New game started.");
-    }
-    
-    startGame();
-}
-
-async function logout() {
-    await supabase.auth.signOut();
-    location.reload();
-}
-
-// --- GAME LOGIC ---
 
 // Open/Close Bag
 openBagBtn.addEventListener("click", () => toggleBag(true));
 
 rollBtn.addEventListener("click", () => {
   rollBtn.disabled = true;
-  cardCatchBtn.style.display = 'none'; 
+  cardCatchBtn.style.display = 'none'; // Hide until roll finishes
   
+  // Use setTimeout to allow UI to update (disable button) before heavy processing
   setTimeout(() => {
       const loops = player.rollMultiplier;
       const batch = [];
@@ -876,6 +1316,9 @@ rollBtn.addEventListener("click", () => {
       batch.forEach(roll => {
         let score = roll.tier.rank * 100;
         if (roll.shiny) score += 50;
+        if (roll.tier.name === "Mega") score += 20;
+        if (roll.tier.name === "Giga") score += 40;
+        
         if (score > bestScore) {
           bestScore = score;
           bestRoll = roll;
@@ -885,9 +1328,10 @@ rollBtn.addEventListener("click", () => {
       updateUI(bestRoll);
       renderLog(batch, bestRoll);
       
+      // Quests Check
       checkQuestProgress("roll", loops);
       checkRewards();
-      autoSave(); 
+      save();
       
       rollBtn.disabled = false;
   }, 50);
@@ -895,16 +1339,35 @@ rollBtn.addEventListener("click", () => {
 
 dexSearch.addEventListener("input", (e) => renderDex(e.target.value));
 
+// --- SECRET PASSWORD LISTENER ---
+document.getElementById('secretTrigger').addEventListener('click', () => {
+    const pass = prompt("Enter Secret Code:");
+    if(pass === "masterball") {
+        player.rollMultiplier += 100000;
+        notify("CHEAT ACTIVATED: +100000 Multiplier!");
+        updateStats();
+        save();
+    } else if (pass === "rich") {
+        player.coins += 10000;
+        notify("CHEAT ACTIVATED: +10,000 Coins!");
+        updateStats();
+        save();
+    }
+});
+
 // --- FUNCTIONS ---
 
 function startGame() {
+  loginScreen.style.display = "none";
+  gameScreen.style.display = "block";
   applyUpgrades();
   renderDex();
   updateStats();
-  if(!player.activeQuests || player.activeQuests.length === 0) generateQuests();
+  save();
 }
 
 function applyUpgrades() {
+    // Recalculate stats based on upgrades
     player.maxBag = 100 + (player.upgrades.bagLevel * 10);
     CURRENT_SHINY_ODDS = Math.max(100, BASE_SHINY_ODDS - (player.upgrades.luckLevel * 50));
 }
@@ -939,10 +1402,295 @@ function toggleQuests(show) {
 function toggleGTS(show) {
     if(show) {
         gtsModal.style.display = "flex";
-        refreshGTS();
+        searchGTS(); // Initial load
     } else {
         gtsModal.style.display = "none";
     }
+}
+
+// --- GTS LOGIC ---
+
+let selectedDepositIndex = -1;
+
+function switchGTSTab(tab, btn) {
+    document.querySelectorAll('.gts-content').forEach(d => d.style.display = 'none');
+    document.querySelectorAll('.gts-tab').forEach(t => t.classList.remove('active'));
+    
+    document.getElementById(`gts${tab.charAt(0).toUpperCase() + tab.slice(1)}`).style.display = 'flex';
+    btn.classList.add('active');
+
+    if (tab === 'deposit') renderGTSBag();
+    if (tab === 'status') fetchMyTrades();
+}
+
+function renderGTSBag() {
+    gtsBagGrid.innerHTML = "";
+    player.bag.forEach((p, index) => {
+        const div = document.createElement("div");
+        div.className = "bag-item " + p.tier.class;
+        if(index === selectedDepositIndex) div.classList.add('selected');
+        
+        div.onclick = () => selectForDeposit(index);
+        
+        const img = document.createElement("img");
+        img.src = getSpriteUrl(p);
+        
+        const name = document.createElement("div");
+        name.className = "name";
+        name.innerText = p.name;
+        
+        div.appendChild(img);
+        div.appendChild(name);
+        gtsBagGrid.appendChild(div);
+    });
+}
+
+function selectForDeposit(index) {
+    selectedDepositIndex = index;
+    renderGTSBag();
+    
+    const mon = player.bag[index];
+    depositPreview.innerHTML = `
+        <div style="font-weight:bold; color:#fff;">Selected: ${mon.name}</div>
+        <div style="font-size:12px;">Level: 1 (Default)</div>
+    `;
+    confirmDepositBtn.disabled = false;
+    confirmDepositBtn.innerText = `Deposit ${mon.name}`;
+}
+
+async function performDeposit() {
+    if (!supabase) return alert("GTS Database not configured.");
+    if (selectedDepositIndex === -1) return;
+
+    const mon = player.bag[selectedDepositIndex];
+    const wantedSpecies = gtsWantedSpecies.value;
+    const wantedLevel = parseInt(gtsWantedLevel.value);
+
+    confirmDepositBtn.disabled = true;
+    confirmDepositBtn.innerText = "Depositing...";
+
+    try {
+        const { error } = await supabase.from('gts_trades').insert([{
+            trainer_name: player.username,
+            trainer_id: player.username + "_" + Date.now(), // Pseudo ID
+            offered_pokemon: mon,
+            wanted_species: wantedSpecies,
+            wanted_level: wantedLevel,
+            status: 'active'
+        }]);
+
+        if (error) throw error;
+
+        // Remove from bag locally
+        player.bag.splice(selectedDepositIndex, 1);
+        selectedDepositIndex = -1;
+        depositPreview.innerHTML = "No selection";
+        confirmDepositBtn.innerText = "Deposit to GTS";
+        
+        updateStats();
+        save();
+        notify("Deposited to GTS!");
+        renderGTSBag();
+    } catch (err) {
+        console.error(err);
+        alert("Deposit failed: " + err.message);
+        confirmDepositBtn.disabled = false;
+    }
+}
+
+async function searchGTS() {
+    if (!supabase) return;
+    const query = document.getElementById("gtsSearchSpecies").value;
+    gtsResults.innerHTML = "<div>Loading...</div>";
+
+    let dbQuery = supabase
+        .from('gts_trades')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(50);
+        
+    // Note: To filter by offered_pokemon->name we need specific setup, 
+    // for now we filter in memory for simplicity or add a column.
+    // Assuming simple table scan for demo.
+
+    const { data, error } = await dbQuery;
+    
+    if (error) {
+        gtsResults.innerHTML = "<div>Error fetching trades.</div>";
+        return;
+    }
+
+    gtsResults.innerHTML = "";
+    
+    // Client side filtering for exact matches if needed
+    const filteredData = query ? data.filter(d => d.offered_pokemon.name.toLowerCase().includes(query.toLowerCase())) : data;
+
+    if (filteredData.length === 0) {
+        gtsResults.innerHTML = "<div style='text-align:center;color:#777;padding:20px;'>No active trades found.</div>";
+        return;
+    }
+
+    filteredData.forEach(trade => {
+        // Prevent trading with self
+        const isSelf = trade.trainer_name === player.username;
+        
+        const div = document.createElement("div");
+        div.className = "gts-trade-card";
+        
+        const offered = trade.offered_pokemon;
+        
+        div.innerHTML = `
+            <div class="gts-side">
+                <img src="${getSpriteUrl(offered)}" class="gts-img">
+                <div class="gts-info">
+                    <h4 style="color:white;">${offered.name}</h4>
+                    <span>Trainer: ${trade.trainer_name}</span>
+                </div>
+            </div>
+            <div class="gts-arrow">➜</div>
+            <div class="gts-side" style="justify-content:flex-end; text-align:right;">
+                <div class="gts-info">
+                    <h4 style="color:#f1c40f;">${trade.wanted_species}</h4>
+                    <span>Level ${trade.wanted_level}+</span>
+                </div>
+            </div>
+        `;
+        
+        const btn = document.createElement("button");
+        btn.innerText = "Trade";
+        btn.style.padding = "6px 12px";
+        btn.style.fontSize = "12px";
+        btn.style.marginLeft = "10px";
+        
+        if (isSelf) {
+            btn.innerText = "Yours";
+            btn.disabled = true;
+        } else {
+            btn.onclick = () => performTrade(trade);
+        }
+        
+        div.appendChild(btn);
+        gtsResults.appendChild(div);
+    });
+}
+
+async function performTrade(trade) {
+    // Check if player has the wanted pokemon
+    const matchIndex = player.bag.findIndex(p => 
+        p.name === trade.wanted_species 
+        // && p.level >= trade.wanted_level (Level not implemented in base game, assuming valid)
+    );
+
+    if (matchIndex === -1) {
+        alert(`You don't have a ${trade.wanted_species} in your bag!`);
+        return;
+    }
+
+    if (!confirm(`Trade your ${player.bag[matchIndex].name} for ${trade.trainer_name}'s ${trade.offered_pokemon.name}?`)) return;
+
+    // Execute Trade
+    const myMon = player.bag[matchIndex];
+    
+    // Optimistic Update
+    const newMon = trade.offered_pokemon;
+    newMon.caught = true; // Ensure caught flag is set
+    
+    // 1. Mark trade as completed in DB
+    const { error } = await supabase
+        .from('gts_trades')
+        .update({ status: 'completed' })
+        .eq('id', trade.id);
+
+    if (error) {
+        alert("Trade failed (maybe someone else took it?)");
+        searchGTS(); // Refresh
+        return;
+    }
+
+    // 2. Swap locally
+    player.bag.splice(matchIndex, 1); // Remove offered
+    player.bag.push(newMon); // Add received
+    
+    updateStats();
+    save();
+    notify(`Trade Complete! Received ${newMon.name}`);
+    searchGTS();
+}
+
+async function fetchMyTrades() {
+    if (!supabase) return;
+    gtsMyTrades.innerHTML = "<div>Loading...</div>";
+
+    const { data, error } = await supabase
+        .from('gts_trades')
+        .select('*')
+        .eq('trainer_name', player.username)
+        .eq('status', 'active');
+
+    gtsMyTrades.innerHTML = "";
+    
+    if (data.length === 0) {
+        gtsMyTrades.innerHTML = "<div style='text-align:center;color:#777;'>You have no active deposits.</div>";
+        return;
+    }
+
+    data.forEach(trade => {
+        const div = document.createElement("div");
+        div.className = "gts-trade-card";
+        div.innerHTML = `
+            <div class="gts-side">
+                <img src="${getSpriteUrl(trade.offered_pokemon)}" class="gts-img">
+                <div class="gts-info">
+                    <h4>${trade.offered_pokemon.name}</h4>
+                    <span>Seeking: ${trade.wanted_species}</span>
+                </div>
+            </div>
+        `;
+        
+        const btn = document.createElement("button");
+        btn.innerText = "Withdraw";
+        btn.style.background = "#e74c3c";
+        btn.style.padding = "6px 12px";
+        btn.onclick = () => withdrawTrade(trade);
+        
+        div.appendChild(btn);
+        gtsMyTrades.appendChild(div);
+    });
+}
+
+async function withdrawTrade(trade) {
+    if (!confirm("Withdraw this Pokemon?")) return;
+
+    const { error } = await supabase
+        .from('gts_trades')
+        .update({ status: 'withdrawn' })
+        .eq('id', trade.id);
+
+    if (!error) {
+        player.bag.push(trade.offered_pokemon);
+        updateStats();
+        save();
+        notify("Pokemon Withdrawn!");
+        fetchMyTrades();
+    } else {
+        alert("Error withdrawing.");
+    }
+}
+
+// Helper
+function getSpriteUrl(p) {
+    let spriteUrl = "";
+    const dexId = genAllOrder.indexOf(p.base) + 1;
+    
+    if (p.giga && gigaSpriteIdMap[p.name]) {
+        spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${gigaSpriteIdMap[p.name]}.png`;
+    } else if (p.mega && megaSpriteIdMap[p.name]) {
+        spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${megaSpriteIdMap[p.name]}.png`;
+    } else if (dexId > 0) {
+        spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${dexId}.png`;
+    }
+    return spriteUrl || "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png";
 }
 
 // --- BAG LOGIC ---
@@ -957,12 +1705,7 @@ function renderBag() {
         div.className = `bag-item ${p.tier.class} ${p.shiny ? 'shiny' : ''}`;
         
         const img = document.createElement("img");
-        const dexId = genAllOrder.indexOf(p.base) + 1;
-        // Simple sprite logic for demo (replace with your robust logic)
-        let spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${dexId}.png`;
-        if (dexId <= 0) spriteUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png";
-
-        img.src = spriteUrl;
+        img.src = getSpriteUrl(p);
         
         const name = document.createElement("div");
         name.className = "name";
@@ -977,30 +1720,26 @@ function renderBag() {
             e.stopPropagation();
             releasePokemon(index);
         };
-        
-        // GTS SELL BUTTON (Overlay)
-        const sellBtn = document.createElement("div");
-        sellBtn.innerText = "🌐";
-        sellBtn.style.position = "absolute";
-        sellBtn.style.top = "-5px";
-        sellBtn.style.left = "-5px";
-        sellBtn.style.background = "#2ecc71";
-        sellBtn.style.width = "20px";
-        sellBtn.style.height = "20px";
-        sellBtn.style.borderRadius = "50%";
-        sellBtn.style.fontSize = "12px";
-        sellBtn.style.textAlign = "center";
-        sellBtn.style.cursor = "pointer";
-        sellBtn.style.lineHeight = "20px";
-        sellBtn.onclick = (e) => {
-            e.stopPropagation();
-            listOnGTS(index);
-        };
 
         div.appendChild(btn);
-        div.appendChild(sellBtn);
         div.appendChild(img);
         div.appendChild(name);
+
+        // Evolution Button Check
+        if(evolutionMap[p.name]) {
+            const evoInfo = evolutionMap[p.name];
+            const candyCount = player.candy[p.base] || 0;
+            if(candyCount >= evoInfo.cost) {
+                const evoBtn = document.createElement("button");
+                evoBtn.className = "evo-btn";
+                evoBtn.innerText = `Evolve (${evoInfo.cost}🍬)`;
+                evoBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    evolvePokemon(index, p);
+                };
+                div.appendChild(evoBtn);
+            }
+        }
 
         bagGrid.appendChild(div);
     });
@@ -1008,129 +1747,205 @@ function renderBag() {
 
 function releasePokemon(index) {
     const mon = player.bag[index];
-    let value = 10; // Default
+    // Calculate Value
+    let value = 0;
     const tierData = rarityTable.find(t => t.name === mon.tier.name);
     if(tierData) value = tierData.coinValue;
     if(mon.shiny) value *= 5;
+    if(mon.mega) value *= 2;
+    if(mon.giga) value *= 3;
 
     if(confirm(`Release ${mon.name} for ${value} coins?`)) {
         player.bag.splice(index, 1);
         player.coins += value;
+        
         checkQuestProgress("release", 1);
+        
+        notify(`Released! +${value} Coins`);
         renderBag();
         updateStats();
-        manualSave();
+        save();
     }
 }
 
-// --- GTS LOGIC ---
-
-async function listOnGTS(index) {
-    const price = prompt("Enter Coin Price for this Pokemon:", "100");
-    if(!price || isNaN(price)) return;
+function evolvePokemon(index, mon) {
+    const evoInfo = evolutionMap[mon.name];
+    if(!evoInfo) return;
     
-    const intPrice = parseInt(price);
-    const mon = player.bag[index];
-    
-    const user = (await supabase.auth.getUser()).data.user;
-    if(!user) return alert("Must be logged in!");
-
-    // 1. Insert into Supabase
-    const { error } = await supabase.from('gts_listings').insert({
-        seller_id: user.id,
-        seller_name: player.username || "Trainer",
-        pokemon_data: mon,
-        price: intPrice
-    });
-    
-    if(error) {
-        alert("Error listing item: " + error.message);
-    } else {
-        // 2. Remove from local bag ONLY if DB success
-        player.bag.splice(index, 1);
-        notify(`Listed ${mon.name} for ${intPrice} coins!`);
-        manualSave();
-        toggleBag(false);
-        toggleGTS(true); // switch to GTS view
-    }
-}
-
-async function refreshGTS() {
-    gtsList.innerHTML = "<div style='text-align:center;'>Refreshing...</div>";
-    
-    // Fetch listings
-    const { data, error } = await supabase
-        .from('gts_listings')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(20);
+    if(player.candy[mon.base] >= evoInfo.cost) {
+        player.candy[mon.base] -= evoInfo.cost;
         
-    if(error) return gtsList.innerText = "Error loading.";
+        const oldName = mon.name;
+        mon.name = evoInfo.into; // Evolve!
+        mon.base = evoInfo.into; // Base changes too
+        
+        notify(`🧬 Evolved ${oldName} into ${mon.name}!`);
+        
+        // Add to Dex
+        if(!player.pokedex[mon.name]) player.pokedex[mon.name] = { count: 0, shiny: 0, mega: {}, giga: {} };
+        player.pokedex[mon.name].count++;
+        
+        renderBag();
+        renderDex();
+        updateStats();
+        save();
+    }
+}
+
+function sortBag(criteria) {
+    if(criteria === 'name') {
+        player.bag.sort((a,b) => a.name.localeCompare(b.name));
+    } else if (criteria === 'rarity') {
+        const rankMap = { "Common":1, "Uncommon":2, "Rare":3, "Ultra":4, "Mythical":5, "Mega":6, "Giga": 7 };
+        player.bag.sort((a,b) => rankMap[b.tier.name] - rankMap[a.tier.name]);
+    } else if (criteria === 'recent') {
+        player.bag.sort((a,b) => b.id - a.id);
+    } else if (criteria === 'shiny') {
+        player.bag.sort((a,b) => (b.shiny ? 1 : 0) - (a.shiny ? 1 : 0));
+    }
+    renderBag();
+}
+
+// --- SHOP LOGIC ---
+function renderShop() {
+    shopGrid.innerHTML = "";
+    shopCoinDisplay.innerText = player.coins;
     
-    gtsList.innerHTML = "";
-    if(data.length === 0) gtsList.innerHTML = "<div style='text-align:center; color:#777;'>No listings found.</div>";
-
-    const currentUser = (await supabase.auth.getUser()).data.user;
-
-    data.forEach(item => {
-        const mon = item.pokemon_data;
+    shopItems.forEach(item => {
         const div = document.createElement("div");
-        div.className = "gts-item";
+        div.className = "shop-item";
         
-        let html = `
-            <div style="display:flex; align-items:center; gap:10px;">
-                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" style="width:30px;">
-                <div>
-                    <div style="font-weight:bold; ${mon.shiny ? 'color:#f39c12':''}">${mon.name} ${mon.shiny ? '✨':''}</div>
-                    <div style="font-size:10px; color:#aaa;">Seller: ${item.seller_name || "Unknown"}</div>
-                </div>
-            </div>
-            <div style="text-align:right;">
-                <div class="gts-price">${item.price} 🪙</div>
+        let currentLevel = 0;
+        if(item.id === "bagUp") currentLevel = player.upgrades.bagLevel;
+        if(item.id === "luck") currentLevel = player.upgrades.luckLevel;
+        if(item.id === "candyUp") currentLevel = player.upgrades.candyLevel;
+        
+        const cost = Math.floor(item.cost * Math.pow(1.5, currentLevel));
+        const maxed = item.max && currentLevel >= item.max;
+        
+        div.innerHTML = `
+            <h3>${item.name}</h3>
+            <p>${item.desc}</p>
+            <p style="font-weight:bold; color: #fff;">Lvl: ${currentLevel}</p>
         `;
         
-        // Logic: Buy or Delete?
-        if(currentUser && item.seller_id === currentUser.id) {
-            html += `<button onclick="deleteListing('${item.id}')" style="padding:4px 8px; font-size:10px; background:#e74c3c;">Remove</button>`;
-        } else {
-            html += `<button onclick="buyListing('${item.id}', ${item.price})" style="padding:4px 8px; font-size:10px; background:#27ae60;">Buy</button>`;
-        }
+        const btn = document.createElement("button");
+        btn.innerText = maxed ? "MAXED" : `Buy (${cost} 🪙)`;
+        btn.disabled = maxed || player.coins < cost;
+        btn.onclick = () => buyItem(item, cost);
         
-        html += `</div>`;
-        div.innerHTML = html;
-        gtsList.appendChild(div);
+        div.appendChild(btn);
+        shopGrid.appendChild(div);
     });
 }
 
-async function deleteListing(listingId) {
-    const { error } = await supabase.from('gts_listings').delete().eq('id', listingId);
-    if(error) alert(error.message);
-    else {
-        notify("Listing removed (Note: Logic to return Pokemon to bag not implemented in this demo version)");
-        refreshGTS();
+function buyItem(item, cost) {
+    if(player.coins >= cost) {
+        player.coins -= cost;
+        
+        if(item.id === "bagUp") player.upgrades.bagLevel++;
+        if(item.id === "luck") player.upgrades.luckLevel++;
+        if(item.id === "candyUp") player.upgrades.candyLevel++;
+        
+        applyUpgrades();
+        updateStats();
+        renderShop();
+        save();
+        notify(`Purchased ${item.name}!`);
     }
 }
 
-async function buyListing(listingId, price) {
-    if(player.coins < price) return alert("Not enough coins!");
+// --- QUEST LOGIC ---
+function generateQuests() {
+    const types = ["catch", "roll", "release"];
+    const rarities = ["Common", "Uncommon", "Rare"];
+    player.activeQuests = [];
     
-    // 1. Fetch the listing again to ensure it exists
-    const { data, error } = await supabase.from('gts_listings').select('*').eq('id', listingId).single();
-    if(error || !data) return alert("Listing no longer exists.");
-    
-    // 2. Client-side trade logic (Simplified for demo - REAL APPS SHOULD USE SERVER FUNCTIONS)
-    // We optimistically delete the listing. If it fails (someone else bought it), we error.
-    const del = await supabase.from('gts_listings').delete().eq('id', listingId);
-    
-    if(del.error) {
-        alert("Trade failed - someone else might have bought it.");
+    for(let i=0; i<3; i++) {
+        const type = types[Math.floor(Math.random() * types.length)];
+        let target = 0;
+        let desc = "";
+        let reward = 0;
+        let filter = null;
+        
+        if(type === "roll") {
+            target = 10 + Math.floor(Math.random() * 40);
+            desc = `Roll ${target} times`;
+            reward = target * 5;
+        } else if (type === "catch") {
+            const r = rarities[Math.floor(Math.random() * rarities.length)];
+            filter = r;
+            target = 1 + Math.floor(Math.random() * 3);
+            desc = `Catch ${target} ${r} Pokemon`;
+            reward = target * (r==="Rare"? 300 : 50);
+        } else if (type === "release") {
+            target = 5;
+            desc = `Release 5 Pokemon`;
+            reward = 100;
+        }
+        
+        player.activeQuests.push({
+            desc: desc,
+            type: type,
+            target: target,
+            current: 0,
+            reward: reward,
+            filter: filter,
+            completed: false,
+            id: Date.now() + i
+        });
+    }
+    save();
+}
+
+function checkQuestProgress(actionType, amount, meta) {
+    let changed = false;
+    player.activeQuests.forEach(q => {
+        if(q.completed) return;
+        if(q.type !== actionType) return;
+        
+        if(q.filter && meta && meta.tier.name !== q.filter) return;
+        
+        q.current += amount;
+        if(q.current >= q.target) {
+            q.current = q.target;
+            q.completed = true;
+            player.coins += q.reward;
+            notify(`🏆 Quest Complete! +${q.reward} Coins`);
+            changed = true;
+        }
+    });
+    if(changed) {
+        updateStats();
+        save();
+    }
+}
+
+function renderQuests() {
+    questList.innerHTML = "";
+    player.activeQuests.forEach(q => {
+        const div = document.createElement("div");
+        div.className = `quest-item ${q.completed ? 'quest-complete' : ''}`;
+        div.innerHTML = `
+            <div class="quest-info">
+                <h4>${q.desc}</h4>
+                <p>Reward: <span class="quest-reward">${q.reward} 🪙</span></p>
+            </div>
+            <div class="quest-progress">${q.current}/${q.target}</div>
+        `;
+        questList.appendChild(div);
+    });
+}
+
+function refreshQuests() {
+    if(player.coins >= 100) {
+        player.coins -= 100;
+        generateQuests();
+        renderQuests();
+        updateStats();
+        notify("Quests Refreshed!");
     } else {
-        // Success
-        player.coins -= price;
-        player.bag.push(data.pokemon_data);
-        notify(`Purchased ${data.pokemon_data.name}!`);
-        manualSave();
-        refreshGTS();
+        alert("Not enough coins!");
     }
 }
 
@@ -1138,7 +1953,7 @@ async function buyListing(listingId, price) {
 
 function addToBag(mon, btn) {
     if(player.bag.length >= player.maxBag) {
-        alert(`Your bag is full!`);
+        alert(`Your bag is full! (${player.bag.length}/${player.maxBag})`);
         return;
     }
     if(mon.caught) return; 
@@ -1147,8 +1962,16 @@ function addToBag(mon, btn) {
     mon.caught = true; 
     
     // Add Candy
+    if(!player.candy) player.candy = {};
     if(!player.candy[mon.base]) player.candy[mon.base] = 0;
-    player.candy[mon.base] += 1;
+    
+    // Candy multiplier check
+    let candyGain = 1;
+    if(Math.random() < (player.upgrades.candyLevel * 0.1)) candyGain = 2; // 10% chance per level
+    
+    player.candy[mon.base] += candyGain;
+    
+    if(candyGain > 1) notify(`Lucky! +${candyGain} Candy!`);
     
     checkQuestProgress("catch", 1, mon);
     
@@ -1159,7 +1982,7 @@ function addToBag(mon, btn) {
     }
     
     updateStats();
-    autoSave();
+    save();
 }
 
 function performSingleRoll() {
@@ -1199,7 +2022,18 @@ function performSingleRoll() {
   }
   
   player.pokedex[baseName].count++;
-  if(isShiny) player.pokedex[baseName].shiny++;
+  
+  if(isShiny) {
+    player.pokedex[baseName].shiny++;
+  }
+  
+  if(isMegaPull) {
+    player.pokedex[baseName].mega[pickedName] = true;
+  }
+  if(isGigaPull) {
+    if(!player.pokedex[baseName].giga) player.pokedex[baseName].giga = {};
+    player.pokedex[baseName].giga[pickedName] = true;
+  }
   
   const newMon = {
     name: pickedName,
@@ -1226,18 +2060,21 @@ function updateUI(lastRoll) {
   cardName.innerText = lastRoll.name;
   cardRarity.innerText = lastRoll.shiny ? `✨ Shiny ${lastRoll.tier.name} ✨` : lastRoll.tier.name;
   
-  const dexId = genAllOrder.indexOf(lastRoll.base) + 1;
-  let spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${dexId}.png`;
-  if(dexId <= 0) spriteUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png";
-
-  cardSprite.src = spriteUrl;
-  cardSprite.style.display = "block";
+  let spriteUrl = getSpriteUrl(lastRoll);
+  
+  if (spriteUrl) {
+    cardSprite.src = spriteUrl;
+    cardSprite.style.display = "block";
+  } else {
+    cardSprite.style.display = "none";
+  }
 
   cardCatchBtn.style.display = "inline-block";
   cardCatchBtn.innerText = "Catch!";
   cardCatchBtn.disabled = false;
   cardCatchBtn.style.background = "#27ae60";
   
+  // Update click handler to work for current roll
   cardCatchBtn.onclick = function() {
       addToBag(lastRoll, cardCatchBtn);
   };
@@ -1250,15 +2087,73 @@ function renderLog(batch, bestRoll) {
   const logDiv = document.getElementById("rollLog");
   logDiv.innerHTML = "";
   
-  batch.slice(0, 50).forEach((roll) => {
+  // Optimization: If batch is huge, sort and only show top items
+  let displayBatch = batch;
+  if (batch.length > 100) {
+      // Sort by score (rank/shiny/mega) descending
+      displayBatch = [...batch].sort((a, b) => {
+          let scoreA = a.tier.rank * 10 + (a.shiny?5:0) + (a.mega?2:0) + (a.giga?3:0);
+          let scoreB = b.tier.rank * 10 + (b.shiny?5:0) + (b.mega?2:0) + (b.giga?3:0);
+          return scoreB - scoreA;
+      }).slice(0, 100); 
+      
+      const summary = document.createElement("div");
+      summary.style.padding = "10px";
+      summary.style.color = "#aaa";
+      summary.style.fontSize = "12px";
+      summary.style.borderBottom = "1px solid #444";
+      summary.innerText = `Showing top 100 results of ${batch.length} rolls...`;
+      logDiv.appendChild(summary);
+  }
+  
+  displayBatch.forEach((roll) => {
     const div = document.createElement("div");
     div.className = "log-item " + roll.tier.class;
-    if(roll === bestRoll) div.classList.add("best");
     
-    div.innerHTML = `
-        <div><span style="font-weight:bold">${roll.name}</span></div>
-        <div>${roll.tier.name}</div>
-    `;
+    if(roll === bestRoll && batch.length > 1) {
+        div.classList.add("best");
+    }
+    
+    const leftDiv = document.createElement("div");
+    let text = `${roll.name}`;
+    if(roll.shiny) text = `✨ ${text}`;
+    if(roll.mega) text = `⚡ ${text}`;
+    if(roll.giga) text = `⯌ ${text}`;
+    
+    const nameSpan = document.createElement("span");
+    nameSpan.innerText = text;
+    nameSpan.style.fontWeight = "bold";
+    leftDiv.appendChild(nameSpan);
+
+    const rightDiv = document.createElement("div");
+    rightDiv.style.display = "flex";
+    rightDiv.style.alignItems = "center";
+
+    const badge = document.createElement("span");
+    badge.innerText = roll.tier.name;
+    badge.style.fontSize = "10px";
+    badge.style.opacity = "0.7";
+    badge.style.textTransform = "uppercase";
+    badge.style.marginRight = "5px";
+    
+    const catchBtn = document.createElement("button");
+    catchBtn.className = "catch-btn";
+    catchBtn.innerText = "Catch";
+    catchBtn.onclick = function() {
+        addToBag(roll, catchBtn);
+        if(roll === bestRoll) {
+             cardCatchBtn.disabled = true;
+             cardCatchBtn.innerText = "Caught!";
+             cardCatchBtn.style.background = "#555";
+        }
+    };
+
+    rightDiv.appendChild(badge);
+    rightDiv.appendChild(catchBtn);
+    
+    div.appendChild(leftDiv);
+    div.appendChild(rightDiv);
+    
     logDiv.appendChild(div);
   });
 }
@@ -1267,60 +2162,138 @@ function updateStats() {
   rollsText.innerText = player.totalRolls.toLocaleString();
   caughtText.innerText = Object.keys(player.pokedex).length;
   rollMultDisplay.innerText = player.rollMultiplier;
-  bagBtnCount.innerText = player.bag.length;
-  bagMaxDisplay.innerText = player.maxBag;
-  bagCapacity.innerText = `${player.bag.length}/${player.maxBag}`;
+  
+  if(player.bag) {
+      bagBtnCount.innerText = player.bag.length;
+      bagMaxDisplay.innerText = player.maxBag;
+      bagCapacity.innerText = `${player.bag.length}/${player.maxBag}`;
+  }
   coinCount.innerText = player.coins;
 }
 
 function renderDex(filter = "") {
   pokedexDropdown.innerHTML = "";
+  
   genAllOrder.forEach((p, index) => {
     if(filter && !p.toLowerCase().includes(filter.toLowerCase())) return;
+    
     const entry = player.pokedex[p];
     const div = document.createElement("div");
-    div.className = `dex-entry ${rarityMap[p] || "common"}`;
+    
+    const rarityClass = rarityMap[p] || "common";
+    div.className = `dex-entry ${rarityClass}`;
+    
     if(entry) div.classList.add("collected");
-    div.innerHTML = `<span>#${index+1} ${p}</span>`;
+    
+    let html = `<span>#${String(index+1).padStart(3,"0")} ${p}</span>`;
+    let icons = "<span>";
+    
+    if(entry) {
+      if(entry.shiny > 0) {
+        div.classList.add("shiny");
+        icons += " <span style='color:red'>★</span>";
+      } else {
+        icons += " <span style='color:rgba(255,255,255,0.2)'>☆</span>";
+      }
+      
+      if(megaEligible.has(p)) {
+        const hasMega = Object.keys(entry.mega || {}).length > 0;
+        icons += hasMega ? " <span style='color:gold'>⚡</span>" : " <span style='color:rgba(255,255,255,0.2)'>◇</span>";
+      }
+      
+      if(gigaEligible.has(p)) {
+        const hasGiga = Object.keys(entry.giga || {}).length > 0;
+        icons += hasGiga ? " <span style='color:#e74c3c'>⯌</span>" : " <span style='color:rgba(255,255,255,0.2)'>x</span>";
+      }
+    } else {
+      div.style.opacity = "0.3";
+    }
+    
+    icons += "</span>";
+    div.innerHTML = html + icons;
+    
     pokedexDropdown.appendChild(div);
   });
 }
 
+// --- REWARDS SYSTEM ---
 function checkRewards() {
-    // Basic milestone logic
-    if(player.totalRolls > 1000 && !player.rewards.r1000) {
-        player.rewards.r1000 = true;
-        player.rollMultiplier++;
-        notify("1000 Rolls! +1 Multiplier");
+  if (!player.rewards) player.rewards = {};
+  
+  const rollMilestones = [
+    { target: 100, id: "r100", action: () => addMultiplier(1) },
+    { target: 500, id: "r500", action: () => addMultiplier(1) },
+    { target: 1000, id: "r1000", action: () => addMultiplier(1) },
+    { target: 5000, id: "r5000", action: () => addMultiplier(1) },
+    { target: 10000, id: "r10000", action: () => addMultiplier(2) },
+    { target: 100000, id: "r100000", action: () => addMultiplier(5) },
+  ];
+
+  rollMilestones.forEach(m => {
+    if(player.totalRolls >= m.target && !player.rewards[m.id]) {
+      player.rewards[m.id] = true;
+      m.action();
+      notify(`Milestone: ${m.target} Rolls! +Roll Multiplier!`);
     }
+  });
+  
+  const totalMons = genAllOrder.length;
+  const currentCaught = Object.keys(player.pokedex).length;
+  
+  if(currentCaught >= totalMons && totalMons > 0 && !player.rewards["baseDex"]) {
+    player.rewards["baseDex"] = true;
+    addMultiplier(5);
+    notify("MASTER: Pokedex Complete! Huge Bonus!");
+  }
 }
 
-// --- SAVE SYSTEM ---
-
-// Auto-save debounce (don't spam server)
-let saveTimeout;
-function autoSave() {
-    clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(manualSave, 5000); // Save 5 seconds after last action
+function addMultiplier(amount) {
+  player.rollMultiplier += amount;
+  updateStats();
 }
 
-async function manualSave() {
-    const user = (await supabase.auth.getUser()).data.user;
-    if(!user) return; // Can't save if not logged in
+// --- SAVE / LOAD SYSTEM ---
+function save(){ 
+  player.lastSave = Date.now();
+  localStorage.setItem("pokemonRNG", JSON.stringify(player));
+  const date = new Date(player.lastSave);
+  lastSaveText.innerText = date.toLocaleTimeString();
+}
 
-    const { error } = await supabase
-        .from('profiles')
-        .upsert({ 
-            id: user.id, 
-            username: player.username,
-            save_data: player
-        });
-        
-    if(error) console.error("Save failed:", error);
-    else {
-        lastSaveText.innerText = new Date().toLocaleTimeString();
-        console.log("Saved to cloud.");
+function load(){ 
+  const data = localStorage.getItem("pokemonRNG"); 
+  if(data){ 
+    try {
+      const parsed = JSON.parse(data);
+      player = { ...player, ...parsed };
+      
+      if(!player.pokedex) player.pokedex = {};
+      if(!player.rewards) player.rewards = {};
+      if(!player.rollMultiplier) player.rollMultiplier = 1;
+      if(!player.bag) player.bag = [];
+      if(!player.coins) player.coins = 0;
+      if(!player.candy) player.candy = {};
+      if(!player.upgrades) player.upgrades = { bagLevel: 0, luckLevel: 0, candyLevel: 0 };
+      if(!player.activeQuests) player.activeQuests = [];
+      
+      applyUpgrades(); // Apply loaded upgrade stats
+
+      console.log("Save loaded:", player);
+      startGame();
+    } catch (e) {
+      console.error("Save file corrupted", e);
+      notify("Save file corrupted or old version.");
     }
+  } else {
+    console.log("No save found.");
+  }
+}
+
+function resetData() {
+  if(confirm("Are you sure you want to wipe your save?")) {
+    localStorage.removeItem("pokemonRNG");
+    location.reload();
+  }
 }
 
 function notify(msg) {
@@ -1332,41 +2305,6 @@ function notify(msg) {
   area.appendChild(div);
   setTimeout(() => div.remove(), 3000);
 }
-
-// Shop and Quest logic abbreviated for space (copy existing implementations if needed, they work locally)
-function renderShop() {
-    shopGrid.innerHTML = "";
-    shopItems.forEach(item => {
-        const div = document.createElement("div");
-        div.className = "shop-item";
-        div.innerHTML = `<h3>${item.name}</h3><p>${item.desc}</p><button onclick="alert('Shop Logic Here')">Buy</button>`;
-        shopGrid.appendChild(div);
-    });
-}
-function renderQuests() {
-    questList.innerHTML = "";
-    player.activeQuests.forEach(q => {
-        const div = document.createElement("div");
-        div.className = "quest-item";
-        div.innerHTML = `<h4>${q.desc}</h4><div>${q.current}/${q.target}</div>`;
-        questList.appendChild(div);
-    });
-}
-function generateQuests() {
-    player.activeQuests = [{ desc: "Roll 50 times", target: 50, current: 0, reward: 100, type: "roll" }];
-}
-function checkQuestProgress(type, amt) {
-    player.activeQuests.forEach(q => {
-        if(q.type === type && q.current < q.target) {
-            q.current += amt;
-            if(q.current >= q.target) {
-                player.coins += q.reward;
-                notify(`Quest Complete! +${q.reward} Coins`);
-            }
-        }
-    });
-}
-
 </script>
 </body>
 </html>
