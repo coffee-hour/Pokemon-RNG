@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Pokemon RNG + GTS</title>
+<title>Pokemon RNG + Code Market</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- Supabase Client -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -465,7 +465,7 @@ input, select { background: #eee; color: #333; }
 
   <!-- Right Menu Bar: Quests, Shop, Coins -->
   <div style="position: absolute; top: 10px; right: 10px; z-index: 100; display: flex; gap: 10px; align-items: center;">
-    <button onclick="toggleGTS(true)" class="menu-btn" style="background:#3498db;">🌐 GTS</button>
+    <button onclick="toggleGTS(true)" class="menu-btn" style="background:#3498db;">🌐 Market</button>
     <button onclick="toggleQuests(true)" class="menu-btn" style="background:#2980b9;">📜 Quests</button>
     <button onclick="toggleShop(true)" class="menu-btn" style="background:#f39c12;">🏪 Shop</button>
     <div class="coin-display">
@@ -568,51 +568,46 @@ input, select { background: #eee; color: #333; }
   </div>
 </div>
 
-<!-- GTS MODAL -->
+<!-- GTS MODAL (Now Marketplace) -->
 <div id="gtsModal" class="modal-overlay" style="display:none;">
   <div class="modal-content">
-    <h2>Global Trade Station</h2>
+    <h2>Global Marketplace</h2>
     <button class="close-btn" style="position: absolute; top: 15px; right: 15px;" onclick="toggleGTS(false)">X</button>
     
     <div class="gts-tabs">
-        <div class="gts-tab active" onclick="switchGTSTab('seek', this)">Seek Pokemon</div>
-        <div class="gts-tab" onclick="switchGTSTab('deposit', this)">Deposit</div>
-        <div class="gts-tab" onclick="switchGTSTab('status', this)">My Trades</div>
+        <div class="gts-tab active" onclick="switchGTSTab('seek', this)">Buy Pokemon</div>
+        <div class="gts-tab" onclick="switchGTSTab('deposit', this)">Sell Pokemon</div>
+        <div class="gts-tab" onclick="switchGTSTab('status', this)">My Listings</div>
     </div>
 
-    <!-- SEEK TAB -->
+    <!-- BUY TAB -->
     <div id="gtsSeek" class="gts-content" style="display:flex; flex-direction:column; height:100%;">
         <div style="display:flex; gap:10px; margin-bottom:10px;">
-            <input id="gtsSearchSpecies" placeholder="Filter by species (e.g. Pikachu)..." style="flex:1; margin:0;">
+            <input id="gtsSearchSpecies" placeholder="Search to buy (e.g. Charizard)..." style="flex:1; margin:0;">
             <button onclick="searchGTS()" style="margin:0; font-size:12px;">Search</button>
         </div>
         <div id="gtsResults" class="gts-list">
-            <div style="text-align:center; color:#777; margin-top:20px;">Loading trades...</div>
+            <div style="text-align:center; color:#777; margin-top:20px;">Search for a Pokemon to buy!</div>
         </div>
     </div>
 
-    <!-- DEPOSIT TAB -->
+    <!-- SELL TAB -->
     <div id="gtsDeposit" class="gts-content" style="display:none; flex-direction:column; height:100%;">
         <div style="display:flex; gap:20px; height:100%;">
             <!-- Left: Select from Bag -->
             <div style="flex:1; display:flex; flex-direction:column; border-right:1px solid #444; padding-right:10px;">
-                <h4>1. Select Pokemon</h4>
+                <h4>1. Select from Bag</h4>
                 <div id="gtsBagGrid" class="bag-grid" style="max-height:300px;"></div>
             </div>
-            <!-- Right: Setup Trade -->
+            <!-- Right: Setup Sale -->
             <div style="flex:1; display:flex; flex-direction:column; padding-left:10px;">
-                <h4>2. What do you want?</h4>
+                <h4>2. Set Price</h4>
                 <div id="depositPreview" style="text-align:center; margin-bottom:10px; font-style:italic; color:#aaa;">No selection</div>
                 
-                <label>Wanted Species:</label>
-                <select id="gtsWantedSpecies" style="margin:0 0 10px 0;">
-                    <!-- Populated by JS -->
-                </select>
+                <label>Selling Price (Coins):</label>
+                <input type="number" id="gtsPriceInput" value="100" min="1" style="margin:0 0 20px 0;">
                 
-                <label>Min Level:</label>
-                <input type="number" id="gtsWantedLevel" value="1" min="1" max="100" style="margin:0 0 20px 0;">
-                
-                <button id="confirmDepositBtn" onclick="performDeposit()" disabled style="margin:0;">Deposit to GTS</button>
+                <button id="confirmDepositBtn" onclick="performDeposit()" disabled style="margin:0;">List for Sale</button>
             </div>
         </div>
     </div>
@@ -635,22 +630,55 @@ window.onerror = function(msg, url, line) {
 const BASE_SHINY_ODDS = 512; 
 let CURRENT_SHINY_ODDS = 512;
 
-// --- SUPABASE CONFIGURATION ---
-// !!! REPLACE THESE WITH YOUR KEYS FROM SUPABASE DASHBOARD !!!
-const SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';
-const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
-let supabase = null;
+// --- MARKETPLACE LISTINGS (EDIT THIS!) ---
+// To add a listing, copy the example block below, paste it into the array, and change the details!
+// Note: 'trainer_name' can be anything. 'price' is in Coins.
+const MARKET_LISTINGS = [
+    {
+        id: "trade_001",
+        trainer_name: "Ash Ketchum",
+        offered_pokemon: { name: "Charizard", shiny: true, tier: { class: "rare" } },
+        price: 5000 
+    },
+    {
+        id: "trade_002",
+        trainer_name: "Gary Oak",
+        offered_pokemon: { name: "Blastoise", shiny: false, tier: { class: "rare" } },
+        price: 2500 
+    },
+    {
+        id: "trade_003",
+        trainer_name: "Misty",
+        offered_pokemon: { name: "Starmie", shiny: true, tier: { class: "rare" } },
+        price: 3000 
+    },
+    {
+        id: "trade_004",
+        trainer_name: "Brock",
+        offered_pokemon: { name: "Onix", shiny: false, tier: { class: "uncommon" } },
+        price: 800 
+    },
+    {
+        id: "trade_005",
+        trainer_name: "Team Rocket",
+        offered_pokemon: { name: "Meowth", shiny: false, tier: { class: "common" } },
+        price: 100 
+    },
+    {
+        id: "trade_006",
+        trainer_name: "Leon",
+        offered_pokemon: { name: "Dragapult", shiny: false, tier: { class: "rare" } },
+        price: 4500 
+    },
+    {
+        id: "trade_007",
+        trainer_name: "Cynthia",
+        offered_pokemon: { name: "Garchomp", shiny: true, tier: { class: "ultra" } },
+        price: 9999 
+    },
+    // PASTE NEW LISTINGS HERE!
+];
 
-if (SUPABASE_URL.includes('YOUR_SUPABASE') || SUPABASE_KEY.includes('YOUR_SUPABASE')) {
-    console.warn("Supabase keys not configured. GTS will not work.");
-} else {
-    try {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        console.log("Supabase initialized");
-    } catch (e) {
-        console.error("Supabase init failed:", e);
-    }
-}
 
 // --- EVOLUTION DATA (Partial Implementation for Demo) ---
 const evolutionMap = {
@@ -1456,91 +1484,50 @@ function selectForDeposit(index) {
         <div style="font-size:12px;">Level: 1 (Default)</div>
     `;
     confirmDepositBtn.disabled = false;
-    confirmDepositBtn.innerText = `Deposit ${mon.name}`;
+    confirmDepositBtn.innerText = `List ${mon.name} (Requires Code Edit)`;
+    confirmDepositBtn.onclick = performDeposit;
 }
 
-async function performDeposit() {
-    if (!supabase) return alert("GTS Database not configured.");
+// Updated performDeposit to instruct user on code editing
+function performDeposit() {
     if (selectedDepositIndex === -1) return;
-
-    const mon = player.bag[selectedDepositIndex];
-    const gtsWantedSpecies = document.getElementById("gtsWantedSpecies");
-    const gtsWantedLevel = document.getElementById("gtsWantedLevel");
-    const confirmDepositBtn = document.getElementById("confirmDepositBtn");
     
-    const wantedSpecies = gtsWantedSpecies.value;
-    const wantedLevel = parseInt(gtsWantedLevel.value);
+    const mon = player.bag[selectedDepositIndex];
+    const gtsPriceInput = document.getElementById("gtsPriceInput");
+    const price = gtsPriceInput ? gtsPriceInput.value : 100;
 
-    confirmDepositBtn.disabled = true;
-    confirmDepositBtn.innerText = "Depositing...";
+    const codeBlock = `
+    {
+        id: "trade_${Date.now()}",
+        trainer_name: "${player.username}",
+        offered_pokemon: { name: "${mon.name}", shiny: ${mon.shiny}, tier: { class: "${mon.tier.class}" } },
+        price: ${price} 
+    },`;
 
-    try {
-        const { error } = await supabase.from('gts_trades').insert([{
-            trainer_name: player.username,
-            trainer_id: player.username + "_" + Date.now(), // Pseudo ID
-            offered_pokemon: mon,
-            wanted_species: wantedSpecies,
-            wanted_level: wantedLevel,
-            status: 'active'
-        }]);
-
-        if (error) throw error;
-
-        // Remove from bag locally
-        player.bag.splice(selectedDepositIndex, 1);
-        selectedDepositIndex = -1;
-        
-        const depositPreview = document.getElementById("depositPreview");
-        depositPreview.innerHTML = "No selection";
-        confirmDepositBtn.innerText = "Deposit to GTS";
-        
-        updateStats();
-        save();
-        notify("Deposited to GTS!");
-        renderGTSBag();
-    } catch (err) {
-        console.error(err);
-        alert("Deposit failed: " + err.message);
-        confirmDepositBtn.disabled = false;
-    }
+    alert(`To sell this Pokemon, you need to add it to the 'MARKET_LISTINGS' array in the code!\n\nCopy this block:\n${codeBlock}`);
+    console.log("Copy this block for your code:", codeBlock);
 }
 
-async function searchGTS() {
-    if (!supabase) return;
+// Updated searchGTS to use the static list
+function searchGTS() {
     const query = document.getElementById("gtsSearchSpecies").value;
     const gtsResults = document.getElementById("gtsResults");
-    gtsResults.innerHTML = "<div>Loading...</div>";
+    gtsResults.innerHTML = "";
 
-    let dbQuery = supabase
-        .from('gts_trades')
-        .select('*')
-        .eq('status', 'active')
-        .order('created_at', { ascending: false })
-        .limit(50);
-        
-    // Note: To filter by offered_pokemon->name we need specific setup, 
-    // for now we filter in memory for simplicity or add a column.
-    // Assuming simple table scan for demo.
-
-    const { data, error } = await dbQuery;
+    // Use static list directly
+    let filteredData = MARKET_LISTINGS;
     
-    if (error) {
-        gtsResults.innerHTML = "<div>Error fetching trades.</div>";
-        return;
+    if (query) {
+        filteredData = MARKET_LISTINGS.filter(d => d.offered_pokemon.name.toLowerCase().includes(query.toLowerCase()));
     }
 
-    gtsResults.innerHTML = "";
-    
-    // Client side filtering for exact matches if needed
-    const filteredData = query ? data.filter(d => d.offered_pokemon.name.toLowerCase().includes(query.toLowerCase())) : data;
-
     if (filteredData.length === 0) {
-        gtsResults.innerHTML = "<div style='text-align:center;color:#777;padding:20px;'>No active trades found.</div>";
+        gtsResults.innerHTML = "<div style='text-align:center;color:#777;padding:20px;'>No trades found for that species.</div>";
         return;
     }
 
     filteredData.forEach(trade => {
-        // Prevent trading with self
+        // Prevent trading with self if names match (optional logic)
         const isSelf = trade.trainer_name === player.username;
         
         const div = document.createElement("div");
@@ -1552,28 +1539,30 @@ async function searchGTS() {
             <div class="gts-side">
                 <img src="${getSpriteUrl(offered)}" class="gts-img">
                 <div class="gts-info">
-                    <h4 style="color:white;">${offered.name}</h4>
+                    <h4 style="color:white;">${offered.name} ${offered.shiny ? '✨' : ''}</h4>
                     <span>Trainer: ${trade.trainer_name}</span>
                 </div>
             </div>
             <div class="gts-arrow">➜</div>
             <div class="gts-side" style="justify-content:flex-end; text-align:right;">
                 <div class="gts-info">
-                    <h4 style="color:#f1c40f;">${trade.wanted_species}</h4>
-                    <span>Level ${trade.wanted_level}+</span>
+                    <h4 style="color:#f1c40f;">${trade.price} 🪙</h4>
+                    <span>Buy Now</span>
                 </div>
             </div>
         `;
         
         const btn = document.createElement("button");
-        btn.innerText = "Trade";
+        btn.innerText = "Buy";
         btn.style.padding = "6px 12px";
         btn.style.fontSize = "12px";
         btn.style.marginLeft = "10px";
+        btn.style.background = "#27ae60";
         
         if (isSelf) {
             btn.innerText = "Yours";
             btn.disabled = true;
+            btn.style.background = "#555";
         } else {
             btn.onclick = () => performTrade(trade);
         }
@@ -1583,114 +1572,55 @@ async function searchGTS() {
     });
 }
 
-async function performTrade(trade) {
-    // Check if player has the wanted pokemon
-    const matchIndex = player.bag.findIndex(p => 
-        p.name === trade.wanted_species 
-        // && p.level >= trade.wanted_level (Level not implemented in base game, assuming valid)
-    );
-
-    if (matchIndex === -1) {
-        alert(`You don't have a ${trade.wanted_species} in your bag!`);
+function performTrade(trade) {
+    if (player.coins < trade.price) {
+        alert(`You need ${trade.price} coins to buy this!`);
         return;
     }
 
-    if (!confirm(`Trade your ${player.bag[matchIndex].name} for ${trade.trainer_name}'s ${trade.offered_pokemon.name}?`)) return;
+    if (!confirm(`Buy ${trade.offered_pokemon.name} from ${trade.trainer_name} for ${trade.price} coins?`)) return;
 
     // Execute Trade
-    const myMon = player.bag[matchIndex];
+    player.coins -= trade.price;
     
-    // Optimistic Update
-    const newMon = trade.offered_pokemon;
-    newMon.caught = true; // Ensure caught flag is set
+    // Create new Pokemon object from listing data
+    const newMon = {
+        name: trade.offered_pokemon.name,
+        base: trade.offered_pokemon.name, // Simplified: assume base is same as name
+        tier: trade.offered_pokemon.tier,
+        shiny: trade.offered_pokemon.shiny,
+        mega: false, // Default false for bought
+        giga: false, // Default false for bought
+        id: Date.now() + Math.random(),
+        caught: true
+    };
     
-    // 1. Mark trade as completed in DB
-    const { error } = await supabase
-        .from('gts_trades')
-        .update({ status: 'completed' })
-        .eq('id', trade.id);
-
-    if (error) {
-        alert("Trade failed (maybe someone else took it?)");
-        searchGTS(); // Refresh
-        return;
-    }
-
-    // 2. Swap locally
-    player.bag.splice(matchIndex, 1); // Remove offered
-    player.bag.push(newMon); // Add received
+    // Check for mega/giga via name string if encoded in listing
+    // (Simplification for static list: usually name would just be "Charizard" and flag set, 
+    // but our simple object matches the display logic)
+    
+    player.bag.push(newMon);
+    
+    // Visual update: remove from UI list locally (can't remove from code obviously)
+    // In a real app we'd filter out ID, but here we just re-render
     
     updateStats();
     save();
-    notify(`Trade Complete! Received ${newMon.name}`);
-    searchGTS();
-}
-
-async function fetchMyTrades() {
-    if (!supabase) return;
-    const gtsMyTrades = document.getElementById("gtsMyTrades");
-    gtsMyTrades.innerHTML = "<div>Loading...</div>";
-
-    const { data, error } = await supabase
-        .from('gts_trades')
-        .select('*')
-        .eq('trainer_name', player.username)
-        .eq('status', 'active');
-
-    gtsMyTrades.innerHTML = "";
+    notify(`Bought ${newMon.name}! -${trade.price} Coins`);
     
-    if (data.length === 0) {
-        gtsMyTrades.innerHTML = "<div style='text-align:center;color:#777;'>You have no active deposits.</div>";
-        return;
-    }
-
-    data.forEach(trade => {
-        const div = document.createElement("div");
-        div.className = "gts-trade-card";
-        div.innerHTML = `
-            <div class="gts-side">
-                <img src="${getSpriteUrl(trade.offered_pokemon)}" class="gts-img">
-                <div class="gts-info">
-                    <h4>${trade.offered_pokemon.name}</h4>
-                    <span>Seeking: ${trade.wanted_species}</span>
-                </div>
-            </div>
-        `;
-        
-        const btn = document.createElement("button");
-        btn.innerText = "Withdraw";
-        btn.style.background = "#e74c3c";
-        btn.style.padding = "6px 12px";
-        btn.onclick = () => withdrawTrade(trade);
-        
-        div.appendChild(btn);
-        gtsMyTrades.appendChild(div);
-    });
+    // Remove the element visually
+    searchGTS(); 
 }
 
-async function withdrawTrade(trade) {
-    if (!confirm("Withdraw this Pokemon?")) return;
-
-    const { error } = await supabase
-        .from('gts_trades')
-        .update({ status: 'withdrawn' })
-        .eq('id', trade.id);
-
-    if (!error) {
-        player.bag.push(trade.offered_pokemon);
-        updateStats();
-        save();
-        notify("Pokemon Withdrawn!");
-        fetchMyTrades();
-    } else {
-        alert("Error withdrawing.");
-    }
+function fetchMyTrades() {
+    const gtsMyTrades = document.getElementById("gtsMyTrades");
+    gtsMyTrades.innerHTML = "<div style='padding:20px; text-align:center; color:#aaa;'>To sell Pokemon, edit the 'MARKET_LISTINGS' array in the source code. <br><br> Your listings will appear in the main Search tab.</div>";
 }
 
 // Helper
 function getSpriteUrl(p) {
     let spriteUrl = "";
-    const dexId = genAllOrder.indexOf(p.base) + 1;
+    const dexId = genAllOrder.indexOf(p.base || p.name) + 1; // Fallback to name if base missing in trade obj
     
     if (p.giga && gigaSpriteIdMap[p.name]) {
         spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${gigaSpriteIdMap[p.name]}.png`;
