@@ -57,9 +57,9 @@ body {
   padding-right: 5px;
 }
 
-pokedexDropdown::-webkit-scrollbar { width: 8px; }
-pokedexDropdown::-webkit-scrollbar-track { background: #0a0c1a; }
-pokedexDropdown::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+#pokedexDropdown::-webkit-scrollbar { width: 8px; }
+#pokedexDropdown::-webkit-scrollbar-track { background: #0a0c1a; }
+#pokedexDropdown::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
 
 /* Dex Entry Base Styling */
 .dex-entry {
@@ -481,6 +481,8 @@ input, select { background: #eee; color: #333; }
     <input id="usernameInput" placeholder="Enter Username (No password needed)">
     <br>
     <button id="startBtn">Start Adventure</button>
+    <br>
+    <button onclick="resetData()" style="background:#555; font-size:12px; padding:6px 10px; margin-top:20px;">⚠️ Clear Corrupted Save</button>
   </div>
 
   <div id="game" style="display:none;">
@@ -1283,10 +1285,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // Event Listeners
   if(startBtn) {
     startBtn.addEventListener("click", () => {
-      const name = usernameInput.value.trim();
-      if(!name) return alert("Please enter a username!");
-      player.username = name;
-      startGame();
+      console.log("Start button clicked...");
+      try {
+          const name = usernameInput.value.trim();
+          if(!name) return alert("Please enter a username!");
+          player.username = name;
+          startGame();
+      } catch (e) {
+          console.error(e);
+          alert("CRITICAL ERROR starting game: " + e.message + "\nPlease try the 'Clear Corrupted Save' button.");
+      }
     });
   }
 
@@ -1390,22 +1398,31 @@ document.addEventListener("DOMContentLoaded", () => {
 // --- FUNCTIONS ---
 
 function startGame() {
+  console.log("Starting game logic...");
+  
+  // Ensure player data integrity before starting
+  if(!player.pokedex) player.pokedex = {};
+  if(!player.upgrades) player.upgrades = { bagLevel: 0, luckLevel: 0, candyLevel: 0 };
+  
   const loginScreen = document.getElementById("login");
   const gameScreen = document.getElementById("game");
   
+  // Force styles directly
   if(loginScreen) loginScreen.style.display = "none";
-  if(gameScreen) gameScreen.style.display = "block";
+  if(gameScreen) gameScreen.style.display = "flex";
   
-  applyUpgrades();
-  renderDex();
-  updateStats();
-  save();
+  // Wrap individual components in try/catch to prevent full crash
+  try { applyUpgrades(); } catch(e) { console.error("Upgrade Apply Error:", e); }
+  try { renderDex(); } catch(e) { console.error("Dex Render Error:", e); }
+  try { updateStats(); } catch(e) { console.error("Stats Update Error:", e); }
+  try { save(); } catch(e) { console.error("Save Error:", e); }
 }
 
 function applyUpgrades() {
+    if(!player.upgrades) player.upgrades = { bagLevel: 0, luckLevel: 0, candyLevel: 0 };
     // Recalculate stats based on upgrades
-    player.maxBag = 100 + (player.upgrades.bagLevel * 10);
-    CURRENT_SHINY_ODDS = Math.max(100, BASE_SHINY_ODDS - (player.upgrades.luckLevel * 50));
+    player.maxBag = 100 + ((player.upgrades.bagLevel || 0) * 10);
+    CURRENT_SHINY_ODDS = Math.max(100, BASE_SHINY_ODDS - ((player.upgrades.luckLevel || 0) * 50));
 }
 
 function toggleBag(show) {
@@ -1921,7 +1938,9 @@ function sortBag(criteria) {
     renderBag();
 }
 
-// --- SHOP LOGIC ---
+// --- SHOP ITEMS ---
+// (Already defined at top)
+
 function renderShop() {
     const shopGrid = document.getElementById("shopGrid");
     const shopCoinDisplay = document.getElementById("shopCoinDisplay");
@@ -2086,7 +2105,7 @@ function addToBag(mon, btn) {
     
     // Candy multiplier check
     let candyGain = 1;
-    if(Math.random() < (player.upgrades.candyLevel * 0.1)) candyGain = 2; // 10% chance per level
+    if(Math.random() < ((player.upgrades.candyLevel || 0) * 0.1)) candyGain = 2; // 10% chance per level
     
     player.candy[mon.base] += candyGain;
     
@@ -2296,7 +2315,7 @@ function updateStats() {
   const bagCapacity = document.getElementById("bagCapacity");
   const coinCount = document.getElementById("coinCount");
   
-  if(rollsText) rollsText.innerText = player.totalRolls.toLocaleString();
+  if(rollsText) rollsText.innerText = (player.totalRolls || 0).toLocaleString();
   if(caughtText) caughtText.innerText = Object.keys(player.pokedex).length;
   if(rollMultDisplay) rollMultDisplay.innerText = player.rollMultiplier;
   
@@ -2440,7 +2459,7 @@ function load(){
 }
 
 function resetData() {
-  if(confirm("Are you sure you want to wipe your save?")) {
+  if(confirm("Are you sure you want to delete your save? This cannot be undone.")) {
     localStorage.removeItem("pokemonRNG");
     localStorage.removeItem("pokemonGTS_market"); // Clear Market too
     location.reload();
