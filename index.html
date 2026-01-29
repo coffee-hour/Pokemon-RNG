@@ -632,6 +632,61 @@ window.onerror = function(msg, url, line) {
   console.error("Game Error: " + msg);
 };
 
+// --- IMMEDIATE GLOBAL DEFINITIONS (Carmack's Robustness) ---
+// Define player object first so it's always available
+let player = {
+  username: "",
+  totalRolls: 0,
+  pokedex: {},
+  rollMultiplier: 1,
+  rewards: {},
+  bag: [],
+  coins: 0,
+  candy: {},
+  upgrades: { bagLevel: 0, luckLevel: 0, candyLevel: 0 },
+  activeQuests: [],
+  maxBag: 100
+};
+
+// Define attemptStart immediately in the global scope
+window.attemptStart = function() {
+    console.log("Start Button Clicked via Global Function");
+    const input = document.getElementById("usernameInput");
+    const btn = document.getElementById("startBtn");
+    
+    if (!input) { alert("Critical Error: Input box missing."); return; }
+    
+    const name = input.value.trim();
+    if (!name) { 
+        alert("Please enter a username!"); 
+        input.focus();
+        return; 
+    }
+    
+    if(btn) btn.innerText = "Starting...";
+    
+    // Set state
+    player.username = name;
+    
+    // FORCE UI Update immediately (No waiting for logic)
+    const loginDiv = document.getElementById("login");
+    const gameDiv = document.getElementById("game");
+    
+    if(loginDiv) loginDiv.style.display = "none";
+    if(gameDiv) gameDiv.style.display = "flex";
+    
+    // Run Logic safely
+    setTimeout(() => {
+        try {
+            startGame();
+        } catch(e) {
+            console.error("Start Game Logic Failed, but UI forced open:", e);
+            // Even if logic fails, the screen is open. We try to save at least.
+            save(); 
+        }
+    }, 100);
+};
+
 // --- CONFIGURATION ---
 const BASE_SHINY_ODDS = 512; 
 let CURRENT_SHINY_ODDS = 512;
@@ -1239,21 +1294,6 @@ const gigaEligible = new Set(Object.values(gigaMap));
 const rarityMap = {};
 rarityTable.forEach(tier => tier.pool.forEach(p => rarityMap[p] = tier.class));
 
-// --- PLAYER STATE ---
-let player = {
-  username: "",
-  totalRolls: 0,
-  pokedex: {},
-  rollMultiplier: 1,
-  rewards: {},
-  bag: [],
-  coins: 0,
-  candy: {},
-  upgrades: { bagLevel: 0, luckLevel: 0, candyLevel: 0 },
-  activeQuests: [],
-  maxBag: 100
-};
-
 // --- DOM ELEMENTS ---
 // Elements are now fetched safely inside DOMContentLoaded
 
@@ -1284,26 +1324,6 @@ function initGame() {
   const secretTrigger = document.getElementById('secretTrigger');
   const dexSearch = document.getElementById("dexSearch");
   
-  // Define global start attempt for the HTML onclick backup
-  window.attemptStart = function() {
-      console.log("Attempting start...");
-      const usernameInput = document.getElementById("usernameInput");
-      const btn = document.getElementById("startBtn");
-      try {
-          const name = usernameInput.value.trim();
-          if(!name) return alert("Please enter a username!");
-          
-          if(btn) btn.innerText = "Starting..."; // Visual feedback
-          
-          player.username = name;
-          startGame();
-      } catch (e) {
-          console.error(e);
-          alert("CRITICAL ERROR starting game: " + e.message + "\nPlease try the 'Clear Corrupted Save' button.");
-          if(btn) btn.innerText = "Start Adventure"; // Reset text on fail
-      }
-  };
-
   // Event Listeners
   // Note: We keep the listener as primary, but window.attemptStart is the HTML backup
   if(startBtn) {
