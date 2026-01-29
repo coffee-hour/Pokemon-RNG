@@ -2432,8 +2432,11 @@ function load(){
       console.warn("Load failed - local storage restricted?", e);
   }
   
-  // Always start game if loaded or not, provided UI is ready
-  startGame();
+  // LOGIC FIX: Only auto-start if the player has a username (returning user).
+  // Otherwise, stay on the login screen so they can click the button.
+  if (player.username && player.username !== "") {
+      startGame();
+  }
 }
 
 function resetData() {
