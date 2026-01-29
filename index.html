@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Pokemon RNG + Code Market</title>
+<title>Pokemon RNG + Hybrid GTS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- Supabase Client -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -571,7 +571,10 @@ input, select { background: #eee; color: #333; }
 <!-- GTS MODAL (Now Marketplace) -->
 <div id="gtsModal" class="modal-overlay" style="display:none;">
   <div class="modal-content">
-    <h2>Global Marketplace</h2>
+    <h2>
+        <span>Global Marketplace</span>
+        <span id="gtsStatusBadge" style="font-size:10px; background:#555; padding:2px 6px; border-radius:4px; margin-left:10px;">OFFLINE</span>
+    </h2>
     <button class="close-btn" style="position: absolute; top: 15px; right: 15px;" onclick="toggleGTS(false)">X</button>
     
     <div class="gts-tabs">
@@ -630,10 +633,29 @@ window.onerror = function(msg, url, line) {
 const BASE_SHINY_ODDS = 512; 
 let CURRENT_SHINY_ODDS = 512;
 
-// --- MARKETPLACE LISTINGS (EDIT THIS!) ---
-// To add a listing, copy the example block below, paste it into the array, and change the details!
-// Note: 'trainer_name' can be anything. 'price' is in Coins.
-const MARKET_LISTINGS = [
+// --- SUPABASE CONFIGURATION (FOR GTS ONLY) ---
+// !!! REPLACE WITH YOUR KEYS TO GO ONLINE !!!
+const SUPABASE_URL = 'https://zgakufrhokcplpyppjzd.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpnYWt1ZnJob2tjcGxweXBwanpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2NDc2MDQsImV4cCI6MjA4NTIyMzYwNH0.iM9u7EkfUxScJ55G9LARdXyuUPzd3AXG5ZmqwYoC5ro';
+
+let supabase = null;
+let isOnline = false;
+
+// Initialize Supabase if keys are present
+try {
+    if (SUPABASE_URL.includes('https') && !SUPABASE_URL.includes('YOUR_SUPABASE')) {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        isOnline = true;
+        console.log("Supabase initialized - GTS is GLOBAL");
+    } else {
+        console.log("No Supabase keys - GTS is LOCAL (Offline Mode)");
+    }
+} catch (e) {
+    console.warn("Supabase init failed, falling back to local:", e);
+}
+
+// --- INITIAL MARKET LISTINGS (OFFLINE FALLBACK) ---
+const DEFAULT_MARKET_LISTINGS = [
     {
         id: "trade_001",
         trainer_name: "Ash Ketchum",
@@ -645,39 +667,20 @@ const MARKET_LISTINGS = [
         trainer_name: "Gary Oak",
         offered_pokemon: { name: "Blastoise", shiny: false, tier: { class: "rare" } },
         price: 2500 
-    },
-    {
-        id: "trade_003",
-        trainer_name: "Misty",
-        offered_pokemon: { name: "Starmie", shiny: true, tier: { class: "rare" } },
-        price: 3000 
-    },
-    {
-        id: "trade_004",
-        trainer_name: "Brock",
-        offered_pokemon: { name: "Onix", shiny: false, tier: { class: "uncommon" } },
-        price: 800 
-    },
-    {
-        id: "trade_005",
-        trainer_name: "Team Rocket",
-        offered_pokemon: { name: "Meowth", shiny: false, tier: { class: "common" } },
-        price: 100 
-    },
-    {
-        id: "trade_006",
-        trainer_name: "Leon",
-        offered_pokemon: { name: "Dragapult", shiny: false, tier: { class: "rare" } },
-        price: 4500 
-    },
-    {
-        id: "trade_007",
-        trainer_name: "Cynthia",
-        offered_pokemon: { name: "Garchomp", shiny: true, tier: { class: "ultra" } },
-        price: 9999 
-    },
-    // PASTE NEW LISTINGS HERE!
+    }
 ];
+
+// Initialize global MARKET_LISTINGS var (Local Storage based)
+let MARKET_LISTINGS = [...DEFAULT_MARKET_LISTINGS];
+
+try {
+    const savedMarket = localStorage.getItem("pokemonGTS_market");
+    if (savedMarket) {
+        MARKET_LISTINGS = JSON.parse(savedMarket);
+    }
+} catch (e) {
+    console.error("Failed to load market data", e);
+}
 
 
 // --- EVOLUTION DATA (Partial Implementation for Demo) ---
@@ -1257,6 +1260,18 @@ const rarityClasses = ["common", "uncommon", "rare", "ultra", "mythical", "mega"
 document.addEventListener("DOMContentLoaded", () => {
   console.log("Game loading...");
   
+  // Update status badge
+  const badge = document.getElementById("gtsStatusBadge");
+  if(badge) {
+      if(isOnline) {
+          badge.innerText = "ONLINE (GLOBAL)";
+          badge.style.background = "#27ae60";
+      } else {
+          badge.innerText = "OFFLINE (LOCAL)";
+          badge.style.background = "#555";
+      }
+  }
+  
   // Safe DOM Element Binding
   const startBtn = document.getElementById("startBtn");
   const usernameInput = document.getElementById("usernameInput");
@@ -1484,43 +1499,112 @@ function selectForDeposit(index) {
         <div style="font-size:12px;">Level: 1 (Default)</div>
     `;
     confirmDepositBtn.disabled = false;
-    confirmDepositBtn.innerText = `List ${mon.name} (Requires Code Edit)`;
+    confirmDepositBtn.innerText = `List ${mon.name} for Sale`;
     confirmDepositBtn.onclick = performDeposit;
 }
 
 // Updated performDeposit to instruct user on code editing
-function performDeposit() {
+async function performDeposit() {
     if (selectedDepositIndex === -1) return;
     
     const mon = player.bag[selectedDepositIndex];
     const gtsPriceInput = document.getElementById("gtsPriceInput");
-    const price = gtsPriceInput ? gtsPriceInput.value : 100;
+    const price = parseInt(gtsPriceInput ? gtsPriceInput.value : 100);
+    const confirmDepositBtn = document.getElementById("confirmDepositBtn");
 
-    const codeBlock = `
-    {
-        id: "trade_${Date.now()}",
-        trainer_name: "${player.username}",
-        offered_pokemon: { name: "${mon.name}", shiny: ${mon.shiny}, tier: { class: "${mon.tier.class}" } },
-        price: ${price} 
-    },`;
+    confirmDepositBtn.disabled = true;
+    confirmDepositBtn.innerText = "Listing...";
 
-    alert(`To sell this Pokemon, you need to add it to the 'MARKET_LISTINGS' array in the code!\n\nCopy this block:\n${codeBlock}`);
-    console.log("Copy this block for your code:", codeBlock);
-}
+    // --- HYBRID LOGIC ---
+    if (isOnline) {
+        // ONLINE: Use Supabase
+        const { error } = await supabase.from('gts_trades').insert([{
+            trainer_name: player.username,
+            trainer_id: player.username + "_" + Date.now(),
+            offered_pokemon: mon,
+            wanted_species: "COIN", // Marketplace mode
+            wanted_level: price,    // Use level field for price to reuse schema
+            status: 'active'
+        }]);
 
-// Updated searchGTS to use the static list
-function searchGTS() {
-    const query = document.getElementById("gtsSearchSpecies").value;
-    const gtsResults = document.getElementById("gtsResults");
-    gtsResults.innerHTML = "";
-
-    // Use static list directly
-    let filteredData = MARKET_LISTINGS;
-    
-    if (query) {
-        filteredData = MARKET_LISTINGS.filter(d => d.offered_pokemon.name.toLowerCase().includes(query.toLowerCase()));
+        if (error) {
+            alert("Global Deposit Failed: " + error.message);
+            confirmDepositBtn.disabled = false;
+            return;
+        }
+    } else {
+        // OFFLINE: Use LocalStorage
+        const newTrade = {
+            id: "trade_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5),
+            trainer_name: player.username || "Trainer",
+            offered_pokemon: mon,
+            price: price 
+        };
+        MARKET_LISTINGS.unshift(newTrade);
+        localStorage.setItem("pokemonGTS_market", JSON.stringify(MARKET_LISTINGS));
     }
 
+    // Success (Common logic)
+    // Remove from Bag
+    player.bag.splice(selectedDepositIndex, 1);
+    selectedDepositIndex = -1;
+    
+    // Reset UI
+    const depositPreview = document.getElementById("depositPreview");
+    if(depositPreview) depositPreview.innerHTML = "No selection";
+    confirmDepositBtn.innerText = "List for Sale";
+    
+    updateStats();
+    save(); // Save player state (bag change)
+    renderGTSBag();
+    notify(`Listed ${mon.name} for ${price} Coins!`);
+    switchGTSTab('seek', document.querySelector('.gts-tab:first-child')); 
+}
+
+// Updated searchGTS to use Hybrid logic
+async function searchGTS() {
+    const query = document.getElementById("gtsSearchSpecies").value;
+    const gtsResults = document.getElementById("gtsResults");
+    gtsResults.innerHTML = "<div>Loading...</div>";
+
+    let trades = [];
+
+    // --- HYBRID LOGIC ---
+    if (isOnline) {
+        // ONLINE: Fetch from Supabase
+        let dbQuery = supabase
+            .from('gts_trades')
+            .select('*')
+            .eq('status', 'active')
+            .order('created_at', { ascending: false })
+            .limit(50);
+            
+        const { data, error } = await dbQuery;
+        if (error) {
+            gtsResults.innerHTML = "<div>Error fetching global trades.</div>";
+            return;
+        }
+        
+        // Map DB structure to internal structure
+        trades = data.map(d => ({
+            id: d.id,
+            trainer_name: d.trainer_name,
+            offered_pokemon: d.offered_pokemon,
+            price: d.wanted_level // Using wanted_level as price
+        }));
+
+    } else {
+        // OFFLINE: Use Local Memory
+        trades = MARKET_LISTINGS;
+    }
+
+    // Common Filtering
+    let filteredData = trades;
+    if (query) {
+        filteredData = trades.filter(d => d.offered_pokemon.name.toLowerCase().includes(query.toLowerCase()));
+    }
+
+    gtsResults.innerHTML = "";
     if (filteredData.length === 0) {
         gtsResults.innerHTML = "<div style='text-align:center;color:#777;padding:20px;'>No trades found for that species.</div>";
         return;
@@ -1572,7 +1656,7 @@ function searchGTS() {
     });
 }
 
-function performTrade(trade) {
+async function performTrade(trade) {
     if (player.coins < trade.price) {
         alert(`You need ${trade.price} coins to buy this!`);
         return;
@@ -1580,41 +1664,128 @@ function performTrade(trade) {
 
     if (!confirm(`Buy ${trade.offered_pokemon.name} from ${trade.trainer_name} for ${trade.price} coins?`)) return;
 
-    // Execute Trade
+    // --- HYBRID LOGIC ---
+    if (isOnline) {
+        // ONLINE: Update Supabase
+        const { error } = await supabase
+            .from('gts_trades')
+            .update({ status: 'completed' })
+            .eq('id', trade.id);
+
+        if (error) {
+            alert("Trade failed (maybe already bought?)");
+            searchGTS();
+            return;
+        }
+    } else {
+        // OFFLINE: Update Local Array
+        const index = MARKET_LISTINGS.findIndex(t => t.id === trade.id);
+        if (index > -1) {
+            MARKET_LISTINGS.splice(index, 1);
+            localStorage.setItem("pokemonGTS_market", JSON.stringify(MARKET_LISTINGS));
+        } else {
+            alert("Trade no longer available.");
+            searchGTS();
+            return;
+        }
+    }
+
+    // Execute Trade Locally (Common)
     player.coins -= trade.price;
     
     // Create new Pokemon object from listing data
     const newMon = {
-        name: trade.offered_pokemon.name,
-        base: trade.offered_pokemon.name, // Simplified: assume base is same as name
-        tier: trade.offered_pokemon.tier,
-        shiny: trade.offered_pokemon.shiny,
-        mega: false, // Default false for bought
-        giga: false, // Default false for bought
+        ...trade.offered_pokemon,
         id: Date.now() + Math.random(),
         caught: true
     };
     
-    // Check for mega/giga via name string if encoded in listing
-    // (Simplification for static list: usually name would just be "Charizard" and flag set, 
-    // but our simple object matches the display logic)
-    
     player.bag.push(newMon);
-    
-    // Visual update: remove from UI list locally (can't remove from code obviously)
-    // In a real app we'd filter out ID, but here we just re-render
     
     updateStats();
     save();
     notify(`Bought ${newMon.name}! -${trade.price} Coins`);
     
-    // Remove the element visually
+    // Update view
     searchGTS(); 
 }
 
-function fetchMyTrades() {
+async function fetchMyTrades() {
     const gtsMyTrades = document.getElementById("gtsMyTrades");
-    gtsMyTrades.innerHTML = "<div style='padding:20px; text-align:center; color:#aaa;'>To sell Pokemon, edit the 'MARKET_LISTINGS' array in the source code. <br><br> Your listings will appear in the main Search tab.</div>";
+    gtsMyTrades.innerHTML = "<div>Loading...</div>";
+    
+    let myTrades = [];
+
+    // --- HYBRID LOGIC ---
+    if (isOnline) {
+        const { data, error } = await supabase
+            .from('gts_trades')
+            .select('*')
+            .eq('trainer_name', player.username)
+            .eq('status', 'active');
+            
+        if (!error) {
+             myTrades = data.map(d => ({
+                id: d.id,
+                trainer_name: d.trainer_name,
+                offered_pokemon: d.offered_pokemon,
+                price: d.wanted_level 
+            }));
+        }
+    } else {
+        myTrades = MARKET_LISTINGS.filter(t => t.trainer_name === player.username);
+    }
+    
+    gtsMyTrades.innerHTML = "";
+    if (myTrades.length === 0) {
+        gtsMyTrades.innerHTML = "<div style='text-align:center;color:#777;padding:20px;'>You have no active listings.</div>";
+        return;
+    }
+
+    myTrades.forEach(trade => {
+        const div = document.createElement("div");
+        div.className = "gts-trade-card";
+        div.innerHTML = `
+            <div class="gts-side">
+                <img src="${getSpriteUrl(trade.offered_pokemon)}" class="gts-img">
+                <div class="gts-info">
+                    <h4>${trade.offered_pokemon.name}</h4>
+                    <span>Price: ${trade.price} 🪙</span>
+                </div>
+            </div>
+        `;
+        
+        const btn = document.createElement("button");
+        btn.innerText = "Cancel";
+        btn.style.background = "#e74c3c";
+        btn.style.padding = "6px 12px";
+        btn.onclick = async () => {
+            // Cancel Trade Logic (Hybrid)
+            if (isOnline) {
+                const { error } = await supabase
+                    .from('gts_trades')
+                    .update({ status: 'withdrawn' })
+                    .eq('id', trade.id);
+                if (error) { alert("Error withdrawing."); return; }
+            } else {
+                const index = MARKET_LISTINGS.findIndex(t => t.id === trade.id);
+                if (index > -1) {
+                    MARKET_LISTINGS.splice(index, 1);
+                    localStorage.setItem("pokemonGTS_market", JSON.stringify(MARKET_LISTINGS));
+                }
+            }
+
+            // Return pokemon to bag
+            player.bag.push(trade.offered_pokemon);
+            save();
+            updateStats();
+            notify("Listing Cancelled");
+            fetchMyTrades();
+        };
+        
+        div.appendChild(btn);
+        gtsMyTrades.appendChild(div);
+    });
 }
 
 // Helper
@@ -2268,6 +2439,7 @@ function load(){
 function resetData() {
   if(confirm("Are you sure you want to wipe your save?")) {
     localStorage.removeItem("pokemonRNG");
+    localStorage.removeItem("pokemonGTS_market"); // Clear Market too
     location.reload();
   }
 }
