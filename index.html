@@ -2,10 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Pokemon RNG + Hybrid GTS</title>
+<title>Pokemon RNG</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- Supabase Client -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 /* --- CSS STYLES --- */
@@ -57,9 +55,9 @@ body {
   padding-right: 5px;
 }
 
-#pokedexDropdown::-webkit-scrollbar { width: 8px; }
-#pokedexDropdown::-webkit-scrollbar-track { background: #0a0c1a; }
-#pokedexDropdown::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+pokedexDropdown::-webkit-scrollbar { width: 8px; }
+pokedexDropdown::-webkit-scrollbar-track { background: #0a0c1a; }
+pokedexDropdown::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
 
 /* Dex Entry Base Styling */
 .dex-entry {
@@ -231,11 +229,11 @@ h1 { margin-top: 0; text-shadow: 0 0 10px #7b2cbf; }
 @keyframes shinyBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
 /* Buttons */
-button, input, select { padding: 12px 20px; margin: 8px; border-radius: 8px; border: none; font-size: 16px; outline: none; }
+button, input { padding: 12px 20px; margin: 8px; border-radius: 8px; border: none; font-size: 16px; outline: none; }
 button { background: #ff4757; color: white; cursor: pointer; transition: 0.2s; font-weight: bold; }
 button:hover { background: #ff6b81; transform: translateY(-2px); }
 button:disabled { background: #555; cursor: not-allowed; transform: none; }
-input, select { background: #eee; color: #333; }
+input { background: #eee; color: #333; }
 
 .stats-box {
   background: rgba(0,0,0,0.4);
@@ -357,7 +355,6 @@ input, select { background: #eee; color: #333; }
   position: relative; border: 2px solid #444;
   cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
-.bag-item.selected { border-color: #f1c40f; box-shadow: 0 0 10px #f1c40f; }
 .bag-item:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.5); }
 .bag-item img { width: 50px; height: 50px; object-fit: contain; }
 .bag-item .name { font-size: 10px; text-align: center; margin-top: 5px; font-weight: bold; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -416,21 +413,6 @@ input, select { background: #eee; color: #333; }
 .quest-progress { font-size: 12px; background: #444; padding: 2px 6px; border-radius: 4px; margin-left: 10px; }
 .quest-complete { border-color: #27ae60; background: #222; opacity: 0.7; }
 
-/* --- GTS STYLES --- */
-.gts-tabs { display: flex; border-bottom: 1px solid #444; margin-bottom: 15px; }
-.gts-tab { flex: 1; padding: 10px; text-align: center; background: #222; cursor: pointer; border-bottom: 3px solid transparent; transition:0.2s; }
-.gts-tab.active { background: #333; border-bottom-color: #3498db; font-weight: bold; color: #3498db; }
-.gts-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex:1; }
-
-.gts-trade-card {
-  background: #1e272e; padding: 10px; border-radius: 8px; border: 1px solid #444; display: flex; justify-content: space-between; align-items: center;
-}
-.gts-side { display: flex; align-items: center; gap: 10px; flex:1; }
-.gts-arrow { color: #aaa; margin: 0 10px; font-weight: bold; font-size: 20px; }
-.gts-info h4 { margin: 0; font-size: 14px; }
-.gts-info span { font-size: 11px; color: #888; }
-.gts-img { width: 40px; height: 40px; }
-
 /* --- SECRET BUTTON STYLE --- */
 #secretTrigger {
   position: fixed;
@@ -465,7 +447,6 @@ input, select { background: #eee; color: #333; }
 
   <!-- Right Menu Bar: Quests, Shop, Coins -->
   <div style="position: absolute; top: 10px; right: 10px; z-index: 100; display: flex; gap: 10px; align-items: center;">
-    <button onclick="toggleGTS(true)" class="menu-btn" style="background:#3498db;">🌐 Market</button>
     <button onclick="toggleQuests(true)" class="menu-btn" style="background:#2980b9;">📜 Quests</button>
     <button onclick="toggleShop(true)" class="menu-btn" style="background:#f39c12;">🏪 Shop</button>
     <div class="coin-display">
@@ -478,12 +459,9 @@ input, select { background: #eee; color: #333; }
 
   <div id="login">
     <h2>Welcome Trainer</h2>
-    <input id="usernameInput" placeholder="Enter Username (No password needed)">
+    <input id="usernameInput" placeholder="Enter Username">
     <br>
-    <!-- ADDED: explicit onclick as a backup fail-safe -->
-    <button id="startBtn" onclick="window.attemptStart()">Start Adventure</button>
-    <br>
-    <button onclick="resetData()" style="background:#555; font-size:12px; padding:6px 10px; margin-top:20px;">⚠️ Clear Corrupted Save</button>
+    <button id="startBtn">Start Adventure</button>
   </div>
 
   <div id="game" style="display:none;">
@@ -571,60 +549,6 @@ input, select { background: #eee; color: #333; }
   </div>
 </div>
 
-<!-- GTS MODAL (Now Marketplace) -->
-<div id="gtsModal" class="modal-overlay" style="display:none;">
-  <div class="modal-content">
-    <h2>
-        <span>Global Marketplace</span>
-        <span id="gtsStatusBadge" style="font-size:10px; background:#555; padding:2px 6px; border-radius:4px; margin-left:10px;">OFFLINE</span>
-    </h2>
-    <button class="close-btn" style="position: absolute; top: 15px; right: 15px;" onclick="toggleGTS(false)">X</button>
-    
-    <div class="gts-tabs">
-        <div class="gts-tab active" onclick="switchGTSTab('seek', this)">Buy Pokemon</div>
-        <div class="gts-tab" onclick="switchGTSTab('deposit', this)">Sell Pokemon</div>
-        <div class="gts-tab" onclick="switchGTSTab('status', this)">My Listings</div>
-    </div>
-
-    <!-- BUY TAB -->
-    <div id="gtsSeek" class="gts-content" style="display:flex; flex-direction:column; height:100%;">
-        <div style="display:flex; gap:10px; margin-bottom:10px;">
-            <input id="gtsSearchSpecies" placeholder="Search to buy (e.g. Charizard)..." style="flex:1; margin:0;">
-            <button onclick="searchGTS()" style="margin:0; font-size:12px;">Search</button>
-        </div>
-        <div id="gtsResults" class="gts-list">
-            <div style="text-align:center; color:#777; margin-top:20px;">Search for a Pokemon to buy!</div>
-        </div>
-    </div>
-
-    <!-- SELL TAB -->
-    <div id="gtsDeposit" class="gts-content" style="display:none; flex-direction:column; height:100%;">
-        <div style="display:flex; gap:20px; height:100%;">
-            <!-- Left: Select from Bag -->
-            <div style="flex:1; display:flex; flex-direction:column; border-right:1px solid #444; padding-right:10px;">
-                <h4>1. Select from Bag</h4>
-                <div id="gtsBagGrid" class="bag-grid" style="max-height:300px;"></div>
-            </div>
-            <!-- Right: Setup Sale -->
-            <div style="flex:1; display:flex; flex-direction:column; padding-left:10px;">
-                <h4>2. Set Price</h4>
-                <div id="depositPreview" style="text-align:center; margin-bottom:10px; font-style:italic; color:#aaa;">No selection</div>
-                
-                <label>Selling Price (Coins):</label>
-                <input type="number" id="gtsPriceInput" value="100" min="1" style="margin:0 0 20px 0;">
-                
-                <button id="confirmDepositBtn" onclick="performDeposit()" disabled style="margin:0;">List for Sale</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- STATUS TAB -->
-    <div id="gtsStatus" class="gts-content" style="display:none; flex-direction:column; height:100%;">
-         <div id="gtsMyTrades" class="gts-list"></div>
-    </div>
-  </div>
-</div>
-
 <div id="secretTrigger">∴</div>
 
 <script>
@@ -632,114 +556,9 @@ window.onerror = function(msg, url, line) {
   console.error("Game Error: " + msg);
 };
 
-// --- IMMEDIATE GLOBAL DEFINITIONS (Carmack's Robustness) ---
-// Define player object first so it's always available
-let player = {
-  username: "",
-  totalRolls: 0,
-  pokedex: {},
-  rollMultiplier: 1,
-  rewards: {},
-  bag: [],
-  coins: 0,
-  candy: {},
-  upgrades: { bagLevel: 0, luckLevel: 0, candyLevel: 0 },
-  activeQuests: [],
-  maxBag: 100
-};
-
-// Define attemptStart immediately in the global scope
-window.attemptStart = function() {
-    console.log("Start Button Clicked via Global Function");
-    const input = document.getElementById("usernameInput");
-    const btn = document.getElementById("startBtn");
-    
-    if (!input) { alert("Critical Error: Input box missing."); return; }
-    
-    const name = input.value.trim();
-    if (!name) { 
-        alert("Please enter a username!"); 
-        input.focus();
-        return; 
-    }
-    
-    if(btn) btn.innerText = "Starting...";
-    
-    // Set state
-    player.username = name;
-    
-    // FORCE UI Update immediately (No waiting for logic)
-    const loginDiv = document.getElementById("login");
-    const gameDiv = document.getElementById("game");
-    
-    if(loginDiv) loginDiv.style.display = "none";
-    if(gameDiv) gameDiv.style.display = "flex";
-    
-    // Run Logic safely
-    setTimeout(() => {
-        try {
-            startGame();
-        } catch(e) {
-            console.error("Start Game Logic Failed, but UI forced open:", e);
-            // Even if logic fails, the screen is open. We try to save at least.
-            save(); 
-        }
-    }, 100);
-};
-
 // --- CONFIGURATION ---
 const BASE_SHINY_ODDS = 512; 
 let CURRENT_SHINY_ODDS = 512;
-
-// --- SUPABASE CONFIGURATION (FOR GTS ONLY) ---
-// !!! REPLACE WITH YOUR KEYS TO GO ONLINE !!!
-const SUPABASE_URL = 'https://zgakufrhokcplpyppjzd.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpnYWt1ZnJob2tjcGxweXBwanpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2NDc2MDQsImV4cCI6MjA4NTIyMzYwNH0.iM9u7EkfUxScJ55G9LARdXyuUPzd3AXG5ZmqwYoC5ro';
-
-let supabase = null;
-let isOnline = false;
-
-// Initialize Supabase if keys are present
-try {
-    if (SUPABASE_URL.includes('https') && !SUPABASE_URL.includes('YOUR_SUPABASE')) {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        isOnline = true;
-        console.log("Supabase initialized - GTS is GLOBAL");
-    } else {
-        console.log("No Supabase keys - GTS is LOCAL (Offline Mode)");
-    }
-} catch (e) {
-    console.warn("Supabase init failed, falling back to local:", e);
-}
-
-// --- INITIAL MARKET LISTINGS (OFFLINE FALLBACK) ---
-const DEFAULT_MARKET_LISTINGS = [
-    {
-        id: "trade_001",
-        trainer_name: "Ash Ketchum",
-        offered_pokemon: { name: "Charizard", shiny: true, tier: { class: "rare" } },
-        price: 5000 
-    },
-    {
-        id: "trade_002",
-        trainer_name: "Gary Oak",
-        offered_pokemon: { name: "Blastoise", shiny: false, tier: { class: "rare" } },
-        price: 2500 
-    }
-];
-
-// Initialize global MARKET_LISTINGS var (Local Storage based)
-let MARKET_LISTINGS = [...DEFAULT_MARKET_LISTINGS];
-
-try {
-    const savedMarket = localStorage.getItem("pokemonGTS_market");
-    if (savedMarket) {
-        MARKET_LISTINGS = JSON.parse(savedMarket);
-    }
-} catch (e) {
-    console.error("Failed to load market data", e);
-}
-
 
 // --- EVOLUTION DATA (Partial Implementation for Demo) ---
 const evolutionMap = {
@@ -1294,179 +1113,156 @@ const gigaEligible = new Set(Object.values(gigaMap));
 const rarityMap = {};
 rarityTable.forEach(tier => tier.pool.forEach(p => rarityMap[p] = tier.class));
 
-// --- DOM ELEMENTS ---
-// Elements are now fetched safely inside DOMContentLoaded
+// --- PLAYER STATE ---
+let player = {
+  username: "",
+  totalRolls: 0,
+  pokedex: {},
+  rollMultiplier: 1,
+  rewards: {},
+  bag: [],
+  coins: 0,
+  candy: {},
+  upgrades: { bagLevel: 0, luckLevel: 0, candyLevel: 0 },
+  activeQuests: [],
+  maxBag: 100
+};
 
-const rarityClasses = ["common", "uncommon", "rare", "ultra", "mythical", "mega", "giga"];
+// --- DOM ELEMENTS ---
+const loginScreen = document.getElementById("login");
+const gameScreen = document.getElementById("game");
+const rollBtn = document.getElementById("rollBtn");
+const startBtn = document.getElementById("startBtn");
+const pokedexDropdown = document.getElementById("pokedexDropdown");
+const dexSearch = document.getElementById("dexSearch");
+const resultCard = document.getElementById("resultCard");
+const cardName = document.getElementById("cardName");
+const cardRarity = document.getElementById("cardRarity");
+const cardSprite = document.getElementById("cardSprite"); 
+const rollsText = document.getElementById("rolls");
+const caughtText = document.getElementById("caughtCount");
+const totalText = document.getElementById("totalCount");
+const lastSaveText = document.getElementById("lastSave");
+const rollMultDisplay = document.getElementById("rollMultDisplay");
+const openBagBtn = document.getElementById("openBagBtn");
+const bagModal = document.getElementById("bagModal");
+const bagGrid = document.getElementById("bagGrid");
+const bagCapacity = document.getElementById("bagCapacity");
+const bagBtnCount = document.getElementById("bagBtnCount");
+const bagMaxDisplay = document.getElementById("bagMaxDisplay");
+const cardCatchBtn = document.getElementById("cardCatchBtn");
+const coinCount = document.getElementById("coinCount");
+const shopModal = document.getElementById("shopModal");
+const shopGrid = document.getElementById("shopGrid");
+const shopCoinDisplay = document.getElementById("shopCoinDisplay");
+const questModal = document.getElementById("questModal");
+const questList = document.getElementById("questList");
 
 // --- INITIALIZATION ---
-// REPLACED: DOMContentLoaded logic with robust ReadyState check to prevent button "deadness"
-
-function initGame() {
-  console.log("Game Initialization Started...");
-  
-  // Update status badge
-  const badge = document.getElementById("gtsStatusBadge");
-  if(badge) {
-      if(isOnline) {
-          badge.innerText = "ONLINE (GLOBAL)";
-          badge.style.background = "#27ae60";
-      } else {
-          badge.innerText = "OFFLINE (LOCAL)";
-          badge.style.background = "#555";
-      }
-  }
-  
-  // Safe DOM Element Binding
-  const startBtn = document.getElementById("startBtn");
-  const rollBtn = document.getElementById("rollBtn");
-  const openBagBtn = document.getElementById("openBagBtn");
-  const secretTrigger = document.getElementById('secretTrigger');
-  const dexSearch = document.getElementById("dexSearch");
-  
-  // Event Listeners
-  // Note: We keep the listener as primary, but window.attemptStart is the HTML backup
-  if(startBtn) {
-    startBtn.onclick = window.attemptStart; // direct binding is often more reliable than addEventListener for single buttons
-  }
-
-  if(rollBtn) {
-    rollBtn.addEventListener("click", () => {
-      rollBtn.disabled = true;
-      const cardCatchBtn = document.getElementById("cardCatchBtn");
-      if(cardCatchBtn) cardCatchBtn.style.display = 'none'; // Hide until roll finishes
-      
-      // Use setTimeout to allow UI to update (disable button) before heavy processing
-      setTimeout(() => {
-          const loops = player.rollMultiplier;
-          const batch = [];
-          
-          for(let i=0; i<loops; i++){
-            batch.push(performSingleRoll());
-          }
-          
-          // Find best roll
-          let bestRoll = batch[0];
-          let bestScore = -1;
-          
-          batch.forEach(roll => {
-            let score = roll.tier.rank * 100;
-            if (roll.shiny) score += 50;
-            if (roll.tier.name === "Mega") score += 20;
-            if (roll.tier.name === "Giga") score += 40;
-            
-            if (score > bestScore) {
-              bestScore = score;
-              bestRoll = roll;
-            }
-          });
-          
-          updateUI(bestRoll);
-          renderLog(batch, bestRoll);
-          
-          // Quests Check
-          checkQuestProgress("roll", loops);
-          checkRewards();
-          save();
-          
-          rollBtn.disabled = false;
-      }, 50);
-    });
-  }
-  
-  if(openBagBtn) openBagBtn.addEventListener("click", () => toggleBag(true));
-  if(dexSearch) dexSearch.addEventListener("input", (e) => renderDex(e.target.value));
-
-  // Secret
-  if(secretTrigger) {
-      secretTrigger.addEventListener('click', () => {
-        const pass = prompt("Enter Secret Code:");
-        if(pass === "masterball") {
-            player.rollMultiplier += 100000;
-            notify("CHEAT ACTIVATED: +100000 Multiplier!");
-            updateStats();
-            save();
-        } else if (pass === "rich") {
-            player.coins += 10000;
-            notify("CHEAT ACTIVATED: +10,000 Coins!");
-            updateStats();
-            save();
-        }
-      });
-  }
-
-  // Init Data
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("Game loading...");
   try {
     load();
-    const totalText = document.getElementById("totalCount");
-    if(totalText) totalText.innerText = genAllOrder.length;
-    
+    totalText.innerText = genAllOrder.length;
     // Initial Quest Gen
     if(!player.activeQuests || player.activeQuests.length === 0) {
         generateQuests();
     }
-    
-    // Populate GTS Dropdown
-    const gtsWantedSpecies = document.getElementById("gtsWantedSpecies");
-    if(gtsWantedSpecies) {
-        genAllOrder.forEach(p => {
-            const opt = document.createElement("option");
-            opt.value = p;
-            opt.innerText = p;
-            gtsWantedSpecies.appendChild(opt);
-        });
-    }
-
     console.log("Game loaded successfully.");
   } catch(e) {
     console.error("Critical error during init: ", e);
-    // Even if load fails, try to show the login screen
-    const loginScreen = document.getElementById("login");
-    if(loginScreen) loginScreen.style.display = "block";
+    alert("Game crashed during load. Please check console.");
   }
-}
+});
 
-// FORCE INITIALIZATION: Check if DOM is already ready
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initGame);
-} else {
-    // DOM is already ready, fire immediately
-    initGame();
-}
+// Event Listeners
+startBtn.addEventListener("click", () => {
+  const name = document.getElementById("usernameInput").value.trim();
+  if(!name) return alert("Please enter a username!");
+  player.username = name;
+  startGame();
+});
 
+// Open/Close Bag
+openBagBtn.addEventListener("click", () => toggleBag(true));
+
+rollBtn.addEventListener("click", () => {
+  rollBtn.disabled = true;
+  cardCatchBtn.style.display = 'none'; // Hide until roll finishes
+  
+  // Use setTimeout to allow UI to update (disable button) before heavy processing
+  setTimeout(() => {
+      const loops = player.rollMultiplier;
+      const batch = [];
+      
+      for(let i=0; i<loops; i++){
+        batch.push(performSingleRoll());
+      }
+      
+      // Find best roll
+      let bestRoll = batch[0];
+      let bestScore = -1;
+      
+      batch.forEach(roll => {
+        let score = roll.tier.rank * 100;
+        if (roll.shiny) score += 50;
+        if (roll.tier.name === "Mega") score += 20;
+        if (roll.tier.name === "Giga") score += 40;
+        
+        if (score > bestScore) {
+          bestScore = score;
+          bestRoll = roll;
+        }
+      });
+      
+      updateUI(bestRoll);
+      renderLog(batch, bestRoll);
+      
+      // Quests Check
+      checkQuestProgress("roll", loops);
+      checkRewards();
+      save();
+      
+      rollBtn.disabled = false;
+  }, 50);
+});
+
+dexSearch.addEventListener("input", (e) => renderDex(e.target.value));
+
+// --- SECRET PASSWORD LISTENER ---
+document.getElementById('secretTrigger').addEventListener('click', () => {
+    const pass = prompt("Enter Secret Code:");
+    if(pass === "masterball") {
+        player.rollMultiplier += 100000;
+        notify("CHEAT ACTIVATED: +100000 Multiplier!");
+        updateStats();
+        save();
+    } else if (pass === "rich") {
+        player.coins += 10000;
+        notify("CHEAT ACTIVATED: +10,000 Coins!");
+        updateStats();
+        save();
+    }
+});
 
 // --- FUNCTIONS ---
 
 function startGame() {
-  console.log("Starting game logic...");
-  
-  // Ensure player data integrity before starting
-  if(!player.pokedex) player.pokedex = {};
-  if(!player.upgrades) player.upgrades = { bagLevel: 0, luckLevel: 0, candyLevel: 0 };
-  
-  const loginScreen = document.getElementById("login");
-  const gameScreen = document.getElementById("game");
-  
-  // Force styles directly
-  if(loginScreen) loginScreen.style.display = "none";
-  if(gameScreen) gameScreen.style.display = "flex";
-  
-  // Wrap individual components in try/catch to prevent full crash
-  try { applyUpgrades(); } catch(e) { console.error("Upgrade Apply Error:", e); }
-  try { renderDex(); } catch(e) { console.error("Dex Render Error:", e); }
-  try { updateStats(); } catch(e) { console.error("Stats Update Error:", e); }
-  try { save(); } catch(e) { console.error("Save Error:", e); }
+  loginScreen.style.display = "none";
+  gameScreen.style.display = "block";
+  applyUpgrades();
+  renderDex();
+  updateStats();
+  save();
 }
 
 function applyUpgrades() {
-    if(!player.upgrades) player.upgrades = { bagLevel: 0, luckLevel: 0, candyLevel: 0 };
     // Recalculate stats based on upgrades
-    player.maxBag = 100 + ((player.upgrades.bagLevel || 0) * 10);
-    CURRENT_SHINY_ODDS = Math.max(100, BASE_SHINY_ODDS - ((player.upgrades.luckLevel || 0) * 50));
+    player.maxBag = 100 + (player.upgrades.bagLevel * 10);
+    CURRENT_SHINY_ODDS = Math.max(100, BASE_SHINY_ODDS - (player.upgrades.luckLevel * 50));
 }
 
 function toggleBag(show) {
-    const bagModal = document.getElementById("bagModal");
     if(show) {
         renderBag();
         bagModal.style.display = "flex";
@@ -1476,7 +1272,6 @@ function toggleBag(show) {
 }
 
 function toggleShop(show) {
-    const shopModal = document.getElementById("shopModal");
     if(show) {
         renderShop();
         shopModal.style.display = "flex";
@@ -1486,7 +1281,6 @@ function toggleShop(show) {
 }
 
 function toggleQuests(show) {
-    const questModal = document.getElementById("questModal");
     if(show) {
         renderQuests();
         questModal.style.display = "flex";
@@ -1495,378 +1289,8 @@ function toggleQuests(show) {
     }
 }
 
-function toggleGTS(show) {
-    const gtsModal = document.getElementById("gtsModal");
-    if(show) {
-        gtsModal.style.display = "flex";
-        searchGTS(); // Initial load
-    } else {
-        gtsModal.style.display = "none";
-    }
-}
-
-// --- GTS LOGIC ---
-
-let selectedDepositIndex = -1;
-
-function switchGTSTab(tab, btn) {
-    document.querySelectorAll('.gts-content').forEach(d => d.style.display = 'none');
-    document.querySelectorAll('.gts-tab').forEach(t => t.classList.remove('active'));
-    
-    document.getElementById(`gts${tab.charAt(0).toUpperCase() + tab.slice(1)}`).style.display = 'flex';
-    btn.classList.add('active');
-
-    if (tab === 'deposit') renderGTSBag();
-    if (tab === 'status') fetchMyTrades();
-}
-
-function renderGTSBag() {
-    const gtsBagGrid = document.getElementById("gtsBagGrid");
-    gtsBagGrid.innerHTML = "";
-    player.bag.forEach((p, index) => {
-        const div = document.createElement("div");
-        div.className = "bag-item " + p.tier.class;
-        if(index === selectedDepositIndex) div.classList.add('selected');
-        
-        div.onclick = () => selectForDeposit(index);
-        
-        const img = document.createElement("img");
-        img.src = getSpriteUrl(p);
-        
-        const name = document.createElement("div");
-        name.className = "name";
-        name.innerText = p.name;
-        
-        div.appendChild(img);
-        div.appendChild(name);
-        gtsBagGrid.appendChild(div);
-    });
-}
-
-function selectForDeposit(index) {
-    selectedDepositIndex = index;
-    renderGTSBag();
-    
-    const mon = player.bag[index];
-    const depositPreview = document.getElementById("depositPreview");
-    const confirmDepositBtn = document.getElementById("confirmDepositBtn");
-    
-    depositPreview.innerHTML = `
-        <div style="font-weight:bold; color:#fff;">Selected: ${mon.name}</div>
-        <div style="font-size:12px;">Level: 1 (Default)</div>
-    `;
-    confirmDepositBtn.disabled = false;
-    confirmDepositBtn.innerText = `List ${mon.name} for Sale`;
-    confirmDepositBtn.onclick = performDeposit;
-}
-
-// Updated performDeposit to instruct user on code editing
-async function performDeposit() {
-    if (selectedDepositIndex === -1) return;
-    
-    const mon = player.bag[selectedDepositIndex];
-    const gtsPriceInput = document.getElementById("gtsPriceInput");
-    const price = parseInt(gtsPriceInput ? gtsPriceInput.value : 100);
-    const confirmDepositBtn = document.getElementById("confirmDepositBtn");
-
-    confirmDepositBtn.disabled = true;
-    confirmDepositBtn.innerText = "Listing...";
-
-    // --- HYBRID LOGIC ---
-    if (isOnline) {
-        // ONLINE: Use Supabase
-        const { error } = await supabase.from('gts_trades').insert([{
-            trainer_name: player.username,
-            trainer_id: player.username + "_" + Date.now(),
-            offered_pokemon: mon,
-            wanted_species: "COIN", // Marketplace mode
-            wanted_level: price,    // Use level field for price to reuse schema
-            status: 'active'
-        }]);
-
-        if (error) {
-            alert("Global Deposit Failed: " + error.message);
-            confirmDepositBtn.disabled = false;
-            return;
-        }
-    } else {
-        // OFFLINE: Use LocalStorage
-        const newTrade = {
-            id: "trade_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5),
-            trainer_name: player.username || "Trainer",
-            offered_pokemon: mon,
-            price: price 
-        };
-        MARKET_LISTINGS.unshift(newTrade);
-        localStorage.setItem("pokemonGTS_market", JSON.stringify(MARKET_LISTINGS));
-    }
-
-    // Success (Common logic)
-    // Remove from Bag
-    player.bag.splice(selectedDepositIndex, 1);
-    selectedDepositIndex = -1;
-    
-    // Reset UI
-    const depositPreview = document.getElementById("depositPreview");
-    if(depositPreview) depositPreview.innerHTML = "No selection";
-    confirmDepositBtn.innerText = "List for Sale";
-    
-    updateStats();
-    save(); // Save player state (bag change)
-    renderGTSBag();
-    notify(`Listed ${mon.name} for ${price} Coins!`);
-    switchGTSTab('seek', document.querySelector('.gts-tab:first-child')); 
-}
-
-// Updated searchGTS to use Hybrid logic
-async function searchGTS() {
-    const query = document.getElementById("gtsSearchSpecies").value;
-    const gtsResults = document.getElementById("gtsResults");
-    gtsResults.innerHTML = "<div>Loading...</div>";
-
-    let trades = [];
-
-    // --- HYBRID LOGIC ---
-    if (isOnline) {
-        // ONLINE: Fetch from Supabase
-        let dbQuery = supabase
-            .from('gts_trades')
-            .select('*')
-            .eq('status', 'active')
-            .order('created_at', { ascending: false })
-            .limit(50);
-            
-        const { data, error } = await dbQuery;
-        if (error) {
-            gtsResults.innerHTML = "<div>Error fetching global trades.</div>";
-            return;
-        }
-        
-        // Map DB structure to internal structure
-        trades = data.map(d => ({
-            id: d.id,
-            trainer_name: d.trainer_name,
-            offered_pokemon: d.offered_pokemon,
-            price: d.wanted_level // Using wanted_level as price
-        }));
-
-    } else {
-        // OFFLINE: Use Local Memory
-        trades = MARKET_LISTINGS;
-    }
-
-    // Common Filtering
-    let filteredData = trades;
-    if (query) {
-        filteredData = trades.filter(d => d.offered_pokemon.name.toLowerCase().includes(query.toLowerCase()));
-    }
-
-    gtsResults.innerHTML = "";
-    if (filteredData.length === 0) {
-        gtsResults.innerHTML = "<div style='text-align:center;color:#777;padding:20px;'>No trades found for that species.</div>";
-        return;
-    }
-
-    filteredData.forEach(trade => {
-        // Prevent trading with self if names match (optional logic)
-        const isSelf = trade.trainer_name === player.username;
-        
-        const div = document.createElement("div");
-        div.className = "gts-trade-card";
-        
-        const offered = trade.offered_pokemon;
-        
-        div.innerHTML = `
-            <div class="gts-side">
-                <img src="${getSpriteUrl(offered)}" class="gts-img">
-                <div class="gts-info">
-                    <h4 style="color:white;">${offered.name} ${offered.shiny ? '✨' : ''}</h4>
-                    <span>Trainer: ${trade.trainer_name}</span>
-                </div>
-            </div>
-            <div class="gts-arrow">➜</div>
-            <div class="gts-side" style="justify-content:flex-end; text-align:right;">
-                <div class="gts-info">
-                    <h4 style="color:#f1c40f;">${trade.price} 🪙</h4>
-                    <span>Buy Now</span>
-                </div>
-            </div>
-        `;
-        
-        const btn = document.createElement("button");
-        btn.innerText = "Buy";
-        btn.style.padding = "6px 12px";
-        btn.style.fontSize = "12px";
-        btn.style.marginLeft = "10px";
-        btn.style.background = "#27ae60";
-        
-        if (isSelf) {
-            btn.innerText = "Yours";
-            btn.disabled = true;
-            btn.style.background = "#555";
-        } else {
-            btn.onclick = () => performTrade(trade);
-        }
-        
-        div.appendChild(btn);
-        gtsResults.appendChild(div);
-    });
-}
-
-async function performTrade(trade) {
-    if (player.coins < trade.price) {
-        alert(`You need ${trade.price} coins to buy this!`);
-        return;
-    }
-
-    if (!confirm(`Buy ${trade.offered_pokemon.name} from ${trade.trainer_name} for ${trade.price} coins?`)) return;
-
-    // --- HYBRID LOGIC ---
-    if (isOnline) {
-        // ONLINE: Update Supabase
-        const { error } = await supabase
-            .from('gts_trades')
-            .update({ status: 'completed' })
-            .eq('id', trade.id);
-
-        if (error) {
-            alert("Trade failed (maybe already bought?)");
-            searchGTS();
-            return;
-        }
-    } else {
-        // OFFLINE: Update Local Array
-        const index = MARKET_LISTINGS.findIndex(t => t.id === trade.id);
-        if (index > -1) {
-            MARKET_LISTINGS.splice(index, 1);
-            localStorage.setItem("pokemonGTS_market", JSON.stringify(MARKET_LISTINGS));
-        } else {
-            alert("Trade no longer available.");
-            searchGTS();
-            return;
-        }
-    }
-
-    // Execute Trade Locally (Common)
-    player.coins -= trade.price;
-    
-    // Create new Pokemon object from listing data
-    const newMon = {
-        ...trade.offered_pokemon,
-        id: Date.now() + Math.random(),
-        caught: true
-    };
-    
-    player.bag.push(newMon);
-    
-    updateStats();
-    save();
-    notify(`Bought ${newMon.name}! -${trade.price} Coins`);
-    
-    // Update view
-    searchGTS(); 
-}
-
-async function fetchMyTrades() {
-    const gtsMyTrades = document.getElementById("gtsMyTrades");
-    gtsMyTrades.innerHTML = "<div>Loading...</div>";
-    
-    let myTrades = [];
-
-    // --- HYBRID LOGIC ---
-    if (isOnline) {
-        const { data, error } = await supabase
-            .from('gts_trades')
-            .select('*')
-            .eq('trainer_name', player.username)
-            .eq('status', 'active');
-            
-        if (!error) {
-             myTrades = data.map(d => ({
-                id: d.id,
-                trainer_name: d.trainer_name,
-                offered_pokemon: d.offered_pokemon,
-                price: d.wanted_level 
-            }));
-        }
-    } else {
-        myTrades = MARKET_LISTINGS.filter(t => t.trainer_name === player.username);
-    }
-    
-    gtsMyTrades.innerHTML = "";
-    if (myTrades.length === 0) {
-        gtsMyTrades.innerHTML = "<div style='text-align:center;color:#777;padding:20px;'>You have no active listings.</div>";
-        return;
-    }
-
-    myTrades.forEach(trade => {
-        const div = document.createElement("div");
-        div.className = "gts-trade-card";
-        div.innerHTML = `
-            <div class="gts-side">
-                <img src="${getSpriteUrl(trade.offered_pokemon)}" class="gts-img">
-                <div class="gts-info">
-                    <h4>${trade.offered_pokemon.name}</h4>
-                    <span>Price: ${trade.price} 🪙</span>
-                </div>
-            </div>
-        `;
-        
-        const btn = document.createElement("button");
-        btn.innerText = "Cancel";
-        btn.style.background = "#e74c3c";
-        btn.style.padding = "6px 12px";
-        btn.onclick = async () => {
-            // Cancel Trade Logic (Hybrid)
-            if (isOnline) {
-                const { error } = await supabase
-                    .from('gts_trades')
-                    .update({ status: 'withdrawn' })
-                    .eq('id', trade.id);
-                if (error) { alert("Error withdrawing."); return; }
-            } else {
-                const index = MARKET_LISTINGS.findIndex(t => t.id === trade.id);
-                if (index > -1) {
-                    MARKET_LISTINGS.splice(index, 1);
-                    localStorage.setItem("pokemonGTS_market", JSON.stringify(MARKET_LISTINGS));
-                }
-            }
-
-            // Return pokemon to bag
-            player.bag.push(trade.offered_pokemon);
-            save();
-            updateStats();
-            notify("Listing Cancelled");
-            fetchMyTrades();
-        };
-        
-        div.appendChild(btn);
-        gtsMyTrades.appendChild(div);
-    });
-}
-
-// Helper
-function getSpriteUrl(p) {
-    let spriteUrl = "";
-    const dexId = genAllOrder.indexOf(p.base || p.name) + 1; // Fallback to name if base missing in trade obj
-    
-    if (p.giga && gigaSpriteIdMap[p.name]) {
-        spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${gigaSpriteIdMap[p.name]}.png`;
-    } else if (p.mega && megaSpriteIdMap[p.name]) {
-        spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${megaSpriteIdMap[p.name]}.png`;
-    } else if (dexId > 0) {
-        spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${dexId}.png`;
-    }
-    return spriteUrl || "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png";
-}
-
 // --- BAG LOGIC ---
 function renderBag() {
-    const bagGrid = document.getElementById("bagGrid");
-    const bagCapacity = document.getElementById("bagCapacity");
-    const bagBtnCount = document.getElementById("bagBtnCount");
-    const bagMaxDisplay = document.getElementById("bagMaxDisplay");
-    
     bagGrid.innerHTML = "";
     bagCapacity.innerText = `${player.bag.length}/${player.maxBag}`;
     bagBtnCount.innerText = player.bag.length;
@@ -1877,7 +1301,28 @@ function renderBag() {
         div.className = `bag-item ${p.tier.class} ${p.shiny ? 'shiny' : ''}`;
         
         const img = document.createElement("img");
-        img.src = getSpriteUrl(p);
+        
+        // Sprite Logic
+        let spriteUrl = "";
+        const dexId = genAllOrder.indexOf(p.base) + 1;
+        
+        if (p.giga && gigaSpriteIdMap[p.name]) {
+            const gigaId = gigaSpriteIdMap[p.name];
+            spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${gigaId}.png`;
+        } else if (p.mega && megaSpriteIdMap[p.name]) {
+            const megaId = megaSpriteIdMap[p.name];
+            spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${megaId}.png`;
+        } else if (dexId > 0) {
+            spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${dexId}.png`;
+        }
+        
+        // Zacian/Zamazenta fallback
+        if((p.base === "Zacian" || p.base === "Zamazenta") && !spriteUrl) {
+             const manualId = p.base === "Zacian" ? 888 : 889;
+             spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${manualId}.png`;
+        }
+
+        img.src = spriteUrl || "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png";
         
         const name = document.createElement("div");
         name.className = "name";
@@ -1978,13 +1423,8 @@ function sortBag(criteria) {
     renderBag();
 }
 
-// --- SHOP ITEMS ---
-// (Already defined at top)
-
+// --- SHOP LOGIC ---
 function renderShop() {
-    const shopGrid = document.getElementById("shopGrid");
-    const shopCoinDisplay = document.getElementById("shopCoinDisplay");
-    
     shopGrid.innerHTML = "";
     shopCoinDisplay.innerText = player.coins;
     
@@ -2099,7 +1539,6 @@ function checkQuestProgress(actionType, amount, meta) {
 }
 
 function renderQuests() {
-    const questList = document.getElementById("questList");
     questList.innerHTML = "";
     player.activeQuests.forEach(q => {
         const div = document.createElement("div");
@@ -2145,7 +1584,7 @@ function addToBag(mon, btn) {
     
     // Candy multiplier check
     let candyGain = 1;
-    if(Math.random() < ((player.upgrades.candyLevel || 0) * 0.1)) candyGain = 2; // 10% chance per level
+    if(Math.random() < (player.upgrades.candyLevel * 0.1)) candyGain = 2; // 10% chance per level
     
     player.candy[mon.base] += candyGain;
     
@@ -2228,13 +1667,6 @@ function performSingleRoll() {
 }
 
 function updateUI(lastRoll) {
-  const resultCard = document.getElementById("resultCard");
-  const cardName = document.getElementById("cardName");
-  const cardRarity = document.getElementById("cardRarity");
-  const cardSprite = document.getElementById("cardSprite");
-  const cardCatchBtn = document.getElementById("cardCatchBtn");
-  const dexSearch = document.getElementById("dexSearch");
-
   resultCard.className = `card ${lastRoll.tier.class}`;
   if(lastRoll.shiny) resultCard.classList.add("is-shiny");
   
@@ -2245,8 +1677,25 @@ function updateUI(lastRoll) {
   cardName.innerText = lastRoll.name;
   cardRarity.innerText = lastRoll.shiny ? `✨ Shiny ${lastRoll.tier.name} ✨` : lastRoll.tier.name;
   
-  let spriteUrl = getSpriteUrl(lastRoll);
+  let spriteUrl = "";
+  const dexId = genAllOrder.indexOf(lastRoll.base) + 1;
+
+  if (lastRoll.giga && gigaSpriteIdMap[lastRoll.name]) {
+      const gigaId = gigaSpriteIdMap[lastRoll.name];
+      spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${gigaId}.png`;
+  } else if (lastRoll.mega && megaSpriteIdMap[lastRoll.name]) {
+      const megaId = megaSpriteIdMap[lastRoll.name];
+      spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${megaId}.png`;
+  } else if (dexId > 0) {
+      spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${dexId}.png`;
+  }
   
+  // Manual check for Zacian/Zamazenta base forms if ID fails
+  if(!spriteUrl && (lastRoll.base === "Zacian" || lastRoll.base === "Zamazenta")) {
+        const manualId = lastRoll.base === "Zacian" ? 888 : 889;
+        spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${manualId}.png`;
+  }
+
   if (spriteUrl) {
     cardSprite.src = spriteUrl;
     cardSprite.style.display = "block";
@@ -2260,12 +1709,14 @@ function updateUI(lastRoll) {
   cardCatchBtn.style.background = "#27ae60";
   
   // Update click handler to work for current roll
+  // Must remove old handlers first to prevent multiple clicks
+  // Easiest is to set onclick property directly
   cardCatchBtn.onclick = function() {
       addToBag(lastRoll, cardCatchBtn);
   };
 
   updateStats();
-  if(dexSearch) renderDex(dexSearch.value);
+  renderDex(dexSearch.value);
 }
 
 function renderLog(batch, bestRoll) {
@@ -2327,12 +1778,9 @@ function renderLog(batch, bestRoll) {
     catchBtn.onclick = function() {
         addToBag(roll, catchBtn);
         if(roll === bestRoll) {
-             const cardCatchBtn = document.getElementById("cardCatchBtn");
-             if(cardCatchBtn) {
-                 cardCatchBtn.disabled = true;
-                 cardCatchBtn.innerText = "Caught!";
-                 cardCatchBtn.style.background = "#555";
-             }
+             cardCatchBtn.disabled = true;
+             cardCatchBtn.innerText = "Caught!";
+             cardCatchBtn.style.background = "#555";
         }
     };
 
@@ -2347,29 +1795,19 @@ function renderLog(batch, bestRoll) {
 }
 
 function updateStats() {
-  const rollsText = document.getElementById("rolls");
-  const caughtText = document.getElementById("caughtCount");
-  const rollMultDisplay = document.getElementById("rollMultDisplay");
-  const bagBtnCount = document.getElementById("bagBtnCount");
-  const bagMaxDisplay = document.getElementById("bagMaxDisplay");
-  const bagCapacity = document.getElementById("bagCapacity");
-  const coinCount = document.getElementById("coinCount");
+  rollsText.innerText = player.totalRolls.toLocaleString();
+  caughtText.innerText = Object.keys(player.pokedex).length;
+  rollMultDisplay.innerText = player.rollMultiplier;
   
-  if(rollsText) rollsText.innerText = (player.totalRolls || 0).toLocaleString();
-  if(caughtText) caughtText.innerText = Object.keys(player.pokedex).length;
-  if(rollMultDisplay) rollMultDisplay.innerText = player.rollMultiplier;
-  
-  if(player.bag && bagBtnCount) {
+  if(player.bag) {
       bagBtnCount.innerText = player.bag.length;
       bagMaxDisplay.innerText = player.maxBag;
       bagCapacity.innerText = `${player.bag.length}/${player.maxBag}`;
   }
-  if(coinCount) coinCount.innerText = player.coins;
+  coinCount.innerText = player.coins;
 }
 
 function renderDex(filter = "") {
-  const pokedexDropdown = document.getElementById("pokedexDropdown");
-  if(!pokedexDropdown) return;
   pokedexDropdown.innerHTML = "";
   
   genAllOrder.forEach((p, index) => {
@@ -2452,56 +1890,44 @@ function addMultiplier(amount) {
 
 // --- SAVE / LOAD SYSTEM ---
 function save(){ 
-  try {
-      player.lastSave = Date.now();
-      localStorage.setItem("pokemonRNG", JSON.stringify(player));
-      const lastSaveText = document.getElementById("lastSave");
-      if(lastSaveText) {
-          const date = new Date(player.lastSave);
-          lastSaveText.innerText = date.toLocaleTimeString();
-      }
-  } catch(e) {
-      console.warn("Save failed - likely browser restriction on localStorage", e);
-  }
+  player.lastSave = Date.now();
+  localStorage.setItem("pokemonRNG", JSON.stringify(player));
+  const date = new Date(player.lastSave);
+  lastSaveText.innerText = date.toLocaleTimeString();
 }
 
 function load(){ 
-  try {
-      const data = localStorage.getItem("pokemonRNG"); 
-      if(data){ 
-          const parsed = JSON.parse(data);
-          player = { ...player, ...parsed };
-          
-          if(!player.pokedex) player.pokedex = {};
-          if(!player.rewards) player.rewards = {};
-          if(!player.rollMultiplier) player.rollMultiplier = 1;
-          if(!player.bag) player.bag = [];
-          if(!player.coins) player.coins = 0;
-          if(!player.candy) player.candy = {};
-          if(!player.upgrades) player.upgrades = { bagLevel: 0, luckLevel: 0, candyLevel: 0 };
-          if(!player.activeQuests) player.activeQuests = [];
-          
-          applyUpgrades(); // Apply loaded upgrade stats
+  const data = localStorage.getItem("pokemonRNG"); 
+  if(data){ 
+    try {
+      const parsed = JSON.parse(data);
+      player = { ...player, ...parsed };
+      
+      if(!player.pokedex) player.pokedex = {};
+      if(!player.rewards) player.rewards = {};
+      if(!player.rollMultiplier) player.rollMultiplier = 1;
+      if(!player.bag) player.bag = [];
+      if(!player.coins) player.coins = 0;
+      if(!player.candy) player.candy = {};
+      if(!player.upgrades) player.upgrades = { bagLevel: 0, luckLevel: 0, candyLevel: 0 };
+      if(!player.activeQuests) player.activeQuests = [];
+      
+      applyUpgrades(); // Apply loaded upgrade stats
 
-          console.log("Save loaded:", player);
-      } else {
-        console.log("No save found.");
-      }
-  } catch(e) {
-      console.warn("Load failed - local storage restricted?", e);
-  }
-  
-  // LOGIC FIX: Only auto-start if the player has a username (returning user).
-  // Otherwise, stay on the login screen so they can click the button.
-  if (player.username && player.username !== "") {
+      console.log("Save loaded:", player);
       startGame();
+    } catch (e) {
+      console.error("Save file corrupted", e);
+      notify("Save file corrupted or old version.");
+    }
+  } else {
+    console.log("No save found.");
   }
 }
 
 function resetData() {
-  if(confirm("Are you sure you want to delete your save? This cannot be undone.")) {
+  if(confirm("Are you sure you want to wipe your save?")) {
     localStorage.removeItem("pokemonRNG");
-    localStorage.removeItem("pokemonGTS_market"); // Clear Market too
     location.reload();
   }
 }
