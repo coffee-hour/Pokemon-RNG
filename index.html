@@ -334,7 +334,7 @@ input { background: #eee; color: #333; }
 .card-action-btn {
     background: #e67e22; /* Changed to Orange for "Encounter" */
     width: 200px;
-    margin-top: -20px;
+    margin-top: 10px; /* FIXED: Removed negative margin */
     margin-bottom: 10px;
     z-index: 10;
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
@@ -1844,17 +1844,7 @@ function performSingleRoll() {
   
   const isShiny = (Math.floor(Math.random() * CURRENT_SHINY_ODDS) === 0);
   
-  // Update Dex Data
-  if(!player.pokedex[baseName]) {
-    player.pokedex[baseName] = { count: 0, shiny: 0, mega: {}, giga: {} };
-  }
-  player.pokedex[baseName].count++;
-  if(isShiny) player.pokedex[baseName].shiny++;
-  if(isMegaPull) player.pokedex[baseName].mega[pickedName] = true;
-  if(isGigaPull) {
-    if(!player.pokedex[baseName].giga) player.pokedex[baseName].giga = {};
-    player.pokedex[baseName].giga[pickedName] = true;
-  }
+  // NOTE: Dex registration removed from here to preserve Mystery
   
   const newMon = {
     name: pickedName,
@@ -1907,6 +1897,19 @@ function updateUI(roll) {
 function startEncounter() {
     if(!currentEncounter) return;
     
+    // NOW Update Dex Data (Register as SEEN)
+    const baseName = currentEncounter.base;
+    if(!player.pokedex[baseName]) {
+      player.pokedex[baseName] = { count: 0, shiny: 0, mega: {}, giga: {} };
+    }
+    player.pokedex[baseName].count++;
+    if(currentEncounter.shiny) player.pokedex[baseName].shiny++;
+    if(currentEncounter.mega) player.pokedex[baseName].mega[currentEncounter.name] = true;
+    if(currentEncounter.giga) {
+      if(!player.pokedex[baseName].giga) player.pokedex[baseName].giga = {};
+      player.pokedex[baseName].giga[currentEncounter.name] = true;
+    }
+    
     // Reveal Info
     encounterName.innerText = currentEncounter.name;
     encounterRarity.innerText = currentEncounter.tier.name;
@@ -1933,6 +1936,11 @@ function startEncounter() {
     if(gameInterval) clearInterval(gameInterval);
     
     encounterModal.style.display = "flex";
+    
+    // Refresh Dex to show "Seen" status
+    renderDex(dexSearch.value);
+    updateStats();
+    save();
 }
 
 function renderBallButtons() {
