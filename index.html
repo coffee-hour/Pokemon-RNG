@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Pokemon RNG</title>
+<title>Pokemon RNG - Grandmaster Edition</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -301,6 +301,23 @@ input { background: #eee; color: #333; }
 #rollLog::-webkit-scrollbar { width: 6px; }
 #rollLog::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
 
+/* Progress Bar for Batch Rolls */
+#progressBarContainer {
+    width: 100%;
+    height: 6px;
+    background: #333;
+    border-radius: 3px;
+    margin-top: 5px;
+    overflow: hidden;
+    display: none;
+}
+#progressBar {
+    height: 100%;
+    background: #00bcd4;
+    width: 0%;
+    transition: width 0.1s;
+}
+
 /* Catch Button Styles */
 .catch-btn {
     background: #27ae60;
@@ -478,6 +495,7 @@ input { background: #eee; color: #333; }
     <button id="cardCatchBtn" class="card-action-btn" style="display:none;">Catch!</button>
 
     <button id="rollBtn">Roll Pokemon (x<span id="rollMultDisplay">1</span>)</button>
+    <div id="progressBarContainer"><div id="progressBar"></div></div>
     
     <div class="stats-box">
       <p>Total Rolls: <span id="rolls">0</span></p>
@@ -1157,6 +1175,8 @@ const shopGrid = document.getElementById("shopGrid");
 const shopCoinDisplay = document.getElementById("shopCoinDisplay");
 const questModal = document.getElementById("questModal");
 const questList = document.getElementById("questList");
+const progressBarContainer = document.getElementById("progressBarContainer");
+const progressBar = document.getElementById("progressBar");
 
 // --- INITIALIZATION ---
 document.addEventListener("DOMContentLoaded", () => {
@@ -1186,45 +1206,29 @@ startBtn.addEventListener("click", () => {
 // Open/Close Bag
 openBagBtn.addEventListener("click", () => toggleBag(true));
 
-rollBtn.addEventListener("click", () => {
-  rollBtn.disabled = true;
-  cardCatchBtn.style.display = 'none'; // Hide until roll finishes
+rollBtn.addEventListener("click", async () => {
+  // Carmack Fix: Logic split to prevent freezing on high multipliers
+  const loops = player.rollMultiplier;
   
-  // Use setTimeout to allow UI to update (disable button) before heavy processing
-  setTimeout(() => {
-      const loops = player.rollMultiplier;
-      const batch = [];
-      
-      for(let i=0; i<loops; i++){
-        batch.push(performSingleRoll());
-      }
-      
-      // Find best roll
-      let bestRoll = batch[0];
-      let bestScore = -1;
-      
-      batch.forEach(roll => {
-        let score = roll.tier.rank * 100;
-        if (roll.shiny) score += 50;
-        if (roll.tier.name === "Mega") score += 20;
-        if (roll.tier.name === "Giga") score += 40;
-        
-        if (score > bestScore) {
-          bestScore = score;
-          bestRoll = roll;
+  // Disable UI
+  rollBtn.disabled = true;
+  cardCatchBtn.style.display = 'none';
+  progressBarContainer.style.display = (loops > 100) ? 'block' : 'none';
+  progressBar.style.width = '0%';
+  
+  if(loops > 1000) {
+    // Heavy lifting mode
+    await processBatchRolls(loops);
+  } else {
+    // Instant mode
+    setTimeout(() => {
+        const batch = [];
+        for(let i=0; i<loops; i++){
+            batch.push(performSingleRoll());
         }
-      });
-      
-      updateUI(bestRoll);
-      renderLog(batch, bestRoll);
-      
-      // Quests Check
-      checkQuestProgress("roll", loops);
-      checkRewards();
-      save();
-      
-      rollBtn.disabled = false;
-  }, 50);
+        finishRollBatch(batch);
+    }, 50);
+  }
 });
 
 dexSearch.addEventListener("input", (e) => renderDex(e.target.value));
@@ -1244,6 +1248,37 @@ document.getElementById('secretTrigger').addEventListener('click', () => {
         save();
     }
 });
+
+// --- HELPER: ROBUST SPRITE URL (The Grandmaster's Hardening) ---
+function getSpriteUrl(name, isShiny, isMega, isGiga, baseName) {
+    let spriteUrl = "";
+    
+    // Giga check
+    if(isGiga && gigaSpriteIdMap[name]) {
+        return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${isShiny ? 'shiny/' : ''}${gigaSpriteIdMap[name]}.png`;
+    }
+    
+    // Mega check
+    if(isMega && megaSpriteIdMap[name]) {
+        return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${isShiny ? 'shiny/' : ''}${megaSpriteIdMap[name]}.png`;
+    }
+    
+    // Base check
+    const useName = baseName || name;
+    const dexId = genAllOrder.indexOf(useName) + 1;
+    
+    if(dexId > 0) {
+        spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${isShiny ? 'shiny/' : ''}${dexId}.png`;
+    }
+    
+    // Manual fallback
+    if((useName === "Zacian" || useName === "Zamazenta") && !spriteUrl) {
+        const manualId = useName === "Zacian" ? 888 : 889;
+        spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${isShiny ? 'shiny/' : ''}${manualId}.png`;
+    }
+    
+    return spriteUrl || "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png";
+}
 
 // --- FUNCTIONS ---
 
@@ -1296,33 +1331,16 @@ function renderBag() {
     bagBtnCount.innerText = player.bag.length;
     bagMaxDisplay.innerText = player.maxBag;
 
-    player.bag.forEach((p, index) => {
+    // "Virtualization" - Limit rendering to first 200 items to avoid DOM lag
+    // A true Grandmaster would use a windowed list, but capping view is a quick fix
+    const displayItems = player.bag.slice(0, 200); 
+
+    displayItems.forEach((p, index) => {
         const div = document.createElement("div");
         div.className = `bag-item ${p.tier.class} ${p.shiny ? 'shiny' : ''}`;
         
         const img = document.createElement("img");
-        
-        // Sprite Logic
-        let spriteUrl = "";
-        const dexId = genAllOrder.indexOf(p.base) + 1;
-        
-        if (p.giga && gigaSpriteIdMap[p.name]) {
-            const gigaId = gigaSpriteIdMap[p.name];
-            spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${gigaId}.png`;
-        } else if (p.mega && megaSpriteIdMap[p.name]) {
-            const megaId = megaSpriteIdMap[p.name];
-            spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${megaId}.png`;
-        } else if (dexId > 0) {
-            spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${dexId}.png`;
-        }
-        
-        // Zacian/Zamazenta fallback
-        if((p.base === "Zacian" || p.base === "Zamazenta") && !spriteUrl) {
-             const manualId = p.base === "Zacian" ? 888 : 889;
-             spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${manualId}.png`;
-        }
-
-        img.src = spriteUrl || "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png";
+        img.src = getSpriteUrl(p.name, p.shiny, p.mega, p.giga, p.base);
         
         const name = document.createElement("div");
         name.className = "name";
@@ -1360,6 +1378,16 @@ function renderBag() {
 
         bagGrid.appendChild(div);
     });
+
+    if(player.bag.length > 200) {
+        const more = document.createElement("div");
+        more.innerText = `...and ${player.bag.length - 200} more items hidden.`;
+        more.style.textAlign = "center";
+        more.style.gridColumn = "1 / -1";
+        more.style.fontSize = "10px";
+        more.style.color = "#888";
+        bagGrid.appendChild(more);
+    }
 }
 
 function releasePokemon(index) {
@@ -1602,6 +1630,65 @@ function addToBag(mon, btn) {
     save();
 }
 
+// Carmack's "Time Slicing" Batch Processor
+async function processBatchRolls(totalLoops) {
+    const BATCH_SIZE = 2000;
+    let processed = 0;
+    let topCandidates = []; // Only keep the best 100 for the log
+    
+    // Prevent browser hang by breaking loop into frames
+    while(processed < totalLoops) {
+        const chunk = Math.min(BATCH_SIZE, totalLoops - processed);
+        
+        for(let i=0; i<chunk; i++) {
+            const roll = performSingleRoll();
+            
+            // "Nintendo Strategy": Only keep interesting data
+            // We need to decide if this roll is worth keeping for the log
+            // To be safe, we push to array, but periodically prune it
+            topCandidates.push(roll);
+        }
+        
+        // Prune memory if too large
+        if(topCandidates.length > 500) {
+            topCandidates = getTopRolls(topCandidates, 100);
+        }
+        
+        processed += chunk;
+        
+        // Update Progress Bar
+        const pct = (processed / totalLoops) * 100;
+        progressBar.style.width = `${pct}%`;
+        
+        // Yield to main thread (maintain 60fps UI)
+        await new Promise(r => setTimeout(r, 0));
+    }
+    
+    finishRollBatch(topCandidates);
+}
+
+function getTopRolls(list, count) {
+    return list.sort((a, b) => {
+        let scoreA = a.tier.rank * 10 + (a.shiny?5:0) + (a.mega?2:0) + (a.giga?3:0);
+        let scoreB = b.tier.rank * 10 + (b.shiny?5:0) + (b.mega?2:0) + (b.giga?3:0);
+        return scoreB - scoreA;
+    }).slice(0, count);
+}
+
+function finishRollBatch(batch) {
+    const bestRoll = getTopRolls(batch, 1)[0];
+    
+    updateUI(bestRoll);
+    renderLog(batch, bestRoll);
+    
+    checkQuestProgress("roll", player.rollMultiplier);
+    checkRewards();
+    save();
+    
+    rollBtn.disabled = false;
+    progressBarContainer.style.display = 'none';
+}
+
 function performSingleRoll() {
   player.totalRolls++;
   
@@ -1634,6 +1721,7 @@ function performSingleRoll() {
   
   const isShiny = (Math.floor(Math.random() * CURRENT_SHINY_ODDS) === 0);
   
+  // Update Dex Data
   if(!player.pokedex[baseName]) {
     player.pokedex[baseName] = { count: 0, shiny: 0, mega: {}, giga: {} };
   }
@@ -1677,24 +1765,8 @@ function updateUI(lastRoll) {
   cardName.innerText = lastRoll.name;
   cardRarity.innerText = lastRoll.shiny ? `✨ Shiny ${lastRoll.tier.name} ✨` : lastRoll.tier.name;
   
-  let spriteUrl = "";
-  const dexId = genAllOrder.indexOf(lastRoll.base) + 1;
-
-  if (lastRoll.giga && gigaSpriteIdMap[lastRoll.name]) {
-      const gigaId = gigaSpriteIdMap[lastRoll.name];
-      spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${gigaId}.png`;
-  } else if (lastRoll.mega && megaSpriteIdMap[lastRoll.name]) {
-      const megaId = megaSpriteIdMap[lastRoll.name];
-      spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${megaId}.png`;
-  } else if (dexId > 0) {
-      spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${dexId}.png`;
-  }
-  
-  // Manual check for Zacian/Zamazenta base forms if ID fails
-  if(!spriteUrl && (lastRoll.base === "Zacian" || lastRoll.base === "Zamazenta")) {
-        const manualId = lastRoll.base === "Zacian" ? 888 : 889;
-        spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${manualId}.png`;
-  }
+  // Use robust sprite getter
+  const spriteUrl = getSpriteUrl(lastRoll.name, lastRoll.shiny, lastRoll.mega, lastRoll.giga, lastRoll.base);
 
   if (spriteUrl) {
     cardSprite.src = spriteUrl;
@@ -1708,9 +1780,6 @@ function updateUI(lastRoll) {
   cardCatchBtn.disabled = false;
   cardCatchBtn.style.background = "#27ae60";
   
-  // Update click handler to work for current roll
-  // Must remove old handlers first to prevent multiple clicks
-  // Easiest is to set onclick property directly
   cardCatchBtn.onclick = function() {
       addToBag(lastRoll, cardCatchBtn);
   };
@@ -1723,22 +1792,18 @@ function renderLog(batch, bestRoll) {
   const logDiv = document.getElementById("rollLog");
   logDiv.innerHTML = "";
   
-  // Optimization: If batch is huge, sort and only show top items
+  // Grandmaster Optimization: 
+  // If batch is huge, sort and only show top items (Memory safety)
   let displayBatch = batch;
   if (batch.length > 100) {
-      // Sort by score (rank/shiny/mega) descending
-      displayBatch = [...batch].sort((a, b) => {
-          let scoreA = a.tier.rank * 10 + (a.shiny?5:0) + (a.mega?2:0) + (a.giga?3:0);
-          let scoreB = b.tier.rank * 10 + (b.shiny?5:0) + (b.mega?2:0) + (b.giga?3:0);
-          return scoreB - scoreA;
-      }).slice(0, 100); 
+      displayBatch = getTopRolls(batch, 100);
       
       const summary = document.createElement("div");
       summary.style.padding = "10px";
       summary.style.color = "#aaa";
       summary.style.fontSize = "12px";
       summary.style.borderBottom = "1px solid #444";
-      summary.innerText = `Showing top 100 results of ${batch.length} rolls...`;
+      summary.innerText = `Displaying best 100 of ${batch.length} rolls`;
       logDiv.appendChild(summary);
   }
   
@@ -1746,7 +1811,8 @@ function renderLog(batch, bestRoll) {
     const div = document.createElement("div");
     div.className = "log-item " + roll.tier.class;
     
-    if(roll === bestRoll && batch.length > 1) {
+    // Highlight best roll only if it's in the display list
+    if(roll.id === bestRoll.id && batch.length > 1) {
         div.classList.add("best");
     }
     
@@ -1777,7 +1843,7 @@ function renderLog(batch, bestRoll) {
     catchBtn.innerText = "Catch";
     catchBtn.onclick = function() {
         addToBag(roll, catchBtn);
-        if(roll === bestRoll) {
+        if(roll.id === bestRoll.id) {
              cardCatchBtn.disabled = true;
              cardCatchBtn.innerText = "Caught!";
              cardCatchBtn.style.background = "#555";
@@ -1797,7 +1863,7 @@ function renderLog(batch, bestRoll) {
 function updateStats() {
   rollsText.innerText = player.totalRolls.toLocaleString();
   caughtText.innerText = Object.keys(player.pokedex).length;
-  rollMultDisplay.innerText = player.rollMultiplier;
+  rollMultDisplay.innerText = player.rollMultiplier.toLocaleString();
   
   if(player.bag) {
       bagBtnCount.innerText = player.bag.length;
@@ -1888,10 +1954,20 @@ function addMultiplier(amount) {
   updateStats();
 }
 
-// --- SAVE / LOAD SYSTEM ---
+// --- SAVE / LOAD SYSTEM (The Iwata Compression) ---
 function save(){ 
   player.lastSave = Date.now();
-  localStorage.setItem("pokemonRNG", JSON.stringify(player));
+  
+  // COMPRESSION: Strip the heavy "tier" objects from the bag before saving.
+  // We only need name, shiny, mega, giga, id, and caught.
+  const compressedPlayer = JSON.parse(JSON.stringify(player));
+  if(compressedPlayer.bag) {
+      compressedPlayer.bag.forEach(p => {
+          delete p.tier; // Redundant data, can be looked up
+      });
+  }
+  
+  localStorage.setItem("pokemonRNG", JSON.stringify(compressedPlayer));
   const date = new Date(player.lastSave);
   lastSaveText.innerText = date.toLocaleTimeString();
 }
@@ -1903,18 +1979,41 @@ function load(){
       const parsed = JSON.parse(data);
       player = { ...player, ...parsed };
       
+      // HYDRATION: Rebuild the "tier" data for bag items
+      if(player.bag) {
+          player.bag.forEach(p => {
+              // Find tier based on name in rarityTable
+              if(!p.tier) {
+                  let foundTier = rarityTable.find(t => t.pool.includes(p.name));
+                  if(!foundTier) {
+                      // Fallback logic for Megas/Gigas not in main pools
+                       if(p.mega) foundTier = rarityTable.find(t => t.name === "Mega");
+                       else if(p.giga) foundTier = rarityTable.find(t => t.name === "Giga");
+                       else foundTier = rarityTable[0]; // Default Common
+                  }
+                  p.tier = { name: foundTier.name, class: foundTier.class, rank: foundTier.rank };
+              }
+              // Ensure Base Name exists for older saves
+              if(!p.base) {
+                  if(p.mega) p.base = megaMap[p.name];
+                  else if(p.giga) p.base = gigaMap[p.name];
+                  else p.base = p.name;
+              }
+          });
+      }
+      
+      // Defaults
       if(!player.pokedex) player.pokedex = {};
       if(!player.rewards) player.rewards = {};
       if(!player.rollMultiplier) player.rollMultiplier = 1;
-      if(!player.bag) player.bag = [];
       if(!player.coins) player.coins = 0;
       if(!player.candy) player.candy = {};
       if(!player.upgrades) player.upgrades = { bagLevel: 0, luckLevel: 0, candyLevel: 0 };
       if(!player.activeQuests) player.activeQuests = [];
       
-      applyUpgrades(); // Apply loaded upgrade stats
+      applyUpgrades(); 
 
-      console.log("Save loaded:", player);
+      console.log("Save loaded & Hydrated:", player);
       startGame();
     } catch (e) {
       console.error("Save file corrupted", e);
