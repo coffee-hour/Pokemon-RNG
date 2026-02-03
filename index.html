@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Pokemon RNG - Grandmaster Edition</title>
+<title>Pokemon RNG</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -301,23 +301,6 @@ input { background: #eee; color: #333; }
 #rollLog::-webkit-scrollbar { width: 6px; }
 #rollLog::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
 
-/* Progress Bar for Batch Rolls */
-#progressBarContainer {
-    width: 100%;
-    height: 6px;
-    background: #333;
-    border-radius: 3px;
-    margin-top: 5px;
-    overflow: hidden;
-    display: none;
-}
-#progressBar {
-    height: 100%;
-    background: #00bcd4;
-    width: 0%;
-    transition: width 0.1s;
-}
-
 /* Catch Button Styles */
 .catch-btn {
     background: #27ae60;
@@ -332,9 +315,9 @@ input { background: #eee; color: #333; }
 .catch-btn:disabled { background: #555; cursor: default; }
 
 .card-action-btn {
-    background: #e67e22; /* Changed to Orange for "Encounter" */
+    background: #27ae60;
     width: 200px;
-    margin-top: 10px; /* FIXED: Removed negative margin */
+    margin-top: -20px;
     margin-bottom: 10px;
     z-index: 10;
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
@@ -430,73 +413,6 @@ input { background: #eee; color: #333; }
 .quest-progress { font-size: 12px; background: #444; padding: 2px 6px; border-radius: 4px; margin-left: 10px; }
 .quest-complete { border-color: #27ae60; background: #222; opacity: 0.7; }
 
-/* --- CATCH GAME STYLES --- */
-#encounterModalContent {
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-}
-.catch-game-container {
-    width: 80%;
-    height: 40px;
-    background: #333;
-    border: 2px solid #555;
-    border-radius: 20px;
-    position: relative;
-    margin: 20px 0;
-    overflow: hidden;
-    cursor: pointer;
-}
-.target-zone {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    background: rgba(46, 204, 113, 0.6);
-    border-left: 2px solid #2ecc71;
-    border-right: 2px solid #2ecc71;
-}
-.catch-cursor {
-    position: absolute;
-    top: -5px;
-    bottom: -5px;
-    width: 4px;
-    background: #e74c3c;
-    box-shadow: 0 0 10px #e74c3c;
-    left: 0%;
-}
-.ball-select-row {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-}
-.ball-btn {
-    background: #2c3e50;
-    border: 2px solid #444;
-    padding: 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    min-width: 80px;
-    transition: 0.2s;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    opacity: 0.5;
-}
-.ball-btn:hover { transform: translateY(-3px); }
-.ball-btn.available { opacity: 1; border-color: #f1c40f; }
-.ball-btn.selected { background: #f1c40f; color: #000; border-color: #fff; opacity: 1; }
-
-.encounter-sprite {
-    width: 200px;
-    height: 200px;
-    image-rendering: pixelated;
-    filter: drop-shadow(0 0 15px rgba(255,255,255,0.3));
-    animation: float 3s ease-in-out infinite;
-}
-@keyframes float { 0% {transform:translateY(0);} 50% {transform:translateY(-10px);} 100% {transform:translateY(0);} }
-
 /* --- SECRET BUTTON STYLE --- */
 #secretTrigger {
   position: fixed;
@@ -559,10 +475,9 @@ input { background: #eee; color: #333; }
     </div>
     
     <!-- Main Card Catch Button -->
-    <button id="cardCatchBtn" class="card-action-btn" style="display:none;">Encounter!</button>
+    <button id="cardCatchBtn" class="card-action-btn" style="display:none;">Catch!</button>
 
     <button id="rollBtn">Roll Pokemon (x<span id="rollMultDisplay">1</span>)</button>
-    <div id="progressBarContainer"><div id="progressBar"></div></div>
     
     <div class="stats-box">
       <p>Total Rolls: <span id="rolls">0</span></p>
@@ -577,32 +492,6 @@ input { background: #eee; color: #333; }
 
     <br>
     <button onclick="resetData()" style="background:#555; font-size:12px; padding:8px;">Reset Data</button>
-  </div>
-</div>
-
-<!-- ENCOUNTER MODAL (The Capture Game) -->
-<div id="encounterModal" class="modal-overlay" style="display:none;">
-  <div id="encounterModalContent" class="modal-content" style="max-width: 500px; background: rgba(10, 10, 30, 0.95);">
-    <h2 style="border:none; justify-content:center; color:#f1c40f;">Wild Encounter!</h2>
-    
-    <img id="encounterSprite" class="encounter-sprite" src="" alt="Pokemon">
-    <h3 id="encounterName" style="margin:10px 0; font-size:24px;">???</h3>
-    <p id="encounterRarity" style="color:#aaa; font-size:14px;">Common</p>
-    
-    <div style="margin-top:20px;">
-        <p style="margin-bottom:10px;">Select a Ball:</p>
-        <div id="ballSelectRow" class="ball-select-row">
-            <!-- Injected via JS -->
-        </div>
-    </div>
-
-    <div id="catchGameContainer" class="catch-game-container" style="display:none;" onclick="throwBall()">
-        <div id="targetZone" class="target-zone"></div>
-        <div id="catchCursor" class="catch-cursor"></div>
-    </div>
-    <p id="catchInstruction" style="font-size:12px; color:#aaa; display:none;">Click bar to throw! Hit Green!</p>
-    
-    <button onclick="fleeEncounter()" style="background:#e74c3c; margin-top:auto;">Run Away</button>
   </div>
 </div>
 
@@ -715,10 +604,6 @@ const evolutionMap = {
 
 // --- SHOP ITEMS ---
 const shopItems = [
-    { id: "pokeBall", name: "Poke Ball", desc: "Basic catch rate", cost: 10, type: "ball", img: "items/poke-ball" },
-    { id: "greatBall", name: "Great Ball", desc: "1.5x catch rate", cost: 50, type: "ball", img: "items/great-ball" },
-    { id: "ultraBall", name: "Ultra Ball", desc: "2x catch rate", cost: 150, type: "ball", img: "items/ultra-ball" },
-    { id: "masterBall", name: "Master Ball", desc: "100% catch rate", cost: 10000, type: "ball", img: "items/master-ball" },
     { id: "bagUp", name: "Bag Upgrade", desc: "+10 Bag Slots", cost: 500, type: "upgrade", max: 100000 },
     { id: "luck", name: "Shiny Charm", desc: "Improves Shiny Odds", cost: 2000, type: "passive", max: 100000 },
     { id: "candyUp", name: "Candy Machine", desc: "Chance for 2x Candy", cost: 1500, type: "passive", max: 100000 }
@@ -1239,7 +1124,6 @@ let player = {
   coins: 0,
   candy: {},
   upgrades: { bagLevel: 0, luckLevel: 0, candyLevel: 0 },
-  balls: { pokeBall: 5, greatBall: 0, ultraBall: 0, masterBall: 0 },
   activeQuests: [],
   maxBag: 100
 };
@@ -1273,26 +1157,6 @@ const shopGrid = document.getElementById("shopGrid");
 const shopCoinDisplay = document.getElementById("shopCoinDisplay");
 const questModal = document.getElementById("questModal");
 const questList = document.getElementById("questList");
-const progressBarContainer = document.getElementById("progressBarContainer");
-const progressBar = document.getElementById("progressBar");
-
-// Encounter Game Elements
-const encounterModal = document.getElementById("encounterModal");
-const encounterSprite = document.getElementById("encounterSprite");
-const encounterName = document.getElementById("encounterName");
-const encounterRarity = document.getElementById("encounterRarity");
-const ballSelectRow = document.getElementById("ballSelectRow");
-const catchGameContainer = document.getElementById("catchGameContainer");
-const targetZone = document.getElementById("targetZone");
-const catchCursor = document.getElementById("catchCursor");
-const catchInstruction = document.getElementById("catchInstruction");
-
-let currentEncounter = null;
-let gameInterval = null;
-let selectedBallType = null;
-let cursorPosition = 0;
-let cursorDirection = 1;
-let cursorSpeed = 2;
 
 // --- INITIALIZATION ---
 document.addEventListener("DOMContentLoaded", () => {
@@ -1322,35 +1186,45 @@ startBtn.addEventListener("click", () => {
 // Open/Close Bag
 openBagBtn.addEventListener("click", () => toggleBag(true));
 
-rollBtn.addEventListener("click", async () => {
-  const loops = player.rollMultiplier;
+rollBtn.addEventListener("click", () => {
+  rollBtn.disabled = true;
+  cardCatchBtn.style.display = 'none'; // Hide until roll finishes
   
-  if(loops === 1) {
-    // Single Roll: Play the Catch Game
-    rollBtn.disabled = true;
-    const roll = performSingleRoll();
-    updateUI(roll); // Reveal masked UI
-    rollBtn.disabled = false;
-  } else {
-    // Batch Roll: Auto-catch simulation
-    // Disable UI
-    rollBtn.disabled = true;
-    cardCatchBtn.style.display = 'none';
-    progressBarContainer.style.display = (loops > 100) ? 'block' : 'none';
-    progressBar.style.width = '0%';
-    
-    if(loops > 1000) {
-        await processBatchRolls(loops);
-    } else {
-        setTimeout(() => {
-            const batch = [];
-            for(let i=0; i<loops; i++){
-                batch.push(performSingleRoll());
-            }
-            finishRollBatch(batch);
-        }, 50);
-    }
-  }
+  // Use setTimeout to allow UI to update (disable button) before heavy processing
+  setTimeout(() => {
+      const loops = player.rollMultiplier;
+      const batch = [];
+      
+      for(let i=0; i<loops; i++){
+        batch.push(performSingleRoll());
+      }
+      
+      // Find best roll
+      let bestRoll = batch[0];
+      let bestScore = -1;
+      
+      batch.forEach(roll => {
+        let score = roll.tier.rank * 100;
+        if (roll.shiny) score += 50;
+        if (roll.tier.name === "Mega") score += 20;
+        if (roll.tier.name === "Giga") score += 40;
+        
+        if (score > bestScore) {
+          bestScore = score;
+          bestRoll = roll;
+        }
+      });
+      
+      updateUI(bestRoll);
+      renderLog(batch, bestRoll);
+      
+      // Quests Check
+      checkQuestProgress("roll", loops);
+      checkRewards();
+      save();
+      
+      rollBtn.disabled = false;
+  }, 50);
 });
 
 dexSearch.addEventListener("input", (e) => renderDex(e.target.value));
@@ -1359,8 +1233,9 @@ dexSearch.addEventListener("input", (e) => renderDex(e.target.value));
 document.getElementById('secretTrigger').addEventListener('click', () => {
     const pass = prompt("Enter Secret Code:");
     if(pass === "masterball") {
-        player.balls.masterBall += 10;
-        notify("CHEAT ACTIVATED: +10 Master Balls!");
+        player.rollMultiplier += 100000;
+        notify("CHEAT ACTIVATED: +100000 Multiplier!");
+        updateStats();
         save();
     } else if (pass === "rich") {
         player.coins += 10000;
@@ -1369,37 +1244,6 @@ document.getElementById('secretTrigger').addEventListener('click', () => {
         save();
     }
 });
-
-// --- HELPER: ROBUST SPRITE URL (The Grandmaster's Hardening) ---
-function getSpriteUrl(name, isShiny, isMega, isGiga, baseName) {
-    let spriteUrl = "";
-    
-    // Giga check
-    if(isGiga && gigaSpriteIdMap[name]) {
-        return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${isShiny ? 'shiny/' : ''}${gigaSpriteIdMap[name]}.png`;
-    }
-    
-    // Mega check
-    if(isMega && megaSpriteIdMap[name]) {
-        return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${isShiny ? 'shiny/' : ''}${megaSpriteIdMap[name]}.png`;
-    }
-    
-    // Base check
-    const useName = baseName || name;
-    const dexId = genAllOrder.indexOf(useName) + 1;
-    
-    if(dexId > 0) {
-        spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${isShiny ? 'shiny/' : ''}${dexId}.png`;
-    }
-    
-    // Manual fallback
-    if((useName === "Zacian" || useName === "Zamazenta") && !spriteUrl) {
-        const manualId = useName === "Zacian" ? 888 : 889;
-        spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${isShiny ? 'shiny/' : ''}${manualId}.png`;
-    }
-    
-    return spriteUrl || "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png";
-}
 
 // --- FUNCTIONS ---
 
@@ -1452,16 +1296,33 @@ function renderBag() {
     bagBtnCount.innerText = player.bag.length;
     bagMaxDisplay.innerText = player.maxBag;
 
-    // "Virtualization" - Limit rendering to first 200 items to avoid DOM lag
-    // A true Grandmaster would use a windowed list, but capping view is a quick fix
-    const displayItems = player.bag.slice(0, 200); 
-
-    displayItems.forEach((p, index) => {
+    player.bag.forEach((p, index) => {
         const div = document.createElement("div");
         div.className = `bag-item ${p.tier.class} ${p.shiny ? 'shiny' : ''}`;
         
         const img = document.createElement("img");
-        img.src = getSpriteUrl(p.name, p.shiny, p.mega, p.giga, p.base);
+        
+        // Sprite Logic
+        let spriteUrl = "";
+        const dexId = genAllOrder.indexOf(p.base) + 1;
+        
+        if (p.giga && gigaSpriteIdMap[p.name]) {
+            const gigaId = gigaSpriteIdMap[p.name];
+            spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${gigaId}.png`;
+        } else if (p.mega && megaSpriteIdMap[p.name]) {
+            const megaId = megaSpriteIdMap[p.name];
+            spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${megaId}.png`;
+        } else if (dexId > 0) {
+            spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${dexId}.png`;
+        }
+        
+        // Zacian/Zamazenta fallback
+        if((p.base === "Zacian" || p.base === "Zamazenta") && !spriteUrl) {
+             const manualId = p.base === "Zacian" ? 888 : 889;
+             spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.shiny ? 'shiny/' : ''}${manualId}.png`;
+        }
+
+        img.src = spriteUrl || "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png";
         
         const name = document.createElement("div");
         name.className = "name";
@@ -1499,16 +1360,6 @@ function renderBag() {
 
         bagGrid.appendChild(div);
     });
-
-    if(player.bag.length > 200) {
-        const more = document.createElement("div");
-        more.innerText = `...and ${player.bag.length - 200} more items hidden.`;
-        more.style.textAlign = "center";
-        more.style.gridColumn = "1 / -1";
-        more.style.fontSize = "10px";
-        more.style.color = "#888";
-        bagGrid.appendChild(more);
-    }
 }
 
 function releasePokemon(index) {
@@ -1582,34 +1433,23 @@ function renderShop() {
         div.className = "shop-item";
         
         let currentLevel = 0;
-        let isMaxed = false;
-        let displayCost = item.cost;
-        let displayLabel = "Owned: 0";
+        if(item.id === "bagUp") currentLevel = player.upgrades.bagLevel;
+        if(item.id === "luck") currentLevel = player.upgrades.luckLevel;
+        if(item.id === "candyUp") currentLevel = player.upgrades.candyLevel;
         
-        // Upgrade Logic
-        if(item.type === "upgrade" || item.type === "passive") {
-            if(item.id === "bagUp") currentLevel = player.upgrades.bagLevel;
-            if(item.id === "luck") currentLevel = player.upgrades.luckLevel;
-            if(item.id === "candyUp") currentLevel = player.upgrades.candyLevel;
-            displayCost = Math.floor(item.cost * Math.pow(1.5, currentLevel));
-            isMaxed = item.max && currentLevel >= item.max;
-            displayLabel = `Lvl: ${currentLevel}`;
-        } 
-        // Ball Logic
-        else if (item.type === "ball") {
-            displayLabel = `Owned: ${player.balls[item.id] || 0}`;
-        }
+        const cost = Math.floor(item.cost * Math.pow(1.5, currentLevel));
+        const maxed = item.max && currentLevel >= item.max;
         
         div.innerHTML = `
             <h3>${item.name}</h3>
             <p>${item.desc}</p>
-            <p style="font-weight:bold; color: #fff;">${displayLabel}</p>
+            <p style="font-weight:bold; color: #fff;">Lvl: ${currentLevel}</p>
         `;
         
         const btn = document.createElement("button");
-        btn.innerText = isMaxed ? "MAXED" : `Buy (${displayCost} 🪙)`;
-        btn.disabled = isMaxed || player.coins < displayCost;
-        btn.onclick = () => buyItem(item, displayCost);
+        btn.innerText = maxed ? "MAXED" : `Buy (${cost} 🪙)`;
+        btn.disabled = maxed || player.coins < cost;
+        btn.onclick = () => buyItem(item, cost);
         
         div.appendChild(btn);
         shopGrid.appendChild(div);
@@ -1620,16 +1460,11 @@ function buyItem(item, cost) {
     if(player.coins >= cost) {
         player.coins -= cost;
         
-        if(item.type === "upgrade" || item.type === "passive") {
-            if(item.id === "bagUp") player.upgrades.bagLevel++;
-            if(item.id === "luck") player.upgrades.luckLevel++;
-            if(item.id === "candyUp") player.upgrades.candyLevel++;
-            applyUpgrades();
-        } else if (item.type === "ball") {
-            if(!player.balls[item.id]) player.balls[item.id] = 0;
-            player.balls[item.id]++;
-        }
+        if(item.id === "bagUp") player.upgrades.bagLevel++;
+        if(item.id === "luck") player.upgrades.luckLevel++;
+        if(item.id === "candyUp") player.upgrades.candyLevel++;
         
+        applyUpgrades();
         updateStats();
         renderShop();
         save();
@@ -1767,51 +1602,6 @@ function addToBag(mon, btn) {
     save();
 }
 
-// Carmack's "Time Slicing" Batch Processor
-async function processBatchRolls(totalLoops) {
-    const BATCH_SIZE = 2000;
-    let processed = 0;
-    let topCandidates = []; // Only keep the best 100 for the log
-    
-    while(processed < totalLoops) {
-        const chunk = Math.min(BATCH_SIZE, totalLoops - processed);
-        for(let i=0; i<chunk; i++) {
-            topCandidates.push(performSingleRoll());
-        }
-        if(topCandidates.length > 500) topCandidates = getTopRolls(topCandidates, 100);
-        processed += chunk;
-        progressBar.style.width = `${(processed / totalLoops) * 100}%`;
-        await new Promise(r => setTimeout(r, 0));
-    }
-    
-    finishRollBatch(topCandidates);
-}
-
-function getTopRolls(list, count) {
-    return list.sort((a, b) => {
-        let scoreA = a.tier.rank * 10 + (a.shiny?5:0) + (a.mega?2:0) + (a.giga?3:0);
-        let scoreB = b.tier.rank * 10 + (b.shiny?5:0) + (b.mega?2:0) + (b.giga?3:0);
-        return scoreB - scoreA;
-    }).slice(0, count);
-}
-
-function finishRollBatch(batch) {
-    const bestRoll = getTopRolls(batch, 1)[0];
-    // In batch mode, we assume "Auto-Catch" for visualization purposes in the log,
-    // but actual catching requires user action normally. 
-    // For simplicity in batch mode, we do NOT auto-catch to bag (would fill instantly).
-    // Just log them.
-    
-    renderLog(batch, bestRoll);
-    checkQuestProgress("roll", player.rollMultiplier);
-    checkRewards();
-    save();
-    
-    rollBtn.disabled = false;
-    progressBarContainer.style.display = 'none';
-    notify("Batch Roll Complete! Check Log.");
-}
-
 function performSingleRoll() {
   player.totalRolls++;
   
@@ -1844,7 +1634,23 @@ function performSingleRoll() {
   
   const isShiny = (Math.floor(Math.random() * CURRENT_SHINY_ODDS) === 0);
   
-  // NOTE: Dex registration removed from here to preserve Mystery
+  if(!player.pokedex[baseName]) {
+    player.pokedex[baseName] = { count: 0, shiny: 0, mega: {}, giga: {} };
+  }
+  
+  player.pokedex[baseName].count++;
+  
+  if(isShiny) {
+    player.pokedex[baseName].shiny++;
+  }
+  
+  if(isMegaPull) {
+    player.pokedex[baseName].mega[pickedName] = true;
+  }
+  if(isGigaPull) {
+    if(!player.pokedex[baseName].giga) player.pokedex[baseName].giga = {};
+    player.pokedex[baseName].giga[pickedName] = true;
+  }
   
   const newMon = {
     name: pickedName,
@@ -1860,281 +1666,79 @@ function performSingleRoll() {
   return newMon;
 }
 
-// --- NEW ENCOUNTER SYSTEM ---
-
-function updateUI(roll) {
-  // Store encounter for later
-  currentEncounter = roll;
-
-  // Mask the UI - The "Mystery" Reveal
-  resultCard.className = `card ${roll.tier.class}`;
-  resultCard.classList.remove("is-shiny"); // Hide shiny hint
+function updateUI(lastRoll) {
+  resultCard.className = `card ${lastRoll.tier.class}`;
+  if(lastRoll.shiny) resultCard.classList.add("is-shiny");
   
   resultCard.classList.remove("pop-anim");
   void resultCard.offsetWidth; 
   resultCard.classList.add("pop-anim");
   
-  cardName.innerText = `Mystery ${roll.tier.name}`;
-  cardRarity.innerText = "???";
+  cardName.innerText = lastRoll.name;
+  cardRarity.innerText = lastRoll.shiny ? `✨ Shiny ${lastRoll.tier.name} ✨` : lastRoll.tier.name;
   
-  // Show Question Mark
-  cardSprite.src = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png";
-  cardSprite.style.display = "block";
+  let spriteUrl = "";
+  const dexId = genAllOrder.indexOf(lastRoll.base) + 1;
 
-  // Change Button to "Encounter"
-  cardCatchBtn.style.display = "inline-block";
-  cardCatchBtn.innerText = "Encounter!";
-  cardCatchBtn.disabled = false;
+  if (lastRoll.giga && gigaSpriteIdMap[lastRoll.name]) {
+      const gigaId = gigaSpriteIdMap[lastRoll.name];
+      spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${gigaId}.png`;
+  } else if (lastRoll.mega && megaSpriteIdMap[lastRoll.name]) {
+      const megaId = megaSpriteIdMap[lastRoll.name];
+      spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${megaId}.png`;
+  } else if (dexId > 0) {
+      spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${dexId}.png`;
+  }
   
+  // Manual check for Zacian/Zamazenta base forms if ID fails
+  if(!spriteUrl && (lastRoll.base === "Zacian" || lastRoll.base === "Zamazenta")) {
+        const manualId = lastRoll.base === "Zacian" ? 888 : 889;
+        spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${lastRoll.shiny ? 'shiny/' : ''}${manualId}.png`;
+  }
+
+  if (spriteUrl) {
+    cardSprite.src = spriteUrl;
+    cardSprite.style.display = "block";
+  } else {
+    cardSprite.style.display = "none";
+  }
+
+  cardCatchBtn.style.display = "inline-block";
+  cardCatchBtn.innerText = "Catch!";
+  cardCatchBtn.disabled = false;
+  cardCatchBtn.style.background = "#27ae60";
+  
+  // Update click handler to work for current roll
+  // Must remove old handlers first to prevent multiple clicks
+  // Easiest is to set onclick property directly
   cardCatchBtn.onclick = function() {
-      startEncounter();
+      addToBag(lastRoll, cardCatchBtn);
   };
 
   updateStats();
   renderDex(dexSearch.value);
 }
 
-function startEncounter() {
-    if(!currentEncounter) return;
-    
-    // NOW Update Dex Data (Register as SEEN)
-    const baseName = currentEncounter.base;
-    if(!player.pokedex[baseName]) {
-      player.pokedex[baseName] = { count: 0, shiny: 0, mega: {}, giga: {} };
-    }
-    player.pokedex[baseName].count++;
-    if(currentEncounter.shiny) player.pokedex[baseName].shiny++;
-    if(currentEncounter.mega) player.pokedex[baseName].mega[currentEncounter.name] = true;
-    if(currentEncounter.giga) {
-      if(!player.pokedex[baseName].giga) player.pokedex[baseName].giga = {};
-      player.pokedex[baseName].giga[currentEncounter.name] = true;
-    }
-    
-    // Reveal Info
-    encounterName.innerText = currentEncounter.name;
-    encounterRarity.innerText = currentEncounter.tier.name;
-    encounterRarity.className = currentEncounter.tier.class;
-    
-    // Shiny Reveal
-    if(currentEncounter.shiny) {
-        encounterName.style.color = "#f1c40f";
-        encounterName.innerText = "✨ " + currentEncounter.name + " ✨";
-    } else {
-        encounterName.style.color = "#fff";
-    }
-
-    // Reveal Sprite
-    const url = getSpriteUrl(currentEncounter.name, currentEncounter.shiny, currentEncounter.mega, currentEncounter.giga, currentEncounter.base);
-    encounterSprite.src = url;
-
-    // Build Ball Buttons
-    renderBallButtons();
-
-    // Reset Game State
-    catchGameContainer.style.display = 'none';
-    catchInstruction.style.display = 'none';
-    if(gameInterval) clearInterval(gameInterval);
-    
-    encounterModal.style.display = "flex";
-    
-    // Refresh Dex to show "Seen" status
-    renderDex(dexSearch.value);
-    updateStats();
-    save();
-}
-
-function renderBallButtons() {
-    ballSelectRow.innerHTML = "";
-    const balls = [
-        { id: "pokeBall", label: "Poke Ball", count: player.balls.pokeBall || 0 },
-        { id: "greatBall", label: "Great Ball", count: player.balls.greatBall || 0 },
-        { id: "ultraBall", label: "Ultra Ball", count: player.balls.ultraBall || 0 },
-        { id: "masterBall", label: "Master Ball", count: player.balls.masterBall || 0 },
-    ];
-
-    balls.forEach(ball => {
-        const btn = document.createElement("div");
-        btn.className = "ball-btn";
-        if(ball.count > 0) btn.classList.add("available");
-        
-        btn.innerHTML = `
-            <span style="font-weight:bold;">${ball.label}</span>
-            <span style="font-size:12px;">x${ball.count}</span>
-        `;
-        
-        btn.onclick = () => {
-            if(ball.count > 0) selectBall(ball.id);
-        };
-        ballSelectRow.appendChild(btn);
-    });
-}
-
-function selectBall(ballType) {
-    selectedBallType = ballType;
-    
-    // Visual Feedback
-    const btns = ballSelectRow.children;
-    for(let b of btns) b.classList.remove("selected");
-    // Find index logic roughly matches array order
-    if(ballType === "pokeBall") btns[0].classList.add("selected");
-    if(ballType === "greatBall") btns[1].classList.add("selected");
-    if(ballType === "ultraBall") btns[2].classList.add("selected");
-    if(ballType === "masterBall") btns[3].classList.add("selected");
-
-    // Master ball skips game
-    if(ballType === "masterBall") {
-        catchGameContainer.style.display = 'none';
-        catchInstruction.style.display = 'block';
-        catchInstruction.innerText = "Master Ball selected! Click 'Throw' below (Use button).";
-        // Actually, just add a throw button or allow click on sprite?
-        // Let's reuse the game container space for a button
-        catchGameContainer.style.display = 'block';
-        catchGameContainer.style.background = "transparent";
-        catchGameContainer.style.border = "none";
-        catchGameContainer.innerHTML = `<button onclick="throwBall()" style="width:100%; height:100%; background:#8e44ad;">THROW MASTER BALL!</button>`;
-    } else {
-        // Setup Minigame
-        catchGameContainer.style.display = 'block';
-        catchGameContainer.style.background = "#333";
-        catchGameContainer.style.border = "2px solid #555";
-        
-        // Difficulty based on rarity
-        let targetWidth = 30; // Percentage
-        if(currentEncounter.tier.rank >= 3) targetWidth = 20; // Rare
-        if(currentEncounter.tier.rank >= 5) targetWidth = 10; // Mythical/Mega
-        if(currentEncounter.tier.rank >= 6) targetWidth = 5; // Giga
-        
-        // Ball Bonus to difficulty (Great/Ultra makes it easier?)
-        // Let's say balls just affect catch rate, not the minigame size, to keep skill relevant.
-        // Actually, Great Ball making zone bigger feels good.
-        if(ballType === "greatBall") targetWidth *= 1.5;
-        if(ballType === "ultraBall") targetWidth *= 2.0;
-
-        // Reset Inner HTML
-        catchGameContainer.innerHTML = `
-            <div id="targetZone" class="target-zone" style="left: ${50 - (targetWidth/2)}%; width: ${targetWidth}%;"></div>
-            <div id="catchCursor" class="catch-cursor"></div>
-        `;
-        
-        catchInstruction.style.display = 'block';
-        catchInstruction.innerText = "Click the bar when the red line is in the green zone!";
-
-        // Start Animation
-        cursorPosition = 0;
-        cursorDirection = 1;
-        
-        // Speed based on rarity
-        cursorSpeed = 1 + (currentEncounter.tier.rank * 0.5); 
-        // Ultra ball slows it down
-        if(ballType === "ultraBall") cursorSpeed *= 0.7;
-
-        if(gameInterval) clearInterval(gameInterval);
-        gameInterval = setInterval(() => {
-            cursorPosition += (cursorSpeed * cursorDirection);
-            if(cursorPosition >= 100 || cursorPosition <= 0) cursorDirection *= -1;
-            document.getElementById("catchCursor").style.left = cursorPosition + "%";
-        }, 16); // 60 FPS approx
-    }
-}
-
-function throwBall() {
-    if(!selectedBallType) return;
-    if(gameInterval) clearInterval(gameInterval);
-    
-    // Decrease Inventory
-    player.balls[selectedBallType]--;
-    renderBallButtons();
-    
-    // Master Ball Check
-    if(selectedBallType === "masterBall") {
-        successCatch();
-        return;
-    }
-    
-    // Calculate Hit
-    const cursor = document.getElementById("catchCursor");
-    const zone = document.getElementById("targetZone");
-    
-    // Get raw percentages from style
-    const cursorLeft = parseFloat(cursor.style.left);
-    const zoneLeft = parseFloat(zone.style.left);
-    const zoneWidth = parseFloat(zone.style.width);
-    
-    // Hit Detection
-    if(cursorLeft >= zoneLeft && cursorLeft <= (zoneLeft + zoneWidth)) {
-        // HIT! Now calculate Capture Chance
-        // Formula: Base Rate * Ball Multiplier
-        // Hitting green ensures a "Throw", but Rarity still matters.
-        // Actually, user wants "Decide to catch". The skill game implies if you hit, you should probably catch it, 
-        // or at least have a high chance.
-        
-        // Let's make hitting green a Guaranteed Catch for Common/Uncommon, chance for others.
-        const tier = currentEncounter.tier.rank;
-        let catchChance = 1.0; // 100%
-        
-        // Rarity Penalties
-        if(tier === 3) catchChance = 0.8; // Rare
-        if(tier === 4) catchChance = 0.6; // Ultra
-        if(tier === 5) catchChance = 0.4; // Mythical
-        if(tier === 6) catchChance = 0.3; // Mega
-        if(tier === 7) catchChance = 0.1; // Giga
-
-        // Ball Multipliers
-        if(selectedBallType === "greatBall") catchChance *= 1.5;
-        if(selectedBallType === "ultraBall") catchChance *= 2.0;
-        
-        if(Math.random() < catchChance) {
-            successCatch();
-        } else {
-            failCatch("The Pokemon broke free!");
-        }
-    } else {
-        failCatch("You missed the target!");
-    }
-}
-
-function successCatch() {
-    notify(`Gotcha! ${currentEncounter.name} was caught!`);
-    addToBag(currentEncounter);
-    closeEncounter();
-}
-
-function failCatch(reason) {
-    alert(reason + "\nThe Pokemon fled!");
-    closeEncounter();
-}
-
-function fleeEncounter() {
-    notify("You ran away safely.");
-    closeEncounter();
-}
-
-function closeEncounter() {
-    encounterModal.style.display = "none";
-    if(gameInterval) clearInterval(gameInterval);
-    
-    // Clean up UI
-    cardCatchBtn.disabled = true;
-    cardCatchBtn.innerText = "Encounter Ended";
-    cardCatchBtn.style.background = "#555";
-}
-
 function renderLog(batch, bestRoll) {
   const logDiv = document.getElementById("rollLog");
   logDiv.innerHTML = "";
   
-  // Grandmaster Optimization: 
-  // If batch is huge, sort and only show top items (Memory safety)
+  // Optimization: If batch is huge, sort and only show top items
   let displayBatch = batch;
   if (batch.length > 100) {
-      displayBatch = getTopRolls(batch, 100);
+      // Sort by score (rank/shiny/mega) descending
+      displayBatch = [...batch].sort((a, b) => {
+          let scoreA = a.tier.rank * 10 + (a.shiny?5:0) + (a.mega?2:0) + (a.giga?3:0);
+          let scoreB = b.tier.rank * 10 + (b.shiny?5:0) + (b.mega?2:0) + (b.giga?3:0);
+          return scoreB - scoreA;
+      }).slice(0, 100); 
       
       const summary = document.createElement("div");
       summary.style.padding = "10px";
       summary.style.color = "#aaa";
       summary.style.fontSize = "12px";
       summary.style.borderBottom = "1px solid #444";
-      summary.innerText = `Displaying best 100 of ${batch.length} rolls`;
+      summary.innerText = `Showing top 100 results of ${batch.length} rolls...`;
       logDiv.appendChild(summary);
   }
   
@@ -2142,8 +1746,7 @@ function renderLog(batch, bestRoll) {
     const div = document.createElement("div");
     div.className = "log-item " + roll.tier.class;
     
-    // Highlight best roll only if it's in the display list
-    if(roll.id === bestRoll.id && batch.length > 1) {
+    if(roll === bestRoll && batch.length > 1) {
         div.classList.add("best");
     }
     
@@ -2169,8 +1772,20 @@ function renderLog(batch, bestRoll) {
     badge.style.textTransform = "uppercase";
     badge.style.marginRight = "5px";
     
-    // Batch logs are just logs now, manual catch only on single roll
+    const catchBtn = document.createElement("button");
+    catchBtn.className = "catch-btn";
+    catchBtn.innerText = "Catch";
+    catchBtn.onclick = function() {
+        addToBag(roll, catchBtn);
+        if(roll === bestRoll) {
+             cardCatchBtn.disabled = true;
+             cardCatchBtn.innerText = "Caught!";
+             cardCatchBtn.style.background = "#555";
+        }
+    };
+
     rightDiv.appendChild(badge);
+    rightDiv.appendChild(catchBtn);
     
     div.appendChild(leftDiv);
     div.appendChild(rightDiv);
@@ -2182,7 +1797,7 @@ function renderLog(batch, bestRoll) {
 function updateStats() {
   rollsText.innerText = player.totalRolls.toLocaleString();
   caughtText.innerText = Object.keys(player.pokedex).length;
-  rollMultDisplay.innerText = player.rollMultiplier.toLocaleString();
+  rollMultDisplay.innerText = player.rollMultiplier;
   
   if(player.bag) {
       bagBtnCount.innerText = player.bag.length;
@@ -2273,20 +1888,10 @@ function addMultiplier(amount) {
   updateStats();
 }
 
-// --- SAVE / LOAD SYSTEM (The Iwata Compression) ---
+// --- SAVE / LOAD SYSTEM ---
 function save(){ 
   player.lastSave = Date.now();
-  
-  // COMPRESSION: Strip the heavy "tier" objects from the bag before saving.
-  // We only need name, shiny, mega, giga, id, and caught.
-  const compressedPlayer = JSON.parse(JSON.stringify(player));
-  if(compressedPlayer.bag) {
-      compressedPlayer.bag.forEach(p => {
-          delete p.tier; // Redundant data, can be looked up
-      });
-  }
-  
-  localStorage.setItem("pokemonRNG", JSON.stringify(compressedPlayer));
+  localStorage.setItem("pokemonRNG", JSON.stringify(player));
   const date = new Date(player.lastSave);
   lastSaveText.innerText = date.toLocaleTimeString();
 }
@@ -2298,42 +1903,18 @@ function load(){
       const parsed = JSON.parse(data);
       player = { ...player, ...parsed };
       
-      // HYDRATION: Rebuild the "tier" data for bag items
-      if(player.bag) {
-          player.bag.forEach(p => {
-              // Find tier based on name in rarityTable
-              if(!p.tier) {
-                  let foundTier = rarityTable.find(t => t.pool.includes(p.name));
-                  if(!foundTier) {
-                      // Fallback logic for Megas/Gigas not in main pools
-                       if(p.mega) foundTier = rarityTable.find(t => t.name === "Mega");
-                       else if(p.giga) foundTier = rarityTable.find(t => t.name === "Giga");
-                       else foundTier = rarityTable[0]; // Default Common
-                  }
-                  p.tier = { name: foundTier.name, class: foundTier.class, rank: foundTier.rank };
-              }
-              // Ensure Base Name exists for older saves
-              if(!p.base) {
-                  if(p.mega) p.base = megaMap[p.name];
-                  else if(p.giga) p.base = gigaMap[p.name];
-                  else p.base = p.name;
-              }
-          });
-      }
-      
-      // Defaults for older save versions
       if(!player.pokedex) player.pokedex = {};
       if(!player.rewards) player.rewards = {};
       if(!player.rollMultiplier) player.rollMultiplier = 1;
+      if(!player.bag) player.bag = [];
       if(!player.coins) player.coins = 0;
       if(!player.candy) player.candy = {};
       if(!player.upgrades) player.upgrades = { bagLevel: 0, luckLevel: 0, candyLevel: 0 };
       if(!player.activeQuests) player.activeQuests = [];
-      if(!player.balls) player.balls = { pokeBall: 5, greatBall: 0, ultraBall: 0, masterBall: 0 };
       
-      applyUpgrades(); 
+      applyUpgrades(); // Apply loaded upgrade stats
 
-      console.log("Save loaded & Hydrated:", player);
+      console.log("Save loaded:", player);
       startGame();
     } catch (e) {
       console.error("Save file corrupted", e);
