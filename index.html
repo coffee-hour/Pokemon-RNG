@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
-<head> 
-  <meta charset="UTF-8"> 
-  <!-- Fixed the spaces in the URL by adding %20 so the browser can read it -->
-  <link rel="icon" type="image/png" href="https://myimgs.org/storage/images/17810/Untitled%20design%20(17).png"> 
-  <title>Pokemon RNG</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<head>
+<meta charset="UTF-8">
+<title>Pokemon RNG</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-  /* --- CSS STYLES --- */
-  body {
+<style>
+/* --- CSS STYLES --- */
+body {
+  background: radial-gradient(circle at top, #1b1f4b, #0a0c1a);
+  color: #fff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
   padding: 20px;
   display: flex;
@@ -54,10 +55,9 @@
   padding-right: 5px;
 }
 
-/* Added the missing '#' symbols to properly target the ID */
-#pokedexDropdown::-webkit-scrollbar { width: 8px; }
-#pokedexDropdown::-webkit-scrollbar-track { background: #0a0c1a; }
-#pokedexDropdown::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+pokedexDropdown::-webkit-scrollbar { width: 8px; }
+pokedexDropdown::-webkit-scrollbar-track { background: #0a0c1a; }
+pokedexDropdown::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
 
 /* Dex Entry Base Styling */
 .dex-entry {
@@ -715,7 +715,7 @@ const rarityTable = [
     rank: 3, 
     coinValue: 100,
     pool: [
-      "Venusaur", "Charizard", "Blastoise", "Butterfree", "Beedrill", "Pidgeot", "Pikachu", "Raichu", "Herdier", 
+      "Venusaur", "Charizard", "Blastoise", "Butterfree", "Beedrill", "Pidgeot", "Pikachu", "Raichu",
       "Nidoqueen", "Nidoking", "Clefable", "Ninetales", "Wigglytuff", "Vileplume", "Arcanine",
       "Poliwrath", "Alakazam", "Machamp", "Golem", "Rapidash", "Slowbro", "Dodrio", "Dewgong",
       "Muk", "Gengar", "Marowak", "Hitmonlee", "Hitmonchan", "Rhydon", "Tangela", "Kangaskhan",
