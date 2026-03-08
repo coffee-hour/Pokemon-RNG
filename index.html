@@ -1605,7 +1605,10 @@ function addToBag(mon, btn) {
 function performSingleRoll() {
   player.totalRolls++;
   
-  let rand = Math.random() * 100;
+  // Calculate the total probability weight based on the actual table
+  const totalWeight = rarityTable.reduce((sum, tier) => sum + tier.chance, 0);
+  let rand = Math.random() * totalWeight;
+  
   let chosenTier = rarityTable[0];
   let cumulative = 0;
   
