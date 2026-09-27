@@ -1,0 +1,9 @@
+export const PALLET={name:'PALLET TOWN',width:16,height:16,tiles:[
+'ffffffffffffffff','fggggggggggggggf','fggggggggggggggf','fggghhhhggghhhgf','fggghhhhggghhhgf','fggghdhhggghdhgf','fgggwwwwgggwwggf','fgggwwwwgggwwggf','fggggggggggggggf','ffffefffffffefff','fggggggggggggggf','fggggggggggggggf','fggggggggggggggf','fggggggggggggggf','ffffffffffffffff','wwwwwwwwwwwwwwww'].map(r=>[...r]),legend:{f:'grass',g:'grass',h:'roof',w:'wall',d:'door',e:'path'},
+player:{x:7,y:10},npcs:[{x:8,y:8,name:'PROF. OAK',text:'The world is full of Pokémon. The tall grass to the north is a good place to begin.'},{x:3,y:9,name:'TOWNSPERSON',text:'Pallet Town: a quiet setting of eternal summer.'},{x:12,y:9,name:'SIGN',text:'ROUTE 1 — VIRIDIAN CITY. Wild Pokémon live in the tall grass.'}],warps:[{x:7,y:1,to:'ROUTE 1',spawn:{x:7,y:13}}],encounters:['Pidgey','Rattata'],grassTiles:['grassTall']};
+// Route uses a simple extension and carries the same collision/encounter conventions.
+export const ROUTE={...PALLET,name:'ROUTE 1',player:{x:7,y:13},npcs:[{x:9,y:8,name:'TRAINER',text:'I am still learning to be a Pokémon trainer!'}],warps:[{x:7,y:14,to:'PALLET TOWN',spawn:{x:7,y:2}}],encounters:['Pidgey','Rattata'],grassTiles:['grassTall']};
+// Make map construction easy to customize: string glyphs become tile names and coordinates remain grid-aligned.
+export function tileAt(map,x,y){if(x<0||y<0||x>=map.width||y>=map.height)return'tree';const raw=map.tiles[y][x];return map.legend[raw]||raw;}
+export function buildMap(source){const tiles=source.tiles.map(row=>row.map(c=>source.legend[c]||c));for(let y=0;y<source.height;y++)for(let x=0;x<source.width;x++)if(tiles[y][x]==='grass'&&y>1&&y<5&&x>1&&x<14)tiles[y][x]='grassTall';return{...source,tiles};}
+export const isBlocked=t=>['tree','wall','roof','water','fence'].includes(t);
