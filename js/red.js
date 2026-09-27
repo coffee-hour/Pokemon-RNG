@@ -1,21 +1,28 @@
-// Overworld art is drawn exclusively from PNG assets in pret/pokered.
+// Draw a purpose-built, colorful 16px GBC overworld. Avoid slicing pret's raw 2bpp atlas as metatiles.
 const canvas=document.querySelector('#screen'),ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=false;
-const ROOT='https://raw.githubusercontent.com/pret/pokered/d2704a63c26f9ba046ade877445216b3de0519a4/gfx/';
-const tiles=new Image(),red=new Image();tiles.src=ROOT+'tilesets/overworld.png';red.src=ROOT+'sprites/red.png';
+const red=new Image();red.src='https://raw.githubusercontent.com/pret/pokered/d2704a63c26f9ba046ade877445216b3de0519a4/gfx/sprites/red.png';
 const T=16,W=40,H=36;
 const map=Array.from({length:H},(_,y)=>Array.from({length:W},(_,x)=>y>29?'p':(x<2||x>37||y<2||y>33?'t':'g')));
 for(let y=0;y<H;y++)for(let x=17;x<=22;x++)if(y>5)map[y][x]='p';for(let x=4;x<36;x++)for(let y=16;y<=21;y++)map[y][x]='p';
 function house(x,y,w=7,h=6){for(let yy=y;yy<y+h;yy++)for(let xx=x;xx<x+w;xx++)map[yy][xx]=yy===y?'r':'b';map[y+h-1][x+(w>>1)]='d'}house(7,8);house(26,8);house(17,23);
 for(let y=3;y<12;y++)for(let x=3;x<12;x++)if((x+y)%3===0&&map[y][x]==='g')map[y][x]='f';for(let y=3;y<10;y++)for(let x=27;x<36;x++)if((x+y)%4===0&&map[y][x]==='g')map[y][x]='f';for(let y=11;y<15;y++)for(let x=3;x<8;x++)map[y][x]='w';for(let x=12;x<16;x++)map[14][x]='h';for(let x=24;x<28;x++)map[14][x]='h';
-for(let y=3;y<16;y++)for(let x=18;x<22;x++)if(y<11&&x!==20)map[y][x]='g';for(let y=0;y<H;y++)for(let x=0;x<W;x++)if((x===0||x===W-1||y===0||y===H-1)&&y<29)map[y][x]='t';
-// Source rectangles are 16x16 cells in the original 256x96 overworld atlas (zero-based column,row).
-const src={g:[9,2],p:[7,1],f:[10,2],w:[3,1],t:[0,0],h:[12,2],r:[5,0],b:[6,1],d:[2,1]};
+for(let y=0;y<H;y++)for(let x=0;x<W;x++)if((x===0||x===W-1||y===0||y===H-1)&&y<29)map[y][x]='t';
 const solid=new Set(['t','w','h','r','b']);let px=19,py=19,dir=0,busy=false,balls=5,hp=20,maxHp=20,encounterCooldown=0,walking=0;
 function tile(x,y){return map[y]?.[x]??'t'}
-function drawTile(code,x,y){const [sx,sy]=src[code]||src.g;if(tiles.complete&&tiles.naturalWidth)ctx.drawImage(tiles,sx*T,sy*T,T,T,x*T,y*T,T,T)}
-// Red's source PNG is a 16x112 sheet of 16px sprite frames. Direction selects a frame row.
+const pal={grass:'#71c64b',grass2:'#58ad3c',leaf:'#278a42',leaf2:'#45a84d',trunk:'#8c5733',path:'#f4d99a',path2:'#e8c47a',water:'#42b9e8',water2:'#2389d0',roof:'#e8433f',roof2:'#a92539',wall:'#f7e8c5',wallShade:'#d8bd91',door:'#81502e',fence:'#e6d8a8'};
+function drawTile(c,x,y){const X=x*T,Y=y*T;ctx.fillStyle=c==='p'||c==='h'?pal.path:c==='w'?pal.water:pal.grass;ctx.fillRect(X,Y,T,T);
+ if(c==='g'){ctx.fillStyle=pal.grass2;ctx.fillRect(X+2,Y+4,2,2);ctx.fillRect(X+11,Y+11,2,2);ctx.fillStyle='#a0dc5c';ctx.fillRect(X+7,Y+2,1,2)}
+ if(c==='p'){ctx.fillStyle=pal.path2;ctx.fillRect(X+3,Y+5,2,1);ctx.fillRect(X+10,Y+12,2,1)}
+ if(c==='w'){ctx.fillStyle=pal.water2;ctx.fillRect(X+2,Y+4,8,1);ctx.fillRect(X+7,Y+11,7,1);ctx.fillStyle='#a2e7f4';ctx.fillRect(X+4,Y+7,4,1)}
+ if(c==='t'){ctx.fillStyle=pal.leaf;ctx.fillRect(X+2,Y+1,12,11);ctx.fillRect(X+0,Y+5,16,7);ctx.fillStyle=pal.leaf2;ctx.fillRect(X+4,Y+2,4,3);ctx.fillRect(X+10,Y+6,3,3);ctx.fillStyle=pal.trunk;ctx.fillRect(X+6,Y+11,4,5)}
+ if(c==='f'){ctx.fillStyle=pal.leaf;ctx.fillRect(X+1,Y+2,14,12);ctx.fillStyle=pal.leaf2;ctx.fillRect(X+4,Y+3,4,3);ctx.fillRect(X+10,Y+8,3,3);ctx.fillStyle='#f28a9c';ctx.fillRect(X+5,Y+7,2,2);ctx.fillStyle='#fff2b4';ctx.fillRect(X+11,Y+4,2,2)}
+ if(c==='h'){ctx.fillStyle=pal.fence;ctx.fillRect(X,Y+5,16,2);ctx.fillRect(X+2,Y+2,2,7);ctx.fillRect(X+11,Y+2,2,7)}
+ if(c==='r'){ctx.fillStyle=pal.roof2;ctx.fillRect(X+1,Y+5,14,9);ctx.fillRect(X+3,Y+3,10,2);ctx.fillRect(X+5,Y+1,6,2);ctx.fillStyle=pal.roof;ctx.fillRect(X+4,Y+4,5,2);ctx.fillRect(X+2,Y+7,3,3)}
+ if(c==='b'){ctx.fillStyle=pal.wall;ctx.fillRect(X+1,Y+1,14,14);ctx.fillStyle=pal.wallShade;ctx.fillRect(X+1,Y+13,14,2);ctx.fillRect(X+13,Y+2,2,11);ctx.fillStyle='#82c8ed';ctx.fillRect(X+3,Y+4,3,3);ctx.fillRect(X+10,Y+4,3,3);ctx.fillStyle='#fff';ctx.fillRect(X+4,Y+4,1,3);ctx.fillRect(X+11,Y+4,1,3)}
+ if(c==='d'){ctx.fillStyle=pal.wall;ctx.fillRect(X+1,Y+1,14,15);ctx.fillStyle=pal.door;ctx.fillRect(X+5,Y+4,6,12);ctx.fillStyle='#e4ba6d';ctx.fillRect(X+9,Y+9,1,1)}
+}
 const playerFrame={down:0,up:1,left:2,right:3};
-function drawRed(x,y){if(!red.complete||!red.naturalWidth)return;const row=playerFrame[dir]??0;const frame=(walking?Math.floor(performance.now()/170)%2:0);const sourceRow=(row+frame)%7;ctx.drawImage(red,0,sourceRow*T,T,T,x*T,y*T,T,T)}
+function drawRed(x,y){if(!red.complete||!red.naturalWidth){ctx.fillStyle='#d83931';ctx.fillRect(x*T+4,y*T+2,8,5);ctx.fillStyle='#f0c49a';ctx.fillRect(x*T+5,y*T+5,6,4);ctx.fillStyle='#2866c4';ctx.fillRect(x*T+4,y*T+9,8,6);return}const row=playerFrame[dir]??0;const frame=(walking?Math.floor(performance.now()/170)%2:0);const sourceRow=(row+frame)%7;ctx.drawImage(red,0,sourceRow*T,T,T,x*T,y*T,T,T)}
 const activeKeys=new Set();
 const directionByCode={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right'};
 let lastStepAt=0;const STEP_MS=135;
